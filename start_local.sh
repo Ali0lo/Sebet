@@ -28,3 +28,4 @@ echo ""
 # Handle graceful shutdown
 trap "kill $BACKEND_PID $FRONTEND_PID" EXIT INT TERM
 wait
+

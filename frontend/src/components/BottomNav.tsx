@@ -44,7 +44,7 @@ export const BottomNav: React.FC = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] transition-colors duration-200">
       <div className="max-w-xl mx-auto px-3 py-1.5 flex items-center justify-around">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
@@ -60,7 +60,7 @@ export const BottomNav: React.FC = () => {
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-lg shadow-emerald-600/30 group-hover:scale-105 group-active:scale-95 transition-all">
                   <Icon className="w-6 h-6" />
                 </div>
-                <span className="text-[10px] font-bold text-emerald-800 mt-0.5">
+                <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-400 mt-0.5">
                   {item.label}
                 </span>
               </Link>
@@ -73,8 +73,8 @@ export const BottomNav: React.FC = () => {
               href={item.href}
               className={`flex flex-col items-center py-1 px-2.5 rounded-xl transition-all relative ${
                 isActive
-                  ? "text-emerald-600 font-bold"
-                  : "text-slate-500 hover:text-slate-800 font-medium"
+                  ? "text-emerald-600 dark:text-emerald-400 font-bold"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium"
               }`}
             >
               <div className="relative">

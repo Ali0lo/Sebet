@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Minus, Check, Sparkles, Tag } from "lucide-react";
+import { Plus, Minus, Sparkles, Tag, ShoppingBasket } from "lucide-react";
 import { Product, StorePrice } from "@/lib/types";
 import { useSebEtStore } from "@/lib/store";
+import { ChainLogo } from "@/components/ChainLogo";
 
 interface ProductCardProps {
   product: Product;
@@ -16,10 +17,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const { basket, addToBasket, updateQuantity } = useSebEtStore();
   const [isMounted, setIsMounted] = useState(false);
+  const [imgSrc, setImgSrc] = useState<string | null>(product.image_url || null);
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    setImgSrc(product.image_url || null);
+  }, [product.image_url]);
 
   const basketItem = isMounted
     ? basket.find((item) => item.product.id === product.id)
@@ -39,26 +42,30 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const hasPromo = product.prices.some((p) => p.is_promo);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition-all p-3 flex flex-col justify-between group">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xs hover:shadow-md transition-all p-3 flex flex-col justify-between group">
       <div>
         {/* Image & Badges */}
-        <div className="relative w-full h-32 rounded-xl bg-slate-50 overflow-hidden mb-2.5 flex items-center justify-center">
-          {product.image_url ? (
+        <div className="relative w-full h-32 rounded-xl bg-slate-50 dark:bg-slate-800/60 overflow-hidden mb-2.5 flex items-center justify-center border border-slate-100 dark:border-slate-800">
+          {imgSrc ? (
             <img
-              src={product.image_url}
+              src={imgSrc}
               alt={product.canonical_name}
+              onError={() => setImgSrc(null)}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
             />
           ) : (
-            <div className="w-12 h-12 text-slate-300 flex items-center justify-center">
-              🛒
+            <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
+              <ShoppingBasket className="w-8 h-8 opacity-40 mb-1" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                {product.brand || "SebEt"}
+              </span>
             </div>
           )}
 
           {/* Brand Badge */}
           {product.brand && (
-            <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold tracking-wide">
+            <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold tracking-wide">
               {product.brand}
             </span>
           )}
@@ -71,7 +78,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               </span>
             )}
             {product.pack_size && (
-              <span className="px-1.5 py-0.5 rounded-md bg-white/90 backdrop-blur-xs text-slate-700 text-[9px] font-bold border border-slate-200">
+              <span className="px-1.5 py-0.5 rounded-md bg-white/95 dark:bg-slate-800/95 backdrop-blur-xs text-slate-700 dark:text-slate-200 text-[9px] font-bold border border-slate-200 dark:border-slate-700">
                 {product.pack_size}
               </span>
             )}
@@ -81,7 +88,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* Product Title */}
         <h3
           onClick={() => onOpenDetails?.(product)}
-          className="text-xs font-bold text-slate-800 line-clamp-2 hover:text-emerald-700 cursor-pointer min-h-[32px]"
+          className="text-xs font-bold text-slate-800 dark:text-slate-100 line-clamp-2 hover:text-emerald-700 dark:hover:text-emerald-400 cursor-pointer min-h-[32px]"
           title={product.canonical_name}
         >
           {product.canonical_name}
@@ -89,23 +96,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Price Dispersion Range */}
         <div className="mt-2 flex items-baseline gap-1.5">
-          <span className="text-base font-extrabold text-emerald-700">
+          <span className="text-base font-extrabold text-emerald-700 dark:text-emerald-400">
             {bestPrice.toFixed(2)} ₼
           </span>
           {maxPrice > bestPrice && (
-            <span className="text-[11px] text-slate-400 line-through">
+            <span className="text-[11px] text-slate-400 dark:text-slate-500 line-through">
               {maxPrice.toFixed(2)} ₼
             </span>
           )}
           {maxPrice > bestPrice && (
-            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1 rounded">
+            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1 rounded">
               -{(maxPrice - bestPrice).toFixed(2)} ₼
             </span>
           )}
         </div>
 
-        {/* Chain Comparison Pills */}
-        <div className="mt-2.5 pt-2 border-t border-slate-100 flex flex-wrap gap-1">
+        {/* Chain Comparison Pills with Official Logos */}
+        <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-1.5">
           {Object.values(chainPrices).map((cp) => {
             const isLowest =
               (cp.is_promo && cp.promo_price ? cp.promo_price : cp.price) ===
@@ -116,17 +123,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             return (
               <div
                 key={cp.chain_slug}
-                className={`text-[9px] px-1.5 py-0.5 rounded font-medium flex items-center gap-1 border ${
+                className={`text-[9px] p-1 rounded-lg font-medium flex items-center gap-1.5 border transition-all ${
                   isLowest
-                    ? "bg-emerald-50 border-emerald-300 text-emerald-800 font-bold"
-                    : "bg-slate-50 border-slate-200 text-slate-600"
+                    ? "bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200 font-bold"
+                    : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
                 }`}
               >
-                <span
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ backgroundColor: cp.chain_color }}
-                />
-                <span>{cp.chain_name}:</span>
+                {/* Official Market Logo Badge */}
+                <ChainLogo slug={cp.chain_slug} size="xs" />
                 <span>{displayPrice.toFixed(2)} ₼</span>
               </div>
             );
@@ -137,14 +141,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {/* Action: Add to Basket */}
       <div className="mt-3 pt-2">
         {inCartQty > 0 ? (
-          <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl p-1">
+          <div className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-xl p-1">
             <button
               onClick={() => updateQuantity(product.id, -1)}
-              className="w-7 h-7 rounded-lg bg-white text-emerald-700 font-black flex items-center justify-center hover:bg-emerald-100 active:scale-90 transition-transform shadow-xs"
+              className="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 font-black flex items-center justify-center hover:bg-emerald-100 dark:hover:bg-slate-700 active:scale-90 transition-transform shadow-xs"
             >
               <Minus className="w-3.5 h-3.5" />
             </button>
-            <span className="text-xs font-black text-emerald-900 px-2">
+            <span className="text-xs font-black text-emerald-900 dark:text-emerald-200 px-2">
               {inCartQty} ədəd
             </span>
             <button
@@ -157,7 +161,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         ) : (
           <button
             onClick={() => addToBasket(product, 1)}
-            className="w-full py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-xs"
+            className="w-full py-1.5 px-3 rounded-xl bg-slate-900 dark:bg-emerald-600 hover:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-xs"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Səbətə at</span>
@@ -167,4 +171,3 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     </div>
   );
 };
-

@@ -9,7 +9,7 @@ def test_receipt_metadata_extraction():
 
     assert meta["voen"] == "1401564751"
     assert meta["obyekt_kodu"] == "0101"
-    assert meta["total_amount"] == 26.50
+    assert meta["total_amount"] == 33.34
     assert meta["fiscal_id"] is not None
 
 
@@ -21,8 +21,8 @@ def test_receipt_line_items_parsing():
     first_item = items[0]
     assert "MILLA" in first_item.raw_name.upper()
     assert first_item.quantity == 1.0
-    assert first_item.unit_price == 2.35
-    assert first_item.total_price == 2.35
+    assert first_item.unit_price == 2.39
+    assert first_item.total_price == 2.39
 
 
 def test_basket_optimizer_logic():

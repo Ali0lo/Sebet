@@ -16,10 +16,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="az">
-      <body className="antialiased bg-slate-100 min-h-screen">
+    <html lang="az" suppressHydrationWarning>
+      <body className="antialiased bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200">
         {/* Mobile Device Frame / Container */}
-        <div className="max-w-xl mx-auto min-h-screen bg-white shadow-xl relative pb-24 flex flex-col border-x border-slate-200/60">
+        <div className="max-w-xl mx-auto min-h-screen bg-white dark:bg-slate-900 shadow-xl relative pb-24 flex flex-col border-x border-slate-200/60 dark:border-slate-800 transition-colors duration-200">
           <Navbar />
           <main className="flex-1 px-4 py-4">{children}</main>
           <BasketDrawer />
@@ -29,4 +29,3 @@ export default function RootLayout({
     </html>
   );
 }
-

@@ -42,7 +42,7 @@ SAMPLE_BAKU_RECEIPTS = [
         "store_name": "Bravo 28 Mall",
         "voen": "1401564751",
         "obyekt_kodu": "0101",
-        "total_amount": 26.50,
+        "total_amount": 33.34,
         "raw_text": """
 "AZERBAIJAN SUPERMARKET" MMC
 BRAVO 28 MALL FILIALI
@@ -51,13 +51,13 @@ OBYEKT KODU: 0101
 Baki seh., Nesimi r., 28 May kuc.
 TARIX: 05.09.2026 14:32
 =========================================
-1. MILLA SUD 2.5% 1L           1.00 x 2.35 = 2.35 AZN
-2. WESTGOLD KEREYAGI 200Q      2.00 x 5.20 = 10.40 AZN
-3. BIZIM SUFRE MAYONEZ 400ML   1.00 x 2.45 = 2.45 AZN
-4. SIRAB QAZSIZ 1.5L           2.00 x 1.05 = 2.10 AZN
-5. ARIEL DAG TERAVETI 3KQ      1.00 x 9.20 = 9.20 AZN
+1. MILLA SUD 2.5% 1L           1.00 x 2.39 = 2.39 AZN
+2. WESTGOLD KEREYAGI 200Q      2.00 x 5.50 = 11.00 AZN
+3. BIZIM SUFRE MAYONEZ 400ML   1.00 x 2.75 = 2.75 AZN
+4. SIRAB QAZSIZ 1.5L           2.00 x 1.15 = 2.30 AZN
+5. ARIEL DAG TERAVETI 3KQ      1.00 x 14.90 = 14.90 AZN
 =========================================
-YEKUN: 26.50 AZN
+YEKUN: 33.34 AZN
 EDV GERI AL / BIRBANK
 NOS: 9940156475128001
 FISEAL ID: AZ1401564751280926
@@ -70,7 +70,7 @@ Tesekkur edirik!
         "store_name": "Araz Nərimanov",
         "voen": "1400124571",
         "obyekt_kodu": "0201",
-        "total_amount": 18.20,
+        "total_amount": 20.24,
         "raw_text": """
 "ARAZ SUPERMARKET" MMC
 ARAZ NERIMANOV FILIALI
@@ -79,13 +79,13 @@ OBYEKT KODU: 0201
 Baki seh., Nerimanov r., Tebriz kuc.
 TARIX: 04.09.2026 18:15
 =========================================
-1. MILLA SUD 2.5% 1L           1.00 x 2.25 = 2.25 AZN
-2. AZERCAY BUKET 250Q          1.00 x 3.90 = 3.90 AZN
-3. MOCUZE YAG 1L               1.00 x 4.80 = 4.80 AZN
-4. DURU ZEYTUN SABUNU 4X115Q   1.00 x 3.65 = 3.65 AZN
-5. SIRAB QAZSIZ 1.5L           4.00 x 0.90 = 3.60 AZN
+1. MILLA SUD 2.5% 1L           1.00 x 2.29 = 2.29 AZN
+2. AZERCAY BUKET 250Q          1.00 x 4.65 = 4.65 AZN
+3. MOCUZE YAG 1L               1.00 x 5.20 = 5.20 AZN
+4. DURU ZEYTUN SABUNU 4X115Q   1.00 x 4.10 = 4.10 AZN
+5. SIRAB QAZSIZ 1.5L           4.00 x 1.00 = 4.00 AZN
 =========================================
-CEMI: 18.20 AZN
+CEMI: 20.24 AZN
 EDV GERI AL / KASSA
 NOS: 9940012457102011
 FISEAL ID: AZ1400124571020926
@@ -97,7 +97,7 @@ FISEAL ID: AZ1400124571020926
         "store_name": "OBA 28 May",
         "voen": "1700893241",
         "obyekt_kodu": "0301",
-        "total_amount": 11.75,
+        "total_amount": 12.85,
         "raw_text": """
 "OBA MARKET" MMC
 OBA 28 MAY FILIALI
@@ -106,13 +106,13 @@ OBYEKT KODU: 0301
 Baki seh., Fizuli kuc. 42
 TARIX: 05.09.2026 10:45
 =========================================
-1. MILLA SUD 2.5% 1L           1.00 x 2.10 = 2.10 AZN
-2. SIRAB QAZSIZ 1.5L           2.00 x 0.85 = 1.70 AZN
-3. MAKFA SPAGETTI 500Q         2.00 x 1.45 = 2.90 AZN
-4. BIZIM SUFRE MAYONEZ 400ML   1.00 x 2.15 = 2.15 AZN
-5. ALBENI SOKOLAD 40Q          4.00 x 0.72 = 2.90 AZN
+1. MILLA SUD 2.5% 1L           1.00 x 2.15 = 2.15 AZN
+2. SIRAB QAZSIZ 1.5L           2.00 x 0.90 = 1.80 AZN
+3. MAKFA SPAGETTI 500Q         2.00 x 1.55 = 3.10 AZN
+4. BIZIM SUFRE MAYONEZ 400ML   1.00 x 2.45 = 2.45 AZN
+5. ALBENI SOKOLAD 40Q          4.00 x 0.84 = 3.35 AZN
 =========================================
-YEKUN: 11.75 AZN
+YEKUN: 12.85 AZN
 EDV GERI AL
 NOS: 9941700893241031
 """

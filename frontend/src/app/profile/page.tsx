@@ -84,28 +84,28 @@ export default function ProfilePage() {
   return (
     <div className="space-y-5">
       {/* User Header Profile Card */}
-      <div className="p-5 rounded-3xl bg-gradient-to-tr from-slate-900 via-slate-800 to-emerald-950 text-white shadow-xl space-y-4">
+      <div className="p-5 rounded-3xl bg-gradient-to-tr from-slate-900 via-slate-800 to-emerald-950 dark:from-slate-950 dark:via-slate-900 dark:to-emerald-950 text-white shadow-xl space-y-4 border border-slate-800 dark:border-slate-700/60">
         <div className="flex items-center gap-3.5">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center font-black text-xl shadow-md shadow-emerald-500/30">
-            Aİ
+            AI
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-extrabold text-base tracking-tight">
-                {user?.full_name || "Ali İsgəndərli"}
+              <h2 className="font-extrabold text-base tracking-tight text-white">
+                {user?.full_name || "Ali Iskandarli"}
               </h2>
               <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 border border-emerald-400/30">
                 Ağıllı Alıcı
               </span>
             </div>
-            <p className="text-xs text-slate-400 font-mono mt-0.5">
+            <p className="text-xs text-slate-400 dark:text-slate-400 font-mono mt-0.5">
               {user?.phone_number || "+994 50 123 45 67"}
             </p>
           </div>
         </div>
 
         {/* Points Banner */}
-        <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-between">
+        <div className="p-3.5 rounded-2xl bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/15 dark:border-white/10 flex items-center justify-between">
           <div>
             <span className="text-[11px] font-bold text-slate-300 block">
               Mövcud SebEt Xalları
@@ -131,28 +131,28 @@ export default function ProfilePage() {
 
       {/* Redeemed Voucher Success Banner */}
       {redeemedCode && (
-        <div className="p-4 rounded-3xl bg-emerald-50 border-2 border-emerald-500 text-emerald-950 space-y-2 animate-in fade-in zoom-in-95">
+        <div className="p-4 rounded-3xl bg-emerald-50 dark:bg-emerald-950/60 border-2 border-emerald-500 dark:border-emerald-600 text-emerald-950 dark:text-emerald-100 space-y-2 animate-in fade-in zoom-in-95">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-black uppercase text-emerald-700 flex items-center gap-1">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               Kupon Uğurla Əldə Edildi!
             </span>
             <button
               onClick={() => setRedeemedCode(null)}
-              className="text-slate-400 hover:text-slate-700 text-xs font-bold"
+              className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs font-bold"
             >
               ✕
             </button>
           </div>
 
-          <div className="text-xs font-bold text-slate-800">
+          <div className="text-xs font-bold text-slate-800 dark:text-slate-100">
             {redeemedCode.title}
           </div>
 
-          <div className="p-2.5 rounded-xl bg-white border border-emerald-200 text-center font-mono font-black text-sm tracking-widest text-emerald-800 selection:bg-emerald-100">
+          <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 text-center font-mono font-black text-sm tracking-widest text-emerald-800 dark:text-emerald-300 selection:bg-emerald-100">
             {redeemedCode.code}
           </div>
-          <p className="text-[10px] text-slate-500 text-center">
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 text-center">
             Bu promokodu tərəfdaş kassa və ya mobil tətbiqində təqdim edin.
           </p>
         </div>
@@ -160,7 +160,7 @@ export default function ProfilePage() {
 
       {/* Redeem Error */}
       {redeemError && (
-        <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
+        <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-medium">
           {redeemError}
         </div>
       )}
@@ -168,11 +168,11 @@ export default function ProfilePage() {
       {/* Rewards Catalog */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-            <Gift className="w-4 h-4 text-emerald-600" />
+          <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+            <Gift className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>Xalları Dəyişdir (Tərəfdaş Hədiyyələri)</span>
           </h3>
-          <span className="text-[10px] font-bold text-slate-500">
+          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
             Dərhal aktivləşir
           </span>
         </div>
@@ -184,20 +184,20 @@ export default function ProfilePage() {
             return (
               <div
                 key={r.id}
-                className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between gap-3 hover:border-emerald-300 transition-all"
+                className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between gap-3 hover:border-emerald-300 dark:hover:border-emerald-500 transition-all"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-11 h-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                  <div className="w-11 h-11 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center shrink-0">
                     {getRewardIcon(r.icon)}
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[9px] font-bold uppercase text-slate-400 block">
+                    <span className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500 block">
                       {r.category}
                     </span>
-                    <h4 className="text-xs font-bold text-slate-900 truncate">
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
                       {r.title}
                     </h4>
-                    <span className="text-xs font-black text-amber-600 mt-0.5 inline-flex items-center gap-1">
+                    <span className="text-xs font-black text-amber-600 dark:text-amber-400 mt-0.5 inline-flex items-center gap-1">
                       <Coins className="w-3 h-3 text-amber-500 fill-amber-500" />
                       {r.points_cost} xal
                     </span>
@@ -210,7 +210,7 @@ export default function ProfilePage() {
                   className={`px-3 py-2 rounded-xl text-xs font-black transition-all shrink-0 active:scale-95 ${
                     canAfford
                       ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed"
                   }`}
                 >
                   {redeemingId === r.id ? "..." : canAfford ? "Al" : "Çatmır"}
@@ -223,19 +223,19 @@ export default function ProfilePage() {
 
       {/* Scanned Receipts History Summary */}
       <div className="space-y-2.5 pt-2">
-        <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-          <Receipt className="w-4 h-4 text-emerald-600" />
+        <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+          <Receipt className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           <span>Skan Edilmiş Qəbzlər</span>
         </h3>
 
-        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 text-xs">
+        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-2 text-xs">
           <div className="flex items-center justify-between">
-            <span className="font-bold text-slate-700">Bravo 28 Mall Qəbzi</span>
-            <span className="font-black text-emerald-700">+50 Xal</span>
+            <span className="font-bold text-slate-700 dark:text-slate-200">Bravo 28 Mall Qəbzi</span>
+            <span className="font-black text-emerald-700 dark:text-emerald-400">+50 Xal</span>
           </div>
-          <div className="text-[11px] text-slate-500 flex items-center justify-between">
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
             <span>05 Sentyabr 2026 • 26.50 AZN</span>
-            <span className="text-emerald-600 font-bold bg-emerald-100 px-2 py-0.5 rounded-md">
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/40">
               Təsdiqləndi
             </span>
           </div>
@@ -243,12 +243,12 @@ export default function ProfilePage() {
       </div>
 
       {/* Info Card: ƏDV Geri Al Synergy */}
-      <div className="p-4 rounded-3xl bg-emerald-50/60 border border-emerald-200 text-xs text-emerald-950 space-y-1.5">
-        <div className="font-extrabold flex items-center gap-1.5 text-emerald-900">
-          <ShieldCheck className="w-4 h-4 text-emerald-700" />
+      <div className="p-4 rounded-3xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/60 text-xs text-emerald-950 dark:text-emerald-200 space-y-1.5">
+        <div className="font-extrabold flex items-center gap-1.5 text-emerald-900 dark:text-emerald-300">
+          <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
           <span>INMerge 2026 Baku — ƏDV Geri Al Sinergiyası</span>
         </div>
-        <p className="text-[11px] text-emerald-800/90 leading-relaxed">
+        <p className="text-[11px] text-emerald-800/90 dark:text-emerald-300/80 leading-relaxed">
           SebEt Azərbaycanda POS inteqrasiyasına ehtiyac duymadan real rəf qiymətlərini kütləvi qəbz OCR və broşür analizi vasitəsilə toplayır. Hər skan olunan qəbz həm istifadəçiyə qənaət təklif edir, həm də pərakəndə qiymət şəffaflığını təmin edir.
         </p>
       </div>

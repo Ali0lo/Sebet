@@ -53,7 +53,7 @@ async def get_current_user(db: AsyncSession = Depends(get_db)):
         # Create default user if not exists
         user = User(
             phone_number="+994501234567",
-            full_name="Ali İsgəndərli",
+            full_name="Ali Iskandarli",
             sebet_points=250,
         )
         db.add(user)

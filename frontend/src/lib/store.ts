@@ -22,6 +22,7 @@ interface SebEtState {
   selectedLocation: BakuLocation;
   userPoints: number;
   isBasketDrawerOpen: boolean;
+  theme: "light" | "dark";
 
   // Actions
   addToBasket: (product: Product, quantity?: number) => void;
@@ -33,6 +34,7 @@ interface SebEtState {
   addPoints: (points: number) => void;
   setPoints: (points: number) => void;
   toggleBasketDrawer: (open?: boolean) => void;
+  toggleTheme: () => void;
   getBasketTotalEstimated: () => number;
 }
 
@@ -43,6 +45,7 @@ export const useSebEtStore = create<SebEtState>()(
       selectedLocation: BAKU_LOCATIONS[0],
       userPoints: 250,
       isBasketDrawerOpen: false,
+      theme: "light",
 
       addToBasket: (product, quantity = 1) => {
         set((state) => {
@@ -97,6 +100,20 @@ export const useSebEtStore = create<SebEtState>()(
             open !== undefined ? open : !state.isBasketDrawerOpen,
         })),
 
+      toggleTheme: () => {
+        set((state) => {
+          const nextTheme = state.theme === "light" ? "dark" : "light";
+          if (typeof document !== "undefined") {
+            if (nextTheme === "dark") {
+              document.documentElement.classList.add("dark");
+            } else {
+              document.documentElement.classList.remove("dark");
+            }
+          }
+          return { theme: nextTheme };
+        });
+      },
+
       getBasketTotalEstimated: () => {
         const state = get();
         return state.basket.reduce((sum, item) => {
@@ -112,6 +129,7 @@ export const useSebEtStore = create<SebEtState>()(
         basket: state.basket,
         selectedLocation: state.selectedLocation,
         userPoints: state.userPoints,
+        theme: state.theme,
       }),
     }
   )

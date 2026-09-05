@@ -5,6 +5,7 @@ import { X, Camera, Search, Barcode, CheckCircle2, ShoppingCart, Sparkles, Exter
 import { getProductByBarcode } from "@/lib/api";
 import { Product } from "@/lib/types";
 import { useSebEtStore } from "@/lib/store";
+import { ChainLogo } from "@/components/ChainLogo";
 
 interface BarcodeScannerModalProps {
   isOpen: boolean;
@@ -51,18 +52,18 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-slate-100 flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-850/50">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700">
+            <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
               <Barcode className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-extrabold text-base text-slate-900">
+              <h2 className="font-extrabold text-base text-slate-900 dark:text-slate-100">
                 Barkod Skaneri
               </h2>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Kamera ilə oxudun və ya barkodu daxil edin
               </p>
             </div>
@@ -73,7 +74,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
               setError(null);
               onClose();
             }}
-            className="p-1.5 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-colors"
+            className="p-1.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -100,7 +101,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
           {/* Quick 1-Click Test Barcodes */}
           <div>
-            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+            <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
               Sürətli Test Üçün Seçin (1 Kliklə):
             </label>
             <div className="grid grid-cols-2 gap-1.5">
@@ -111,12 +112,12 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                     setManualCode(item.barcode);
                     handleLookup(item.barcode);
                   }}
-                  className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:border-emerald-300 border border-slate-200 text-left transition-all group"
+                  className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-750 hover:border-emerald-300 dark:hover:border-emerald-600 border border-slate-200 dark:border-slate-700 text-left transition-all group"
                 >
-                  <div className="text-[11px] font-bold text-slate-800 group-hover:text-emerald-700 truncate">
+                  <div className="text-[11px] font-bold text-slate-800 dark:text-slate-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">
                     {item.name}
                   </div>
-                  <div className="text-[9px] font-mono text-slate-400">
+                  <div className="text-[9px] font-mono text-slate-400 dark:text-slate-500">
                     {item.barcode}
                   </div>
                 </button>
@@ -126,7 +127,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
           {/* Manual Barcode Input */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+            <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               Və ya əllə daxil edin:
             </label>
             <div className="flex gap-2">
@@ -136,7 +137,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                 value={manualCode}
                 onChange={(e) => setManualCode(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleLookup(manualCode)}
-                className="flex-1 px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/30 focus:bg-white font-mono"
+                className="flex-1 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/30 focus:bg-white dark:focus:bg-slate-850 font-mono"
               />
               <button
                 disabled={isLoading || !manualCode.trim()}
@@ -155,35 +156,35 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
           {/* Error Banner */}
           {error && (
-            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
+            <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-medium">
               {error}
             </div>
           )}
 
           {/* Scanned Result Card */}
           {scannedProduct && (
-            <div className="p-3.5 rounded-2xl bg-emerald-50/50 border border-emerald-200/80 space-y-3 animate-in fade-in zoom-in-95">
+            <div className="p-3.5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/50 space-y-3 animate-in fade-in zoom-in-95">
               <div className="flex gap-3">
                 {scannedProduct.image_url && (
                   <img
                     src={scannedProduct.image_url}
                     alt={scannedProduct.canonical_name}
-                    className="w-16 h-16 rounded-xl object-cover bg-white border border-slate-200"
+                    className="w-16 h-16 rounded-xl object-cover bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-200/80 text-emerald-900">
+                  <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-200/80 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200">
                     {scannedProduct.brand || "Bakı"}
                   </span>
-                  <h4 className="text-xs font-bold text-slate-900 mt-1 line-clamp-2">
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1 line-clamp-2">
                     {scannedProduct.canonical_name}
                   </h4>
                   <div className="mt-1 flex items-baseline gap-2">
-                    <span className="text-sm font-black text-emerald-700">
+                    <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">
                       Ən ucuz: {scannedProduct.min_price?.toFixed(2)} ₼
                     </span>
                     {scannedProduct.max_price && scannedProduct.max_price > (scannedProduct.min_price || 0) && (
-                      <span className="text-[10px] text-slate-400 line-through">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 line-through">
                         {scannedProduct.max_price.toFixed(2)} ₼
                       </span>
                     )}
@@ -193,7 +194,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
               {/* Price comparison matrix */}
               <div className="space-y-1.5">
-                <div className="text-[10px] font-bold text-slate-500 uppercase">
+                <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
                   Marketlər üzrə qiymət müqayisəsi:
                 </div>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -209,21 +210,18 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                         key={sp.store_id}
                         className={`p-2 rounded-xl text-xs flex items-center justify-between border ${
                           isMin
-                            ? "bg-emerald-100/60 border-emerald-300 font-bold text-emerald-950"
-                            : "bg-white border-slate-200 text-slate-700"
+                            ? "bg-emerald-100/60 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 font-bold text-emerald-950 dark:text-emerald-200"
+                            : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
                         }`}
                       >
                         <div className="truncate pr-1">
-                          <div className="flex items-center gap-1">
-                            <span
-                              className="w-2 h-2 rounded-full shrink-0"
-                              style={{ backgroundColor: sp.chain_color }}
-                            />
+                          <div className="flex items-center gap-1.5">
+                            <ChainLogo slug={sp.chain_slug} size="xs" />
                             <span className="text-[11px] font-bold truncate">
                               {sp.chain_name}
                             </span>
                           </div>
-                          <span className="text-[9px] text-slate-400 truncate block">
+                          <span className="text-[9px] text-slate-400 dark:text-slate-500 truncate block">
                             {sp.neighborhood || sp.branch_name}
                           </span>
                         </div>
@@ -232,7 +230,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                             {priceVal.toFixed(2)} ₼
                           </div>
                           {sp.is_promo && (
-                            <span className="text-[8px] text-rose-600 font-bold">
+                            <span className="text-[8px] text-rose-600 dark:text-rose-400 font-bold">
                               Aksiya
                             </span>
                           )}
