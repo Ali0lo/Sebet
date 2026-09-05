@@ -16,6 +16,7 @@ import {
   ArrowRight,
   Store as StoreIcon,
   Navigation,
+  ExternalLink,
 } from "lucide-react";
 import { useSebEtStore } from "@/lib/store";
 import { optimizeBasket, searchProducts } from "@/lib/api";
@@ -313,6 +314,24 @@ export default function BasketPage() {
                       {optimizationResult.best_split_store.total_cost.toFixed(2)} ₼
                     </span>
                   </div>
+
+                  {/* Google Maps Directions between Split Stores */}
+                  <div className="pt-1">
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(
+                        optimizationResult.best_split_store.store_1.branch_name + ", Baku"
+                      )}&destination=${encodeURIComponent(
+                        optimizationResult.best_split_store.store_2.branch_name + ", Baku"
+                      )}&travelmode=walking`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2 px-3 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-95"
+                    >
+                      <Navigation className="w-3.5 h-3.5 text-amber-300" />
+                      <span>Google Maps-də Marşrutu Aç (2 Market Arası)</span>
+                      <ExternalLink className="w-3 h-3 opacity-80" />
+                    </a>
+                  </div>
                 </div>
               ) : null}
 
@@ -349,6 +368,20 @@ export default function BasketPage() {
                       </span>
                     </div>
                   </div>
+
+                  {/* Google Maps Directions to Single Store */}
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&origin=${selectedLocation.lat},${selectedLocation.lon}&destination=${encodeURIComponent(
+                      optimizationResult.best_single_store.branch_name + ", " + optimizationResult.best_single_store.address + ", Baku"
+                    )}&travelmode=walking`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2 px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 text-xs font-black flex items-center justify-center gap-1.5 transition-colors border border-emerald-200/80 dark:border-emerald-800/40 shadow-2xs active:scale-95"
+                  >
+                    <Navigation className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>Google Maps-də Mağazaya Marşrut</span>
+                    <ExternalLink className="w-3 h-3 opacity-70" />
+                  </a>
                 </div>
               )}
 

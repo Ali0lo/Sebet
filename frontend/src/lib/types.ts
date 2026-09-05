@@ -14,6 +14,21 @@ export interface StorePrice {
   recorded_at: string;
 }
 
+export interface NearbyStore {
+  id: string;
+  branch_name: string;
+  neighborhood: string;
+  chain_name: string;
+  chain_slug: string;
+  chain_color: string;
+  voen?: string;
+  obyekt_kodu?: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  distance_km: number;
+}
+
 export interface Product {
   id: string;
   barcode?: string | null;

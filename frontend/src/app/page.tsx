@@ -10,11 +10,13 @@ import {
   Filter,
   TrendingDown,
   ShoppingBag,
+  Compass,
 } from "lucide-react";
 import { searchProducts, getTopDeals, getCategories } from "@/lib/api";
 import { Product, Category } from "@/lib/types";
 import { ProductCard } from "@/components/ProductCard";
 import { BarcodeScannerModal } from "@/components/BarcodeScannerModal";
+import { NearbyMarketsModal } from "@/components/NearbyMarketsModal";
 import { ChainLogo } from "@/components/ChainLogo";
 import { useSebEtStore } from "@/lib/store";
 
@@ -32,6 +34,7 @@ export default function HomePage() {
   const [selectedChain, setSelectedChain] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("cheapest");
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isNearbyModalOpen, setIsNearbyModalOpen] = useState(false);
 
   const [topDeals, setTopDeals] = useState<Product[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -126,9 +129,13 @@ export default function HomePage() {
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>Bravo • Araz • OBA • Bazarstore</span>
           </span>
-          <span className="font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/40">
-            Real rəf qiymətləri
-          </span>
+          <button
+            onClick={() => setIsNearbyModalOpen(true)}
+            className="font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/40 flex items-center gap-1 transition-colors active:scale-95 shadow-2xs"
+          >
+            <Compass className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+            <span>Yaxın Filiallar & Xəritə</span>
+          </button>
         </div>
       </div>
 
@@ -311,6 +318,12 @@ export default function HomePage() {
       <BarcodeScannerModal
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
+      />
+
+      {/* Nearby Markets & Live Map Modal */}
+      <NearbyMarketsModal
+        isOpen={isNearbyModalOpen}
+        onClose={() => setIsNearbyModalOpen(false)}
       />
     </div>
   );

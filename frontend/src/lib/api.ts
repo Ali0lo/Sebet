@@ -7,6 +7,7 @@ import {
   Category,
   User,
   Reward,
+  NearbyStore,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -143,5 +144,15 @@ export async function redeemReward(
       title,
     }),
   });
+}
+
+export async function getNearbyStores(
+  latitude: number,
+  longitude: number,
+  radiusKm: number = 5.0
+): Promise<NearbyStore[]> {
+  return fetchJson(
+    `/api/v1/stores/nearby?latitude=${latitude}&longitude=${longitude}&radius_km=${radiusKm}`
+  );
 }
 
