@@ -147,6 +147,7 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Bravo, Araz, OBA, Bazarstore, Al Market, Neptun və Spar
+                Bravo, Araz, OBA, Bazarstore, Al Market, Neptun, Spar və digərləri
               </p>
             </div>
           </div>
@@ -198,6 +199,7 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
           <div className="space-y-1.5">
             <label className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               Və ya Bakı Ərazisini Seçin:
+              Və ya Ərazi Seçin:
             </label>
             <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
               {BAKU_LOCATIONS.map((loc) => (
@@ -282,6 +284,9 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
                 { label: "Araz", slug: "araz" },
                 { label: "OBA", slug: "oba" },
                 { label: "Bazarstore", slug: "bazarstore" },
+                { label: "Al Market", slug: "almarket" },
+                { label: "Neptun", slug: "neptun" },
+                { label: "Spar", slug: "spar" },
               ].map((c) => (
                 <button
                   key={c.slug}

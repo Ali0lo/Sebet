@@ -16,6 +16,11 @@ AVAILABLE_REWARDS = [
         "points_cost": 200,
         "category": "Kafe & Restoran",
         "icon": "Coffee",
+        "id": "reward-beverage",
+        "title": "1 Pulsuz Sərinləşdirici İçki (Sirab / Badamlı / Şirə)",
+        "points_cost": 150,
+        "category": "Market Hədiyyəsi",
+        "icon": "CupSoda",
     },
     {
         "id": "reward-azercell",
@@ -23,6 +28,11 @@ AVAILABLE_REWARDS = [
         "points_cost": 300,
         "category": "Mobil Rabitə",
         "icon": "PhoneCall",
+        "id": "reward-icecream",
+        "title": "1 Pulsuz Qaymaqlı Dondurma (Plombir / Eskimo)",
+        "points_cost": 150,
+        "category": "Market Hədiyyəsi",
+        "icon": "IceCream",
     },
     {
         "id": "reward-cinema",
@@ -30,6 +40,11 @@ AVAILABLE_REWARDS = [
         "points_cost": 500,
         "category": "Əyləncə",
         "icon": "Film",
+        "id": "reward-chocolate",
+        "title": "1 Pulsuz Şokolad və ya Şirniyyat (Alpen Gold / KitKat)",
+        "points_cost": 200,
+        "category": "Market Hədiyyəsi",
+        "icon": "Gift",
     },
     {
         "id": "reward-bolt",
@@ -37,6 +52,11 @@ AVAILABLE_REWARDS = [
         "points_cost": 350,
         "category": "Nəqliyyat",
         "icon": "Car",
+        "id": "reward-voucher-5azn",
+        "title": "Marketlərdə 5 AZN Endirim Çeki",
+        "points_cost": 400,
+        "category": "Market Çeki",
+        "icon": "ShoppingBag",
     },
 ]
 

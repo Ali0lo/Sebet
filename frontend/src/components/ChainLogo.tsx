@@ -63,6 +63,27 @@ const LOGO_CONFIG: Record<
     bg: "bg-white",
     textClass: "text-[#007A3D]",
   },
+  rahat: {
+    src: "/chains/rahat.png",
+    name: "Rahat",
+    alt: "Rahat Market",
+    bg: "bg-[#009FE3]",
+    textClass: "text-[#009FE3]",
+  },
+  grandmart: {
+    src: "/chains/grandmart.png",
+    name: "Grandmart",
+    alt: "Grandmart Supermarket",
+    bg: "bg-[#E30613]",
+    textClass: "text-[#E30613]",
+  },
+  bolmart: {
+    src: "/chains/bolmart.png",
+    name: "Bolmart",
+    alt: "Bolmart",
+    bg: "bg-[#F39200]",
+    textClass: "text-[#F39200]",
+  },
 };
 
 export const ChainLogo: React.FC<ChainLogoProps> = ({
@@ -88,6 +109,9 @@ export const ChainLogo: React.FC<ChainLogoProps> = ({
     matchedKey = "almarket";
   else if (normalized.includes("neptun")) matchedKey = "neptun";
   else if (normalized.includes("spar")) matchedKey = "spar";
+  else if (normalized.includes("rahat")) matchedKey = "rahat";
+  else if (normalized.includes("grandmart")) matchedKey = "grandmart";
+  else if (normalized.includes("bolmart")) matchedKey = "bolmart";
 
   const config = matchedKey ? LOGO_CONFIG[matchedKey] : null;
 

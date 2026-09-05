@@ -6,12 +6,11 @@ import {
   Coins,
   Sparkles,
   Gift,
-  Coffee,
-  PhoneCall,
-  Film,
-  Car,
+  CupSoda,
+  IceCream,
+  ShoppingBag,
+  Store,
   CheckCircle2,
-  Receipt,
   ChevronRight,
   ShieldCheck,
   CreditCard,
@@ -68,16 +67,15 @@ export default function ProfilePage() {
 
   const getRewardIcon = (iconName: string) => {
     switch (iconName) {
-      case "Coffee":
-        return <Coffee className="w-5 h-5 text-amber-600" />;
-      case "PhoneCall":
-        return <PhoneCall className="w-5 h-5 text-blue-600" />;
-      case "Film":
-        return <Film className="w-5 h-5 text-purple-600" />;
-      case "Car":
-        return <Car className="w-5 h-5 text-emerald-600" />;
+      case "CupSoda":
+        return <CupSoda className="w-5 h-5 text-sky-500" />;
+      case "IceCream":
+        return <IceCream className="w-5 h-5 text-pink-500" />;
+      case "ShoppingBag":
+        return <ShoppingBag className="w-5 h-5 text-emerald-600" />;
+      case "Gift":
       default:
-        return <Gift className="w-5 h-5 text-emerald-600" />;
+        return <Gift className="w-5 h-5 text-amber-500" />;
     }
   };
 
@@ -221,35 +219,14 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Scanned Receipts History Summary */}
-      <div className="space-y-2.5 pt-2">
-        <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-          <Receipt className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          <span>Skan Edilmiş Qəbzlər</span>
-        </h3>
-
-        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-2 text-xs">
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-slate-700 dark:text-slate-200">Bravo 28 Mall Qəbzi</span>
-            <span className="font-black text-emerald-700 dark:text-emerald-400">+50 Xal</span>
-          </div>
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
-            <span>05 Sentyabr 2026 • 26.50 AZN</span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/40">
-              Təsdiqləndi
-            </span>
-          </div>
+      {/* Partner Supermarkets Redemption Guide */}
+      <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-2.5">
+        <div className="flex items-center gap-2 text-xs font-extrabold text-slate-900 dark:text-slate-100">
+          <Store className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <span>Partnyor Marketlərdə İstifadə Qaydası</span>
         </div>
-      </div>
-
-      {/* Info Card: ƏDV Geri Al Synergy */}
-      <div className="p-4 rounded-3xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/60 text-xs text-emerald-950 dark:text-emerald-200 space-y-1.5">
-        <div className="font-extrabold flex items-center gap-1.5 text-emerald-900 dark:text-emerald-300">
-          <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
-          <span>INMerge 2026 Baku — ƏDV Geri Al Sinergiyası</span>
-        </div>
-        <p className="text-[11px] text-emerald-800/90 dark:text-emerald-300/80 leading-relaxed">
-          Sebet Azərbaycanda POS inteqrasiyasına ehtiyac duymadan real rəf qiymətlərini kütləvi qəbz OCR və broşür analizi vasitəsilə toplayır. Hər skan olunan qəbz həm istifadəçiyə qənaət təklif edir, həm də pərakəndə qiymət şəffaflığını təmin edir.
+        <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+          Topladığınız xallarla əldə etdiyiniz kupon kodlarını <strong>Bravo, Araz, OBA, Bazarstore, Al Market, Neptun və Spar</strong> marketlərində kassaya təqdim edərək pulsuz içki, dondurma, şirniyyat və ya 5 AZN endirim əldə edə bilərsiniz.
         </p>
       </div>
     </div>

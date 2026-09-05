@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import {
   Home,
   ShoppingBag,
-  ScanLine,
   BookOpen,
   User,
 } from "lucide-react";
@@ -33,45 +32,22 @@ export const BottomNav: React.FC = () => {
       icon: ShoppingBag,
       badge: totalBasketItems > 0 ? totalBasketItems : null,
     },
-    {
-      label: "Qəbz Skan",
-      href: "/scan",
-      icon: ScanLine,
-      isSpecial: true,
-    },
     { label: "Kataloqlar", href: "/flyers", icon: BookOpen },
     { label: "Profil & Xal", href: "/profile", icon: User },
   ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] transition-colors duration-200">
-      <div className="max-w-xl mx-auto px-3 py-1.5 flex items-center justify-around">
+      <div className="max-w-xl mx-auto px-4 py-2 flex items-center justify-around">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
-
-          if (item.isSpecial) {
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="relative -top-3.5 flex flex-col items-center group focus:outline-hidden"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-lg shadow-emerald-600/30 group-hover:scale-105 group-active:scale-95 transition-all">
-                  <Icon className="w-6 h-6" />
-                </div>
-                <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-400 mt-0.5">
-                  {item.label}
-                </span>
-              </Link>
-            );
-          }
 
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center py-1 px-2.5 rounded-xl transition-all relative ${
+              className={`flex flex-col items-center py-1 px-3 rounded-xl transition-all relative ${
                 isActive
                   ? "text-emerald-600 dark:text-emerald-400 font-bold"
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium"

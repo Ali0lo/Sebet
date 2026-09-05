@@ -23,11 +23,12 @@ import { useSebEtStore } from "@/lib/store";
 const CHAINS_FILTER = [
   { name: "Bütün Marketlər", slug: "" },
   { name: "Bravo", slug: "bravo", color: "#007A3D" },
+  { name: "Bravo", slug: "bravo", color: "#74b826" },
   { name: "Araz", slug: "araz", color: "#E30613" },
   { name: "OBA", slug: "oba", color: "#009640" },
   { name: "Bazarstore", slug: "bazarstore", color: "#D01026" },
-  { name: "Al Market", slug: "almarket", color: "#00539B" },
-  { name: "Neptun", slug: "neptun", color: "#008CD2" },
+  { name: "Al Market", slug: "almarket", color: "#E31E24" },
+  { name: "Neptun", slug: "neptun", color: "#f37021" },
   { name: "Spar", slug: "spar", color: "#007A3D" },
 ];
 
@@ -35,7 +36,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   "dairy-eggs": "🥛",
   "bakery": "🍞",
   "meat-poultry": "🥩",
-  "pantry-cooking": "🫒",
+  "pantry-cooking": "🥫",
   "beverages-tea": "☕",
   "snacks-sweets": "🍫",
   "cleaning-household": "🧼",

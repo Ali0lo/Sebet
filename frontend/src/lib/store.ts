@@ -15,6 +15,8 @@ export const BAKU_LOCATIONS: BakuLocation[] = [
   { name: "Elmlər Akademiyası", lat: 40.3735, lon: 49.8142 },
   { name: "Nizami / Tarqovı", lat: 40.3752, lon: 49.8335 },
   { name: "Koroğlu", lat: 40.4208, lon: 49.9192 },
+  { name: "Xırdalan (Mərkəz)", lat: 40.4520, lon: 49.7560 },
+  { name: "Sumqayıt", lat: 40.5897, lon: 49.6686 },
 ];
 
 interface SebEtState {

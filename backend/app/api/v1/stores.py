@@ -28,10 +28,20 @@ def detect_chain_info(name: str):
         return "Bazarstore", "bazarstore", "#D01026"
     if "al market" in n or "almarket" in n:
         return "Al Market", "almarket", "#00539B"
+        return "Al Market", "almarket", "#E31E24"
     if "neptun" in n:
         return "Neptun", "neptun", "#008CD2"
+        return "Neptun", "neptun", "#f37021"
     if "spar" in n:
         return "Spar", "spar", "#007A3D"
+    if "rahat" in n:
+        return "Rahat", "rahat", "#009FE3"
+    if "grandmart" in n:
+        return "Grandmart", "grandmart", "#E30613"
+    if "bolmart" in n:
+        return "Bolmart", "bolmart", "#F39200"
+    if "bizim market" in n or "bizimmarket" in n:
+        return "Bizim Market", "bizimmarket", "#1E88E5"
     return name, "supermarket", "#10B981"
 
 
