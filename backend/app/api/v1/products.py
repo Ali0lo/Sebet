@@ -8,6 +8,13 @@ from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 from app.models import Product, StorePrice, Store, Chain, Category
 from app.schemas.product import ProductOut, ProductSearchResponse, StorePriceOut
+from app.core.az_normalizer import (
+    fold_az_accents,
+    clean_tokens,
+    get_query_variants,
+    matches_tokens,
+    calculate_relevance,
+)
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -41,7 +48,6 @@ def format_product_out(product: Product) -> ProductOut:
 
     return ProductOut(
         id=product.id,
-        barcode=product.barcode,
         canonical_name=product.canonical_name,
         brand=product.brand,
         category_id=product.category_id,
@@ -49,8 +55,10 @@ def format_product_out(product: Product) -> ProductOut:
         unit=product.unit,
         pack_size=product.pack_size,
         image_url=product.image_url,
-        min_price=round(min_p, 2) if min_p is not None else None,
-        max_price=round(max_p, 2) if max_p is not None else None,
+        barcode=product.barcode,
+        description=None,
+        min_price=min_p,
+        max_price=max_p,
         prices=prices_out,
     )
 
@@ -66,7 +74,8 @@ async def search_products(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Fuzzy text and category search for Baku grocery products.
+    Intelligent fuzzy and transliteration-aware search for grocery products.
+    Supports Azerbaijani Latin, accents, typos, and multi-word token queries.
     """
     stmt = (
         select(Product)
@@ -76,50 +85,60 @@ async def search_products(
         )
     )
 
-    if q:
-        search_filter = or_(
-            Product.canonical_name.ilike(f"%{q}%"),
-            Product.brand.ilike(f"%{q}%"),
-            Product.barcode.ilike(f"%{q}%"),
-        )
-        stmt = stmt.where(search_filter)
-
     if category_id:
         stmt = stmt.where(Product.category_id == category_id)
 
-    # Count total
-    count_stmt = select(func.count(Product.id))
-    if q:
-        count_stmt = count_stmt.where(search_filter)
-    if category_id:
-        count_stmt = count_stmt.where(Product.category_id == category_id)
-    total_count_res = await db.execute(count_stmt)
-    total = total_count_res.scalar() or 0
-
-    # Pagination
-    offset = (page - 1) * page_size
-    stmt = stmt.offset(offset).limit(page_size)
-
+    # Fetch candidates
     result = await db.execute(stmt)
-    products = result.scalars().all()
+    all_products = result.scalars().all()
 
-    items = [format_product_out(p) for p in products]
+    if q and q.strip():
+        # Match using transliteration and tokenization engine
+        matched_products = []
+        for p in all_products:
+            if matches_tokens(q, p.canonical_name, p.brand or "", p.barcode or ""):
+                score = calculate_relevance(q, p.canonical_name, p.brand or "", p.barcode or "")
+                matched_products.append((score, p))
+            else:
+                # Fallback: check category name
+                cat_name = p.category.name_az if p.category else ""
+                if matches_tokens(q, cat_name):
+                    score = calculate_relevance(q, cat_name, "", "") * 0.7
+                    matched_products.append((score, p))
+
+        # Sort primarily by relevance if not sorting by cheapest/name
+        if sort_by == "popularity":
+            matched_products.sort(key=lambda item: item[0], reverse=True)
+            filtered_products = [p for _, p in matched_products]
+        else:
+            filtered_products = [p for _, p in matched_products]
+    else:
+        filtered_products = list(all_products)
+
+    # Format output items
+    items = [format_product_out(p) for p in filtered_products]
 
     if chain_slug:
-        # Filter store prices inside product
+        # Filter store prices inside product to the chosen chain
         for item in items:
             item.prices = [p for p in item.prices if p.chain_slug == chain_slug]
 
     if sort_by == "cheapest":
         items.sort(key=lambda x: x.min_price or float("inf"))
     elif sort_by == "name":
-        items.sort(key=lambda x: x.canonical_name.lower())
+        items.sort(key=lambda x: fold_az_accents(x.canonical_name))
+
+    total = len(items)
+
+    # In-memory pagination
+    offset = (page - 1) * page_size
+    paged_items = items[offset : offset + page_size]
 
     return ProductSearchResponse(
         total=total,
         page=page,
         page_size=page_size,
-        items=items,
+        items=paged_items,
     )
 
 

@@ -26,13 +26,28 @@ const CHAINS_FILTER = [
   { name: "Araz", slug: "araz", color: "#E30613" },
   { name: "OBA", slug: "oba", color: "#009640" },
   { name: "Bazarstore", slug: "bazarstore", color: "#D01026" },
+  { name: "Al Market", slug: "almarket", color: "#00539B" },
+  { name: "Neptun", slug: "neptun", color: "#008CD2" },
+  { name: "Spar", slug: "spar", color: "#007A3D" },
 ];
+
+const CATEGORY_ICONS: Record<string, string> = {
+  "dairy-eggs": "🥛",
+  "bakery": "🍞",
+  "meat-poultry": "🥩",
+  "pantry-cooking": "🫒",
+  "beverages-tea": "☕",
+  "snacks-sweets": "🍫",
+  "cleaning-household": "🧼",
+  "personal-care-baby": "👶",
+};
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedChain, setSelectedChain] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("cheapest");
+  const [onlyPromos, setOnlyPromos] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isNearbyModalOpen, setIsNearbyModalOpen] = useState(false);
 
@@ -211,36 +226,43 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Category Pills */}
+      {/* Smart Category Pills */}
       {categories.length > 0 && (
-        <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 no-scrollbar">
-          <button
-            onClick={() => setSelectedCategory("")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all ${
-              selectedCategory === ""
-                ? "bg-slate-900 dark:bg-emerald-600 text-white shadow-xs"
-                : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-transparent dark:border-slate-800"
-            }`}
-          >
-            Hamısı
-          </button>
-          {categories.map((cat) => (
+        <div className="space-y-2">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 no-scrollbar">
             <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all ${
-                selectedCategory === cat.id
-                  ? "bg-emerald-600 text-white shadow-xs"
+              onClick={() => setSelectedCategory("")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 ${
+                selectedCategory === ""
+                  ? "bg-slate-900 dark:bg-emerald-600 text-white shadow-xs"
                   : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-transparent dark:border-slate-800"
               }`}
             >
-              {cat.name_az}
+              <span>🛒</span>
+              <span>Bütün Kateqoriyalar</span>
             </button>
-          ))}
+            {categories.map((cat) => {
+              const icon = CATEGORY_ICONS[cat.slug] || "🏷️";
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 ${
+                    selectedCategory === cat.id
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-transparent dark:border-slate-800"
+                  }`}
+                >
+                  <span>{icon}</span>
+                  <span>{cat.name_az}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
-      {/* Chain Filter Bar with Supermarket Logos */}
+      {/* Chain Filter Bar with Supermarket Logos (7 Chains) */}
       <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 no-scrollbar">
         {CHAINS_FILTER.map((cf) => (
           <button
@@ -262,13 +284,40 @@ export default function HomePage() {
         ))}
       </div>
 
+      {/* Quick Catalog / Promo Mode Switch */}
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          onClick={() => setOnlyPromos(false)}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            !onlyPromos
+              ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
+              : "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
+          }`}
+        >
+          📦 Bütün Rəf Məhsulları ({totalProducts})
+        </button>
+        <button
+          onClick={() => setOnlyPromos(true)}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+            onlyPromos
+              ? "bg-rose-600 text-white shadow-xs"
+              : "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 hover:bg-rose-100"
+          }`}
+        >
+          <Flame className="w-3.5 h-3.5 text-amber-400" />
+          <span>Yalnız Super Endirimlər</span>
+        </button>
+      </div>
+
       {/* Products Grid */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
             {searchQuery
-              ? `Axtarış nəticələri: "${searchQuery}" (${totalProducts})`
-              : `Bakı Marketlərində Məhsullar (${totalProducts})`}
+              ? `Axtarış nəticələri: "${searchQuery}" (${products.length})`
+              : onlyPromos
+              ? "Aktiv Həftəlik Endirimlər"
+              : `Rəf Məhsulları (${products.length})`}
           </h3>
 
           <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-semibold">
@@ -293,7 +342,7 @@ export default function HomePage() {
               />
             ))}
           </div>
-        ) : products.length === 0 ? (
+        ) : (onlyPromos ? products.filter((p) => p.prices.some((sp) => sp.is_promo)) : products).length === 0 ? (
           <div className="text-center py-12 p-6 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
             <div className="text-3xl">🔍</div>
             <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">Məhsul tapılmadı</h4>
@@ -303,7 +352,7 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            {products.map((prod) => (
+            {(onlyPromos ? products.filter((p) => p.prices.some((sp) => sp.is_promo)) : products).map((prod) => (
               <ProductCard
                 key={prod.id}
                 product={prod}

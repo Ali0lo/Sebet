@@ -58,6 +58,17 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
     loadStores();
   }, [isOpen, selectedLocation.lat, selectedLocation.lon, radiusKm]);
 
+  // Close modal on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   // Trigger HTML5 Real-time GPS
@@ -111,8 +122,16 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
   const googleMapsSearchUrl = `https://www.google.com/maps/search/supermarket/@${selectedLocation.lat},${selectedLocation.lon},15z`;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col max-h-[92vh]">
+    <div
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col max-h-[92vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Modal Header */}
         <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-850/60">
           <div className="flex items-center gap-2.5">
@@ -127,16 +146,18 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
                 </span>
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Bakı üzrə Bravo, Araz, OBA və Bazarstore filialları
+                Bravo, Araz, OBA, Bazarstore, Al Market, Neptun və Spar
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition-colors shadow-2xs"
+            title="Bağla (Esc)"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
+            <span>Bağla</span>
           </button>
         </div>
 
@@ -375,6 +396,28 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
               </div>
             )}
           </div>
+        </div>
+
+        {/* Modal Sticky Footer with Leave / Close Button */}
+        <div className="p-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-850/90 flex items-center justify-between gap-3 shrink-0">
+          <a
+            href={googleMapsSearchUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 py-2 px-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 text-xs font-extrabold flex items-center justify-center gap-1.5 border border-emerald-200/80 dark:border-emerald-800/40 shadow-2xs transition-all"
+          >
+            <Navigation className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="truncate">Google Maps-də Bütün Ətraf Marketlər</span>
+            <ExternalLink className="w-3 h-3 opacity-70 shrink-0" />
+          </a>
+
+          <button
+            onClick={onClose}
+            className="py-2 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-black shadow-xs transition-all active:scale-95 flex items-center gap-1.5 shrink-0"
+          >
+            <X className="w-4 h-4" />
+            <span>Çıxış / Bağla</span>
+          </button>
         </div>
       </div>
     </div>

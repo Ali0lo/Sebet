@@ -42,6 +42,27 @@ const LOGO_CONFIG: Record<
     bg: "bg-[#4a4845]",
     textClass: "text-[#D01026]",
   },
+  almarket: {
+    src: "/chains/almarket.svg",
+    name: "Al Market",
+    alt: "Al Market",
+    bg: "bg-[#00539B]",
+    textClass: "text-[#00539B]",
+  },
+  neptun: {
+    src: "/chains/neptun.svg",
+    name: "Neptun",
+    alt: "Neptun Supermarket",
+    bg: "bg-[#008CD2]",
+    textClass: "text-[#008CD2]",
+  },
+  spar: {
+    src: "/chains/spar.svg",
+    name: "Spar",
+    alt: "Spar Supermarket",
+    bg: "bg-[#007A3D]",
+    textClass: "text-[#007A3D]",
+  },
 };
 
 export const ChainLogo: React.FC<ChainLogoProps> = ({
@@ -59,6 +80,9 @@ export const ChainLogo: React.FC<ChainLogoProps> = ({
   else if (normalized.includes("araz")) matchedKey = "araz";
   else if (normalized.includes("oba")) matchedKey = "oba";
   else if (normalized.includes("bazarstore")) matchedKey = "bazarstore";
+  else if (normalized.includes("almarket") || normalized.includes("al_market")) matchedKey = "almarket";
+  else if (normalized.includes("neptun")) matchedKey = "neptun";
+  else if (normalized.includes("spar")) matchedKey = "spar";
 
   const config = matchedKey ? LOGO_CONFIG[matchedKey] : null;
 
