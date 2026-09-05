@@ -88,6 +88,7 @@ export default function BasketPage() {
   const [activeTab, setActiveTab] = useState<"optimizer" | "checklist">("optimizer");
   const [checklistFilter, setChecklistFilter] = useState<"all" | "remaining" | "obtained">("all");
   const [walkingRadius, setWalkingRadius] = useState<number>(600);
+  const [optimizationMode, setOptimizationMode] = useState<"single" | "multi">("single");
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizationResult, setOptimizationResult] =
     useState<BasketOptimizationResponse | null>(null);
@@ -647,131 +648,199 @@ export default function BasketPage() {
             </div>
           ) : optimizationResult ? (
             <div className="space-y-4">
-              {/* Best Split Option Card (Dual Store Savings) */}
-              {optimizationResult.best_split_store &&
-              optimizationResult.best_split_store.savings_vs_single_azn > 0.3 ? (
-                <div className="p-4 rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-xl space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-black uppercase tracking-wider backdrop-blur-md">
-                      Maksimum Qənaət Təklifi
-                    </span>
-                    <span className="text-xs font-bold text-emerald-100 flex items-center gap-1">
-                      <Footprints className="w-3.5 h-3.5" />
-                      {optimizationResult.best_split_store.distance_between_stores_m}m məsafə
-                    </span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="text-2xl font-black tracking-tight">
-                      Qənaət: {optimizationResult.best_split_store.savings_vs_single_azn.toFixed(2)} AZN
-                      <span className="text-sm font-normal text-emerald-200 ml-2">
-                        (-{optimizationResult.best_split_store.savings_percent}%)
-                      </span>
-                    </div>
-                    <p className="text-xs text-emerald-100">
-                      Səbəti bir-birinə yaxın 2 market arasında bölüşdürərək ən aşağı qiyməti əldə edin:
-                    </p>
-                  </div>
-
-                  {/* Split stores breakdown */}
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    {/* Store 1 */}
-                    <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] uppercase font-bold text-emerald-200">
-                          1-ci Dayanacaq
-                        </span>
-                        <ChainLogo slug={getChainSlug(optimizationResult.best_split_store.store_1.branch_name)} size="xs" />
-                      </div>
-                      <div className="font-extrabold text-xs truncate">
-                        {optimizationResult.best_split_store.store_1.branch_name}
-                      </div>
-                      <div className="text-emerald-300 text-xs font-black">
-                        {optimizationResult.best_split_store.store_1.subtotal.toFixed(2)} ₼
-                      </div>
-                      <div className="text-[10px] text-emerald-200/90">
-                        {optimizationResult.best_split_store.store_1.items.length} məhsul
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          setChecklistMarket(getChainSlug(optimizationResult.best_split_store!.store_1.branch_name));
-                          setActiveTab("checklist");
-                          window.scrollTo({ top: 0, behavior: "smooth" });
-                        }}
-                        className="w-full py-1.5 px-2 rounded-xl bg-white/20 hover:bg-white/30 text-[11px] font-bold text-white transition-all flex items-center justify-center gap-1 mt-1 active:scale-95"
-                      >
-                        <CheckSquare className="w-3.5 h-3.5" />
-                        <span>Canlı Siyahı</span>
-                      </button>
-                    </div>
-
-                    {/* Store 2 */}
-                    <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] uppercase font-bold text-emerald-200">
-                          2-ci Dayanacaq
-                        </span>
-                        <ChainLogo slug={getChainSlug(optimizationResult.best_split_store.store_2.branch_name)} size="xs" />
-                      </div>
-                      <div className="font-extrabold text-xs truncate">
-                        {optimizationResult.best_split_store.store_2.branch_name}
-                      </div>
-                      <div className="text-emerald-300 text-xs font-black">
-                        {optimizationResult.best_split_store.store_2.subtotal.toFixed(2)} ₼
-                      </div>
-                      <div className="text-[10px] text-emerald-200/90">
-                        {optimizationResult.best_split_store.store_2.items.length} məhsul
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          setChecklistMarket(getChainSlug(optimizationResult.best_split_store!.store_2.branch_name));
-                          setActiveTab("checklist");
-                          window.scrollTo({ top: 0, behavior: "smooth" });
-                        }}
-                        className="w-full py-1.5 px-2 rounded-xl bg-white/20 hover:bg-white/30 text-[11px] font-bold text-white transition-all flex items-center justify-center gap-1 mt-1 active:scale-95"
-                      >
-                        <CheckSquare className="w-3.5 h-3.5" />
-                        <span>Canlı Siyahı</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Total Split Price */}
-                  <div className="pt-2 border-t border-white/15 flex items-center justify-between text-xs font-bold">
-                    <span>İkiqat Səfər Ümumi Cəmi:</span>
-                    <span className="text-base font-black">
-                      {optimizationResult.best_split_store.total_cost.toFixed(2)} ₼
-                    </span>
-                  </div>
-
-                  {/* Google Maps Directions between Split Stores */}
-                  <div className="pt-1">
-                    <a
-                      href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(
-                        optimizationResult.best_split_store.store_1.branch_name + ", Baku"
-                      )}&destination=${encodeURIComponent(
-                        optimizationResult.best_split_store.store_2.branch_name + ", Baku"
-                      )}&travelmode=walking`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full py-2 px-3 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-95"
-                    >
-                      <Navigation className="w-3.5 h-3.5 text-amber-300" />
-                      <span>Google Maps-də Marşrutu Aç (2 Market Arası)</span>
-                      <ExternalLink className="w-3 h-3 opacity-80" />
-                    </a>
-                  </div>
+              {/* Strategy Selector: Single Place vs Multiple Places */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-[11px]">
+                    Alış-veriş Strategiyasını Seçin:
+                  </span>
+                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                    {optimizationMode === "single" ? "Tək Market seçilib" : "Çoxlu Market seçilib"}
+                  </span>
                 </div>
-              ) : null}
 
-              {/* Single Store Best Option Card */}
-              {optimizationResult.best_single_store && (
+                <div className="grid grid-cols-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200/90 dark:border-slate-700 shadow-2xs gap-1.5">
+                  <button
+                    onClick={() => setOptimizationMode("single")}
+                    className={`py-2.5 px-3 rounded-xl text-xs font-black transition-all flex flex-col items-center text-center gap-1 ${
+                      optimizationMode === "single"
+                        ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm border border-emerald-500/30 ring-1 ring-emerald-500/20"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-black">
+                      <StoreIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <span>Tək Market (Bir Məkan)</span>
+                    </div>
+                    <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                      Bütün səbət 1 marketdən • Vaxta qənaət
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setOptimizationMode("multi")}
+                    className={`py-2.5 px-3 rounded-xl text-xs font-black transition-all flex flex-col items-center text-center gap-1 ${
+                      optimizationMode === "multi"
+                        ? "bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-400/40"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-black">
+                      <Sparkles className="w-4 h-4 text-amber-300" />
+                      <span>Çoxlu Market (Split)</span>
+                    </div>
+                    <span className={`text-[10px] font-medium ${optimizationMode === "multi" ? "text-emerald-100" : "text-slate-500 dark:text-slate-400"}`}>
+                      2 market arasında bölüşdürmə • Maksimum qənaət
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* MODE 1: MULTIPLE PLACES (SPLIT BASKET) */}
+              {optimizationMode === "multi" && (
+                <div className="space-y-4">
+                  {optimizationResult.best_split_store &&
+                  optimizationResult.best_split_store.savings_vs_single_azn > 0.1 ? (
+                    <div className="p-4 rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-xl space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-black uppercase tracking-wider backdrop-blur-md">
+                          Maksimum Qənaət Təklifi (2 Market)
+                        </span>
+                        <span className="text-xs font-bold text-emerald-100 flex items-center gap-1">
+                          <Footprints className="w-3.5 h-3.5" />
+                          {optimizationResult.best_split_store.distance_between_stores_m}m məsafə
+                        </span>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="text-2xl font-black tracking-tight">
+                          Qənaət: {optimizationResult.best_split_store.savings_vs_single_azn.toFixed(2)} AZN
+                          <span className="text-sm font-normal text-emerald-200 ml-2">
+                            (-{optimizationResult.best_split_store.savings_percent}%)
+                          </span>
+                        </div>
+                        <p className="text-xs text-emerald-100">
+                          Səbəti bir-birinə yaxın 2 market arasında bölüşdürərək ən aşağı qiyməti əldə edin:
+                        </p>
+                      </div>
+
+                      {/* Split stores breakdown */}
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        {/* Store 1 */}
+                        <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] uppercase font-bold text-emerald-200">
+                              1-ci Dayanacaq
+                            </span>
+                            <ChainLogo slug={getChainSlug(optimizationResult.best_split_store.store_1.branch_name)} size="xs" />
+                          </div>
+                          <div className="font-extrabold text-xs truncate">
+                            {optimizationResult.best_split_store.store_1.branch_name}
+                          </div>
+                          <div className="text-emerald-300 text-xs font-black">
+                            {optimizationResult.best_split_store.store_1.subtotal.toFixed(2)} ₼
+                          </div>
+                          <div className="text-[10px] text-emerald-200/90">
+                            {optimizationResult.best_split_store.store_1.items.length} məhsul
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              setChecklistMarket(getChainSlug(optimizationResult.best_split_store!.store_1.branch_name));
+                              setActiveTab("checklist");
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                            className="w-full py-1.5 px-2 rounded-xl bg-white/20 hover:bg-white/30 text-[11px] font-bold text-white transition-all flex items-center justify-center gap-1 mt-1 active:scale-95"
+                          >
+                            <CheckSquare className="w-3.5 h-3.5" />
+                            <span>Canlı Siyahı</span>
+                          </button>
+                        </div>
+
+                        {/* Store 2 */}
+                        <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] uppercase font-bold text-emerald-200">
+                              2-ci Dayanacaq
+                            </span>
+                            <ChainLogo slug={getChainSlug(optimizationResult.best_split_store.store_2.branch_name)} size="xs" />
+                          </div>
+                          <div className="font-extrabold text-xs truncate">
+                            {optimizationResult.best_split_store.store_2.branch_name}
+                          </div>
+                          <div className="text-emerald-300 text-xs font-black">
+                            {optimizationResult.best_split_store.store_2.subtotal.toFixed(2)} ₼
+                          </div>
+                          <div className="text-[10px] text-emerald-200/90">
+                            {optimizationResult.best_split_store.store_2.items.length} məhsul
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              setChecklistMarket(getChainSlug(optimizationResult.best_split_store!.store_2.branch_name));
+                              setActiveTab("checklist");
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                            className="w-full py-1.5 px-2 rounded-xl bg-white/20 hover:bg-white/30 text-[11px] font-bold text-white transition-all flex items-center justify-center gap-1 mt-1 active:scale-95"
+                          >
+                            <CheckSquare className="w-3.5 h-3.5" />
+                            <span>Canlı Siyahı</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Total Split Price */}
+                      <div className="pt-2 border-t border-white/15 flex items-center justify-between text-xs font-bold">
+                        <span>İkiqat Səfər Ümumi Cəmi:</span>
+                        <span className="text-base font-black">
+                          {optimizationResult.best_split_store.total_cost.toFixed(2)} ₼
+                        </span>
+                      </div>
+
+                      {/* Google Maps Directions between Split Stores */}
+                      <div className="pt-1">
+                        <a
+                          href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(
+                            optimizationResult.best_split_store.store_1.branch_name + ", Baku"
+                          )}&destination=${encodeURIComponent(
+                            optimizationResult.best_split_store.store_2.branch_name + ", Baku"
+                          )}&travelmode=walking`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-2 px-3 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-95"
+                        >
+                          <Navigation className="w-3.5 h-3.5 text-amber-300" />
+                          <span>Google Maps-də Marşrutu Aç (2 Market Arası)</span>
+                          <ExternalLink className="w-3 h-3 opacity-80" />
+                        </a>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-5 rounded-3xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center space-y-2">
+                      <StoreIcon className="w-8 h-8 text-slate-400 mx-auto" />
+                      <h4 className="font-extrabold text-xs text-slate-800 dark:text-slate-200">
+                        Cari radiusda tək marketdən almaq daha sərfəlidir
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                        Seçilmiş {walkingRadius}m radiusda 2 market arasında bölüşdürmə əhəmiyyətli dərəcədə əlavə qənaət vermir. Bir marketdən rahat alış-veriş edə bilərsiniz.
+                      </p>
+                      <button
+                        onClick={() => setOptimizationMode("single")}
+                        className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-xs active:scale-95"
+                      >
+                        Tək Market Rejiminə Bax
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* MODE 2: SINGLE PLACE (1 STOP BEST STORE) */}
+              {optimizationMode === "single" && optimizationResult.best_single_store && (
                 <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border-2 border-emerald-500 dark:border-emerald-600 shadow-md space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[10px] font-black uppercase">
-                      Tək Marketdə Ən Ucuz
+                      Tək Marketdə Ən Ucuz (1 Dayanacaq)
                     </span>
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
                       {optimizationResult.best_single_store.distance_km} km məsafədə
@@ -829,62 +898,64 @@ export default function BasketPage() {
                 </div>
               )}
 
-              {/* All Single Stores Ranking Table */}
-              <div className="space-y-2 pt-2">
-                <h4 className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-                  Bütün Yaxın Filiallar Üzrə Müqayisə
-                </h4>
-                <div className="space-y-1.5">
-                  {optimizationResult.all_single_stores.map((st, index) => {
-                    const storeSlug = getChainSlug(st.branch_name);
-                    return (
-                      <div
-                        key={st.store_id}
-                        className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors"
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 font-black text-slate-500 dark:text-slate-400 flex items-center justify-center text-[10px] shrink-0">
-                            #{index + 1}
-                          </span>
-                          <ChainLogo slug={storeSlug} size="xs" />
-                          <div className="min-w-0">
-                            <div className="font-bold text-slate-900 dark:text-slate-100 truncate">
-                              {st.branch_name}
-                            </div>
-                            <div className="text-[10px] text-slate-400 dark:text-slate-500">
-                              {st.neighborhood} • {st.distance_km} km
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 shrink-0">
-                          <div className="text-right">
-                            <div className="font-black text-slate-900 dark:text-slate-100">
-                              {st.total_cost.toFixed(2)} ₼
-                            </div>
-                            <div className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">
-                              {st.coverage_pct}% stokda
+              {/* All Single Stores Ranking Table (for Single Store mode) */}
+              {optimizationMode === "single" && (
+                <div className="space-y-2 pt-2">
+                  <h4 className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+                    Bütün Yaxın Filiallar Üzrə Müqayisə
+                  </h4>
+                  <div className="space-y-1.5">
+                    {optimizationResult.all_single_stores.map((st, index) => {
+                      const storeSlug = getChainSlug(st.branch_name);
+                      return (
+                        <div
+                          key={st.store_id}
+                          className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 font-black text-slate-500 dark:text-slate-400 flex items-center justify-center text-[10px] shrink-0">
+                              #{index + 1}
+                            </span>
+                            <ChainLogo slug={storeSlug} size="xs" />
+                            <div className="min-w-0">
+                              <div className="font-bold text-slate-900 dark:text-slate-100 truncate">
+                                {st.branch_name}
+                              </div>
+                              <div className="text-[10px] text-slate-400 dark:text-slate-500">
+                                {st.neighborhood} • {st.distance_km} km
+                              </div>
                             </div>
                           </div>
 
-                          <button
-                            onClick={() => {
-                              setChecklistMarket(storeSlug);
-                              setActiveTab("checklist");
-                              window.scrollTo({ top: 0, behavior: "smooth" });
-                            }}
-                            title="Bu marketdə canlı yoxlama siyahısını aç"
-                            className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-400 font-bold text-[10px] flex items-center gap-1 transition-colors"
-                          >
-                            <CheckSquare className="w-3.5 h-3.5" />
-                            <span>Seç</span>
-                          </button>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <div className="text-right">
+                              <div className="font-black text-slate-900 dark:text-slate-100">
+                                {st.total_cost.toFixed(2)} ₼
+                              </div>
+                              <div className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">
+                                {st.coverage_pct}% stokda
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => {
+                                setChecklistMarket(storeSlug);
+                                setActiveTab("checklist");
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                              }}
+                              title="Bu marketdə canlı yoxlama siyahısını aç"
+                              className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-400 font-bold text-[10px] flex items-center gap-1 transition-colors"
+                            >
+                              <CheckSquare className="w-3.5 h-3.5" />
+                              <span>Seç</span>
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           ) : null}
 

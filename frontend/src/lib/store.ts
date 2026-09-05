@@ -16,6 +16,7 @@ export const BAKU_LOCATIONS: BakuLocation[] = [
   { name: "Nizami / Tarqovı", lat: 40.3752, lon: 49.8335 },
   { name: "Koroğlu", lat: 40.4208, lon: 49.9192 },
   { name: "Xırdalan (Mərkəz)", lat: 40.4520, lon: 49.7560 },
+  { name: "Biləcəri (Qəsəbə)", lat: 40.4315, lon: 49.8000 },
   { name: "Sumqayıt", lat: 40.5897, lon: 49.6686 },
 ];
 

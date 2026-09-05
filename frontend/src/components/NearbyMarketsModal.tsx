@@ -198,8 +198,7 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
           {/* Preset Location Quick Pills */}
           <div className="space-y-1.5">
             <label className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-              Və ya Bakı Ərazisini Seçin:
-              Və ya Ərazi Seçin:
+              Və ya Ərazi Seçin (Bakı, Xırdalan, Biləcəri, Sumqayıt):
             </label>
             <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
               {BAKU_LOCATIONS.map((loc) => (

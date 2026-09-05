@@ -12,7 +12,7 @@ interface ChainLogoProps {
 
 const LOGO_CONFIG: Record<
   string,
-  { src: string; name: string; alt: string; bg: string; textClass: string }
+  { src?: string; name: string; alt: string; bg: string; textClass: string }
 > = {
   bravo: {
     src: "/chains/bravo.png",
@@ -64,21 +64,18 @@ const LOGO_CONFIG: Record<
     textClass: "text-[#007A3D]",
   },
   rahat: {
-    src: "/chains/rahat.png",
     name: "Rahat",
     alt: "Rahat Market",
     bg: "bg-[#009FE3]",
     textClass: "text-[#009FE3]",
   },
   grandmart: {
-    src: "/chains/grandmart.png",
     name: "Grandmart",
     alt: "Grandmart Supermarket",
     bg: "bg-[#E30613]",
     textClass: "text-[#E30613]",
   },
   bolmart: {
-    src: "/chains/bolmart.png",
     name: "Bolmart",
     alt: "Bolmart",
     bg: "bg-[#F39200]",
@@ -125,7 +122,7 @@ export const ChainLogo: React.FC<ChainLogoProps> = ({
 
   const { box, text } = sizeMap[size] || sizeMap.sm;
 
-  if (config && !hasError) {
+  if (config && config.src && !hasError) {
     return (
       <span className={`inline-flex items-center gap-1.5 shrink-0 ${className}`}>
         <span
@@ -148,12 +145,23 @@ export const ChainLogo: React.FC<ChainLogoProps> = ({
     );
   }
 
-  // Fallback text badge if image fails to load
+  // Stylish badge for chains without image assets or on fallback
+  const displayName = name || config?.name || slug || "Market";
+  const badgeBg = config?.bg || "bg-slate-800";
+
   return (
-    <span
-      className={`inline-flex items-center justify-center font-black rounded-md px-1.5 py-0.5 text-[10px] uppercase tracking-wider bg-slate-800 text-white ${className}`}
-    >
-      {name || slug}
+    <span className={`inline-flex items-center gap-1.5 shrink-0 ${className}`}>
+      <span
+        className={`${box} overflow-hidden flex items-center justify-center ${badgeBg} text-white font-black text-[10px] shadow-2xs border border-black/10 dark:border-white/10 shrink-0`}
+        title={displayName}
+      >
+        {displayName.charAt(0).toUpperCase()}
+      </span>
+      {showText && (
+        <span className={`${text} font-bold text-slate-800 dark:text-slate-100`}>
+          {displayName}
+        </span>
+      )}
     </span>
   );
 };
