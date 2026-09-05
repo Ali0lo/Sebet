@@ -14,11 +14,11 @@ interface BarcodeScannerModalProps {
 
 const PRESET_BARCODES = [
   { name: "Milla Süd 1L", barcode: "4760083300124" },
+  { name: "Milla Qatıq 450g", barcode: "4760083300254" },
   { name: "Westgold Kərə Yağı", barcode: "9415494000125" },
-  { name: "Ariel Yuyucu Toz 3kg", barcode: "8001090123456" },
+  { name: "Anchor Kərə Yağı 500g", barcode: "9415494000194" },
   { name: "Ariel Yuyucu Toz 7kg", barcode: "8001090123499" },
   { name: "Fairy Limon 650ml", barcode: "8001090123470" },
-  { name: "Azərçay Buket 250g", barcode: "4760012300124" },
   { name: "Sirab Qazsız 1.5L", barcode: "4760048100123" },
   { name: "Bizim Süfrə Mayonez", barcode: "4760098765432" },
 ];
