@@ -43,24 +43,24 @@ const LOGO_CONFIG: Record<
     textClass: "text-[#D01026]",
   },
   almarket: {
-    src: "/chains/almarket.svg",
+    src: "/chains/almarket.png",
     name: "Al Market",
     alt: "Al Market",
-    bg: "bg-[#00539B]",
-    textClass: "text-[#00539B]",
+    bg: "bg-[#E31E24]",
+    textClass: "text-[#E31E24]",
   },
   neptun: {
-    src: "/chains/neptun.svg",
+    src: "/chains/neptun.png",
     name: "Neptun",
     alt: "Neptun Supermarket",
-    bg: "bg-[#008CD2]",
-    textClass: "text-[#008CD2]",
+    bg: "bg-[#f37021]",
+    textClass: "text-[#f37021]",
   },
   spar: {
-    src: "/chains/spar.svg",
+    src: "/chains/spar.png",
     name: "Spar",
     alt: "Spar Supermarket",
-    bg: "bg-[#007A3D]",
+    bg: "bg-white",
     textClass: "text-[#007A3D]",
   },
 };
@@ -80,7 +80,12 @@ export const ChainLogo: React.FC<ChainLogoProps> = ({
   else if (normalized.includes("araz")) matchedKey = "araz";
   else if (normalized.includes("oba")) matchedKey = "oba";
   else if (normalized.includes("bazarstore")) matchedKey = "bazarstore";
-  else if (normalized.includes("almarket") || normalized.includes("al_market")) matchedKey = "almarket";
+  else if (
+    normalized.includes("almarket") ||
+    normalized.includes("al_market") ||
+    normalized.includes("al market")
+  )
+    matchedKey = "almarket";
   else if (normalized.includes("neptun")) matchedKey = "neptun";
   else if (normalized.includes("spar")) matchedKey = "spar";
 
@@ -107,7 +112,7 @@ export const ChainLogo: React.FC<ChainLogoProps> = ({
             src={config.src}
             alt={config.alt}
             onError={() => setHasError(true)}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain p-0.5"
           />
         </span>
         {showText && (

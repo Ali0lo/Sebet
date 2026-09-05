@@ -58,7 +58,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
               <ShoppingBasket className="w-8 h-8 opacity-40 mb-1" />
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                {product.brand || "SebEt"}
+                {product.brand || "Sebet"}
               </span>
             </div>
           )}

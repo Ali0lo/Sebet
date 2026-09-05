@@ -79,3 +79,4 @@ async def test_nearby_stores_outside_baku():
         assert res.status_code == 200
         data = res.json()
         assert len(data) > 0
+

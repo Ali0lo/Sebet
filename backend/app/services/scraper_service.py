@@ -166,3 +166,4 @@ async def run_all_scrapers() -> Dict[str, List[ScrapedItem]]:
         else:
             out[slug] = res
     return out
+

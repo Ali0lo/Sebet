@@ -16,14 +16,14 @@ logger = logging.getLogger("sebet")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("🚀 Starting SebEt Backend API...")
+    logger.info("🚀 Starting Sebet Backend API...")
     try:
         await init_db()
         logger.info("✅ Database tables ensured.")
     except Exception as e:
         logger.error(f"⚠️ Database initialization error (will retry on request): {e}")
     yield
-    logger.info("🛑 Shutting down SebEt Backend API...")
+    logger.info("🛑 Shutting down Sebet Backend API...")
 
 
 app = FastAPI(
@@ -62,7 +62,7 @@ async def health_check():
 @app.get("/", tags=["root"])
 async def root():
     return {
-        "message": "Welcome to SebEt API — Baku Grocery Price Intelligence",
+        "message": "Welcome to Sebet API — Baku Grocery Price Intelligence",
         "docs_url": "/docs",
         "version": settings.VERSION,
     }

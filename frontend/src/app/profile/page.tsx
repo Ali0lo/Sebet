@@ -108,7 +108,7 @@ export default function ProfilePage() {
         <div className="p-3.5 rounded-2xl bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/15 dark:border-white/10 flex items-center justify-between">
           <div>
             <span className="text-[11px] font-bold text-slate-300 block">
-              Mövcud SebEt Xalları
+              Mövcud Sebet Xalları
             </span>
             <div className="flex items-baseline gap-1.5 mt-0.5">
               <span className="text-2xl font-black text-amber-300 tracking-tight">
@@ -249,7 +249,7 @@ export default function ProfilePage() {
           <span>INMerge 2026 Baku — ƏDV Geri Al Sinergiyası</span>
         </div>
         <p className="text-[11px] text-emerald-800/90 dark:text-emerald-300/80 leading-relaxed">
-          SebEt Azərbaycanda POS inteqrasiyasına ehtiyac duymadan real rəf qiymətlərini kütləvi qəbz OCR və broşür analizi vasitəsilə toplayır. Hər skan olunan qəbz həm istifadəçiyə qənaət təklif edir, həm də pərakəndə qiymət şəffaflığını təmin edir.
+          Sebet Azərbaycanda POS inteqrasiyasına ehtiyac duymadan real rəf qiymətlərini kütləvi qəbz OCR və broşür analizi vasitəsilə toplayır. Hər skan olunan qəbz həm istifadəçiyə qənaət təklif edir, həm də pərakəndə qiymət şəffaflığını təmin edir.
         </p>
       </div>
     </div>

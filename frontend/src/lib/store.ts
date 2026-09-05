@@ -24,6 +24,10 @@ interface SebEtState {
   isBasketDrawerOpen: boolean;
   theme: "light" | "dark";
 
+  // In-Store Shopping Checklist
+  checklistCheckedIds: string[];
+  checklistSelectedMarket: string;
+
   // Actions
   addToBasket: (product: Product, quantity?: number) => void;
   removeFromBasket: (productId: string) => void;
@@ -36,6 +40,10 @@ interface SebEtState {
   toggleBasketDrawer: (open?: boolean) => void;
   toggleTheme: () => void;
   getBasketTotalEstimated: () => number;
+  toggleChecklistItem: (productId: string) => void;
+  checkAllItems: () => void;
+  uncheckAllItems: () => void;
+  setChecklistMarket: (marketSlug: string) => void;
 }
 
 export const useSebEtStore = create<SebEtState>()(
@@ -46,6 +54,8 @@ export const useSebEtStore = create<SebEtState>()(
       userPoints: 250,
       isBasketDrawerOpen: false,
       theme: "light",
+      checklistCheckedIds: [],
+      checklistSelectedMarket: "bravo",
 
       addToBasket: (product, quantity = 1) => {
         set((state) => {
@@ -121,6 +131,31 @@ export const useSebEtStore = create<SebEtState>()(
           return sum + price * item.quantity;
         }, 0);
       },
+
+      toggleChecklistItem: (productId) => {
+        set((state) => {
+          const exists = state.checklistCheckedIds.includes(productId);
+          return {
+            checklistCheckedIds: exists
+              ? state.checklistCheckedIds.filter((id) => id !== productId)
+              : [...state.checklistCheckedIds, productId],
+          };
+        });
+      },
+
+      checkAllItems: () => {
+        set((state) => ({
+          checklistCheckedIds: state.basket.map((item) => item.product.id),
+        }));
+      },
+
+      uncheckAllItems: () => {
+        set({ checklistCheckedIds: [] });
+      },
+
+      setChecklistMarket: (checklistSelectedMarket) => {
+        set({ checklistSelectedMarket });
+      },
     }),
     {
       name: "sebet-storage-v1",
@@ -130,8 +165,14 @@ export const useSebEtStore = create<SebEtState>()(
         selectedLocation: state.selectedLocation,
         userPoints: state.userPoints,
         theme: state.theme,
+        checklistCheckedIds: state.checklistCheckedIds,
+        checklistSelectedMarket: state.checklistSelectedMarket,
       }),
     }
   )
 );
+
+// Unified Sebet alias
+export const useSebetStore = useSebEtStore;
+export type SebetState = SebEtState;
 

@@ -134,7 +134,7 @@ async def process_receipt_text_and_save(
         processing_status="PROCESSED",
         sebet_points_awarded=points_to_award,
         raw_ocr_text=parsed.raw_text,
-        message=f"Receipt verified! +{points_to_award} SebEt Points awarded!",
+        message=f"Receipt verified! +{points_to_award} Sebet Points awarded!",
     )
 
 

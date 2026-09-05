@@ -82,14 +82,14 @@ export const Navbar: React.FC = () => {
           <div>
             <div className="flex items-center gap-1.5">
               <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">
-                Seb<span className="text-emerald-600 dark:text-emerald-400">Et</span>
+                Seb<span className="text-emerald-600 dark:text-emerald-400">et</span>
               </span>
               <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
                 Baku
               </span>
             </div>
             <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-none">
-              Səbətini SebEt
+              Səbətini Sebet
             </p>
           </div>
         </Link>
@@ -176,7 +176,7 @@ export const Navbar: React.FC = () => {
             )}
           </button>
 
-          {/* SebEt Points */}
+          {/* Sebet Points */}
           <Link
             href="/profile"
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-700/40 text-amber-900 dark:text-amber-300 text-xs font-bold hover:bg-amber-100/70 dark:hover:bg-amber-900/40 transition-colors"

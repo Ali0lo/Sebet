@@ -122,7 +122,7 @@ export default function ScanReceiptPage() {
           </div>
         </div>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          "ƏDV Geri Al" qəbzlərini yükləyin, rəf qiymətlərini yeniləyin və SebEt xalları qazanın!
+          "ƏDV Geri Al" qəbzlərini yükləyin, rəf qiymətlərini yeniləyin və Sebet xalları qazanın!
         </p>
       </div>
 
@@ -328,7 +328,7 @@ export default function ScanReceiptPage() {
             <div>
               <span className="font-bold block">ƏDV Geri Al ilə birgə qazanın:</span>
               <span className="text-[11px] text-amber-800 dark:text-amber-300">
-                Bu qəbzi Birbank və ya edvgerial.az-da skan etməzdən əvvəl SebEt-ə yükləməklə həm ƏDV keşbekinizi alırsınız, həm də SebEt xalları toplayırsınız!
+                Bu qəbzi Birbank və ya edvgerial.az-da skan etməzdən əvvəl Sebet-ə yükləməklə həm ƏDV keşbekinizi alırsınız, həm də Sebet xalları toplayırsınız!
               </span>
             </div>
           </div>

@@ -195,7 +195,7 @@ async def get_product_by_barcode_or_id(
     if not product:
         raise HTTPException(
             status_code=404,
-            detail=f"Product with barcode/id '{barcode_or_id}' was not found in SebEt catalog.",
+            detail=f"Product with barcode/id '{barcode_or_id}' was not found in Sebet catalog.",
         )
 
     return format_product_out(product)
