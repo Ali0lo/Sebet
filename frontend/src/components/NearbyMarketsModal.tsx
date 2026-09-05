@@ -380,3 +380,4 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
     </div>
   );
 };
+
