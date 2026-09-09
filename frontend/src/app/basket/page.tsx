@@ -219,9 +219,6 @@ export default function BasketPage() {
               Sebet
             </span>
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Qiymət müqayisəsi və mağazada canlı alış-veriş rejimi
-          </p>
         </div>
 
         {basket.length > 0 && (
@@ -277,7 +274,7 @@ export default function BasketPage() {
           </div>
           <div>
             <h3 className="font-extrabold text-sm text-slate-800 dark:text-slate-200">
-              Səbətiniz hələlik boşdur
+              Səbətim hələlik boşdur
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto mt-1">
               Ərzaqlarınızı əlavə edin və ya dərhal test etmək üçün hazır Bakı ailə səbətini yükləyin.
@@ -659,39 +656,29 @@ export default function BasketPage() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200/90 dark:border-slate-700 shadow-2xs gap-1.5">
+                <div className="grid grid-cols-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200/90 dark:border-slate-700 shadow-2xs gap-1.5">
                   <button
                     onClick={() => setOptimizationMode("single")}
-                    className={`py-2.5 px-3 rounded-xl text-xs font-black transition-all flex flex-col items-center text-center gap-1 ${
+                    className={`py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
                       optimizationMode === "single"
                         ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm border border-emerald-500/30 ring-1 ring-emerald-500/20"
                         : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
-                    <div className="flex items-center gap-1.5 font-black">
-                      <StoreIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                      <span>Tək Market (Bir Məkan)</span>
-                    </div>
-                    <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
-                      Bütün səbət 1 marketdən • Vaxta qənaət
-                    </span>
+                    <StoreIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>Tək Market</span>
                   </button>
 
                   <button
                     onClick={() => setOptimizationMode("multi")}
-                    className={`py-2.5 px-3 rounded-xl text-xs font-black transition-all flex flex-col items-center text-center gap-1 ${
+                    className={`py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
                       optimizationMode === "multi"
                         ? "bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-400/40"
                         : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
-                    <div className="flex items-center gap-1.5 font-black">
-                      <Sparkles className="w-4 h-4 text-amber-300" />
-                      <span>Çoxlu Market (Split)</span>
-                    </div>
-                    <span className={`text-[10px] font-medium ${optimizationMode === "multi" ? "text-emerald-100" : "text-slate-500 dark:text-slate-400"}`}>
-                      2 market arasında bölüşdürmə • Maksimum qənaət
-                    </span>
+                    <Sparkles className="w-4 h-4 text-amber-300" />
+                    <span>Çoxlu Market</span>
                   </button>
                 </div>
               </div>

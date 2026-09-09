@@ -1,129 +1,205 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Search,
   Barcode,
   Sparkles,
   Flame,
-  ArrowUpDown,
-  Filter,
-  TrendingDown,
   ShoppingBag,
   Compass,
+  ArrowRight,
+  TrendingUp,
+  Tag,
+  Check,
+  Percent,
+  Layers,
+  Store,
 } from "lucide-react";
-import { searchProducts, getTopDeals, getCategories } from "@/lib/api";
-import { Product, Category } from "@/lib/types";
+import { searchProducts, getTopDeals, getCategories, getSearchRecommendations } from "@/lib/api";
+import { Product, Category, SearchRecommendationsResponse } from "@/lib/types";
 import { ProductCard } from "@/components/ProductCard";
 import { BarcodeScannerModal } from "@/components/BarcodeScannerModal";
 import { NearbyMarketsModal } from "@/components/NearbyMarketsModal";
-import { ChainLogo } from "@/components/ChainLogo";
-import { useSebEtStore } from "@/lib/store";
+import { useSebetStore } from "@/lib/store";
 
-const CHAINS_FILTER = [
-  { name: "Bütün Marketlər", slug: "" },
-  { name: "Bravo", slug: "bravo", color: "#007A3D" },
-  { name: "Bravo", slug: "bravo", color: "#74b826" },
-  { name: "Araz", slug: "araz", color: "#E30613" },
-  { name: "OBA", slug: "oba", color: "#009640" },
-  { name: "Bazarstore", slug: "bazarstore", color: "#D01026" },
-  { name: "Al Market", slug: "almarket", color: "#E31E24" },
-  { name: "Neptun", slug: "neptun", color: "#f37021" },
-  { name: "Spar", slug: "spar", color: "#007A3D" },
-];
-
-const CATEGORY_ICONS: Record<string, string> = {
-  "dairy-eggs": "🥛",
-  "bakery": "🍞",
-  "meat-poultry": "🥩",
-  "pantry-cooking": "🥫",
-  "beverages-tea": "☕",
-  "snacks-sweets": "🍫",
-  "cleaning-household": "🧼",
-  "personal-care-baby": "👶",
+const CATEGORY_ICONS: Record<string, { emoji: string; bg: string; border: string }> = {
+  "dairy-eggs": { emoji: "🥛", bg: "from-blue-500/20 to-sky-500/10", border: "border-sky-200 dark:border-sky-800" },
+  "bakery": { emoji: "🍞", bg: "from-amber-500/20 to-yellow-500/10", border: "border-amber-200 dark:border-amber-800" },
+  "meat-poultry": { emoji: "🥩", bg: "from-rose-500/20 to-red-500/10", border: "border-rose-200 dark:border-rose-800" },
+  "pantry-cooking": { emoji: "🥫", bg: "from-emerald-500/20 to-teal-500/10", border: "border-emerald-200 dark:border-emerald-800" },
+  "beverages-tea": { emoji: "☕", bg: "from-orange-500/20 to-amber-500/10", border: "border-orange-200 dark:border-orange-800" },
+  "snacks-sweets": { emoji: "🍫", bg: "from-purple-500/20 to-pink-500/10", border: "border-purple-200 dark:border-purple-800" },
+  "cleaning-household": { emoji: "🧼", bg: "from-teal-500/20 to-cyan-500/10", border: "border-teal-200 dark:border-teal-800" },
+  "personal-care-baby": { emoji: "👶", bg: "from-pink-500/20 to-rose-500/10", border: "border-pink-200 dark:border-pink-800" },
 };
 
+const HERO_PROMOS = [
+  {
+    id: "bravo-promo",
+    chain: "Bravo",
+    chainSlug: "bravo",
+    title: "Həftənin Möhtəşəm Fürsətləri",
+    badge: "35%-dək Endirim",
+    color: "from-emerald-700 via-emerald-800 to-slate-900",
+    image: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80",
+  },
+  {
+    id: "araz-promo",
+    chain: "Araz",
+    chainSlug: "araz",
+    title: "Ailəvi Qənaət Günləri",
+    badge: "Həftəlik Aksiya",
+    color: "from-rose-700 via-red-800 to-slate-900",
+    image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=600&q=80",
+  },
+  {
+    id: "oba-promo",
+    chain: "OBA",
+    chainSlug: "oba",
+    title: "Qənaətli Xalq Qiymətləri",
+    badge: "Xüsusi Təkliflər",
+    color: "from-green-700 via-emerald-800 to-slate-900",
+    image: "https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?auto=format&fit=crop&w=600&q=80",
+  },
+];
+
 export default function HomePage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedChain, setSelectedChain] = useState<string>("");
-  const [sortBy, setSortBy] = useState<string>("cheapest");
-  const [onlyPromos, setOnlyPromos] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [recommendations, setRecommendations] = useState<SearchRecommendationsResponse | null>(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isNearbyModalOpen, setIsNearbyModalOpen] = useState(false);
 
   const [topDeals, setTopDeals] = useState<Product[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [totalProducts, setTotalProducts] = useState(0);
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [addedDealIds, setAddedDealIds] = useState<{ [key: string]: boolean }>({});
 
-  const { addToBasket } = useSebEtStore();
+  const { addToBasket } = useSebetStore();
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
+  // Load initial deals, categories, and initial recommendations
   useEffect(() => {
-    async function loadInitialData() {
+    async function loadData() {
       try {
-        const [dealsData, catsData] = await Promise.all([
+        const [dealsData, catsData, recsData] = await Promise.all([
           getTopDeals().catch(() => []),
           getCategories().catch(() => []),
+          getSearchRecommendations().catch(() => null),
         ]);
         setTopDeals(dealsData);
         setCategories(catsData);
+        if (recsData) setRecommendations(recsData);
       } catch (err) {
-        console.error("Failed to load initial metadata", err);
+        console.error("Home load failed", err);
       }
     }
-    loadInitialData();
+    loadData();
   }, []);
 
+  // Fetch contextual search recommendations when user types
   useEffect(() => {
     let isCancelled = false;
-    async function fetchProductsList() {
-      setIsLoading(true);
+    const timer = setTimeout(async () => {
       try {
-        const res = await searchProducts(
-          searchQuery,
-          selectedCategory || undefined,
-          selectedChain || undefined,
-          1,
-          40
-        );
-        if (!isCancelled) {
-          setProducts(res.items);
-          setTotalProducts(res.total);
+        const recs = await getSearchRecommendations(searchQuery || undefined);
+        if (!isCancelled && recs) {
+          setRecommendations(recs);
         }
-      } catch (err) {
-        console.error("Search failed", err);
-      } finally {
-        if (!isCancelled) setIsLoading(false);
+      } catch {
+        // ignore
       }
-    }
+    }, 200);
 
-    const timer = setTimeout(fetchProductsList, 250);
     return () => {
       isCancelled = true;
       clearTimeout(timer);
     };
-  }, [searchQuery, selectedCategory, selectedChain, sortBy]);
+  }, [searchQuery]);
+
+  // Live search when user types query
+  useEffect(() => {
+    let isCancelled = false;
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await searchProducts(searchQuery, undefined, undefined, 1, 10);
+        if (!isCancelled) {
+          setSearchResults(res.items);
+        }
+      } catch {
+        // ignore
+      } finally {
+        if (!isCancelled) setIsSearching(false);
+      }
+    }, 250);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
+
+  // Handle clicking outside of search dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target as Node)
+      ) {
+        setIsSearchFocused(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelectRecommendation = (term: string) => {
+    setSearchQuery(term);
+    setIsSearchFocused(false);
+  };
+
+  const handleAddDealToBasket = (prod: Product) => {
+    addToBasket(prod, 1);
+    setAddedDealIds((prev) => ({ ...prev, [prod.id]: true }));
+    setTimeout(() => {
+      setAddedDealIds((prev) => ({ ...prev, [prod.id]: false }));
+    }, 1800);
+  };
 
   return (
-    <div className="space-y-5">
-      {/* Search Bar & Barcode Scanner Trigger */}
-      <div className="space-y-2">
+    <div className="space-y-6 pb-6">
+      {/* Trendyol-Style Modern Search Bar with AI Recommendations */}
+      <div ref={searchContainerRef} className="relative z-30">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
             <input
               type="text"
-              placeholder="Məhsul, brend və ya barkod axtarın (məs: Milla, Westgold)..."
+              placeholder="Məhsul, brend və ya kateqoriya axtarın..."
               value={searchQuery}
+              onFocus={() => setIsSearchFocused(true)}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200/60 dark:hover:bg-slate-850 focus:bg-white dark:focus:bg-slate-900 border border-transparent dark:border-slate-800 focus:border-emerald-500/40 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-xs"
+              className="w-full pl-10 pr-9 py-3 rounded-2xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-850 focus:bg-white dark:focus:bg-slate-900 border border-slate-200/80 dark:border-slate-800 focus:border-emerald-500 dark:focus:border-emerald-500 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-hidden focus:ring-3 focus:ring-emerald-500/20 transition-all shadow-xs"
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs font-bold px-1"
+                onClick={() => {
+                  setSearchQuery("");
+                  setSearchResults([]);
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full bg-slate-200/60 dark:bg-slate-800"
               >
                 ✕
               </button>
@@ -132,245 +208,339 @@ export default function HomePage() {
 
           <button
             onClick={() => setIsScannerOpen(true)}
-            className="p-2.5 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white hover:opacity-90 active:scale-95 transition-all shadow-md shadow-emerald-600/25 flex items-center justify-center shrink-0"
+            className="p-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95 transition-all shadow-md shadow-emerald-600/25 flex items-center justify-center shrink-0"
             title="Barkod skaneri aç"
           >
             <Barcode className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Live Market Counter Pill */}
-        <div className="flex items-center justify-between px-1 text-[11px] text-slate-500 dark:text-slate-400">
-          <span className="flex items-center gap-1.5 font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Bravo • Araz • OBA • Bazarstore</span>
-          </span>
-          <button
-            onClick={() => setIsNearbyModalOpen(true)}
-            className="font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/40 flex items-center gap-1 transition-colors active:scale-95 shadow-2xs"
-          >
-            <Compass className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-            <span>Yaxın Filiallar & Xəritə</span>
-          </button>
-        </div>
+        {/* OpenAI Search Recommendations Dropdown Overlay */}
+        {isSearchFocused && recommendations && (
+          <div className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200/90 dark:border-slate-800 p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            {/* AI or Autocomplete Suggestions */}
+            {recommendations.suggestions.length > 0 && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  <span className="flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Ağıllı Təkliflər (AI)</span>
+                  </span>
+                  {recommendations.source === "openai" && (
+                    <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 font-mono">
+                      OpenAI
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {recommendations.suggestions.map((sug, idx) => (
+                    <button
+                      key={`sug-${idx}`}
+                      onClick={() => handleSelectRecommendation(sug)}
+                      className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-400 text-xs font-semibold flex items-center gap-1.5 transition-colors active:scale-95"
+                    >
+                      <Search className="w-3 h-3 text-slate-400" />
+                      <span>{sug}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Trending Supermarket Searches */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1 text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                <Flame className="w-3.5 h-3.5 text-rose-500" />
+                <span>Bakıda Populyar Axtarışlar</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {recommendations.trending.slice(0, 6).map((trend, idx) => (
+                  <button
+                    key={`trend-${idx}`}
+                    onClick={() => handleSelectRecommendation(trend)}
+                    className="px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-850 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium border border-slate-200/60 dark:border-slate-700/60 flex items-center gap-1 transition-all"
+                  >
+                    <TrendingUp className="w-3 h-3 text-rose-500" />
+                    <span>{trend}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Direct Jump to Category */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                Daha çox axtarış seçimləri
+              </span>
+              <Link
+                href="/flyers"
+                onClick={() => setIsSearchFocused(false)}
+                className="text-[11px] font-black text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
+              >
+                <span>Bütün Kataloqa Keç</span>
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Top Discounts Today Carousel */}
-      {topDeals.length > 0 && !searchQuery && (
-        <section className="space-y-2.5">
+      {/* PRIORITIZED CATEGORIES: Trendyol-Style Vibrant Stories / Bubbles */}
+      <section className="space-y-2">
+        <div className="flex items-center justify-between px-0.5">
+          <h2 className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
+            <span>Kateqoriyalar</span>
+          </h2>
+          <Link
+            href="/flyers"
+            className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5"
+          >
+            <span>Hamısına bax</span>
+            <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+
+        <div className="flex gap-3 overflow-x-auto pb-2 pt-1 -mx-4 px-4 no-scrollbar">
+          {categories.map((cat) => {
+            const conf = CATEGORY_ICONS[cat.slug] || {
+              emoji: "🛍️",
+              bg: "from-emerald-500/20 to-teal-500/10",
+              border: "border-slate-200 dark:border-slate-800",
+            };
+
+            return (
+              <Link
+                key={cat.id}
+                href={`/flyers?cat=${cat.slug}`}
+                className="flex flex-col items-center gap-1.5 shrink-0 group focus:outline-hidden"
+              >
+                <div
+                  className={`w-15 h-15 rounded-2xl bg-gradient-to-br ${conf.bg} ${conf.border} border flex items-center justify-center text-2xl shadow-xs group-hover:scale-105 group-active:scale-95 transition-all`}
+                >
+                  <span>{conf.emoji}</span>
+                </div>
+                <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 text-center max-w-[68px] line-clamp-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                  {cat.name_az.split("&")[0].split("(")[0].trim()}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Active Search Results (if user is actively querying) */}
+      {searchQuery.trim() ? (
+        <section className="space-y-3 pt-1">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <div className="p-1 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400">
-                <Flame className="w-4 h-4" />
-              </div>
-              <h2 className="text-sm font-black text-slate-900 dark:text-slate-100">
-                Günün Ən Yaxşı Endirimləri
-              </h2>
-            </div>
-            <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-full border border-rose-100 dark:border-rose-900/50">
-              25%-dək qənaət
-            </span>
+            <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+              Axtarış nəticələri: &ldquo;{searchQuery}&rdquo; ({searchResults.length})
+            </h3>
+            <Link
+              href={`/flyers?q=${encodeURIComponent(searchQuery)}`}
+              className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
+            >
+              <span>Kataloqda tam bax</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
 
-          <div className="flex gap-3 overflow-x-auto pb-2 pt-1 -mx-4 px-4 no-scrollbar">
-            {topDeals.map((prod) => {
-              const promoPrice = prod.min_price || 0;
-              const origPrice = prod.max_price || promoPrice * 1.2;
-              const discountPct = Math.round(
-                ((origPrice - promoPrice) / origPrice) * 100
-              );
-
-              return (
+          {isSearching ? (
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2].map((n) => (
                 <div
-                  key={`deal-${prod.id}`}
-                  className="w-48 shrink-0 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 rounded-2xl border border-rose-100/80 dark:border-slate-800 shadow-xs p-3 flex flex-col justify-between"
+                  key={n}
+                  className="h-60 rounded-2xl bg-slate-100 dark:bg-slate-900 animate-pulse border border-slate-200 dark:border-slate-800"
+                />
+              ))}
+            </div>
+          ) : searchResults.length === 0 ? (
+            <div className="text-center py-10 p-6 bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 space-y-2">
+              <div className="text-3xl">🔍</div>
+              <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                Məhsul tapılmadı
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Digər açar sözlər və ya kateqoriyalar üzrə axtarın.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {searchResults.map((prod) => (
+                <ProductCard
+                  key={prod.id}
+                  product={prod}
+                  onOpenDetails={() => setIsScannerOpen(true)}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      ) : (
+        <>
+          {/* HERO CAMPAIGN BANNERS: Supermarket Weekly Flyers Highlights */}
+          <section className="space-y-2">
+            <div className="flex items-center justify-between px-0.5">
+              <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                Həftəlik Kampaniyalar
+              </span>
+              <button
+                onClick={() => setIsNearbyModalOpen(true)}
+                className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/40 flex items-center gap-1 active:scale-95"
+              >
+                <Compass className="w-3 h-3" />
+                <span>Yaxın Filiallar</span>
+              </button>
+            </div>
+
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 no-scrollbar">
+              {HERO_PROMOS.map((promo) => (
+                <Link
+                  key={promo.id}
+                  href={`/flyers?chain=${promo.chainSlug}`}
+                  className="w-72 shrink-0 rounded-3xl overflow-hidden relative shadow-md group active:scale-98 transition-all"
                 >
-                  <div>
-                    <div className="relative w-full h-24 rounded-xl bg-white dark:bg-slate-850 overflow-hidden mb-2 flex items-center justify-center border border-slate-100 dark:border-slate-800">
-                      {prod.image_url && (
-                        <img
-                          src={prod.image_url}
-                          alt={prod.canonical_name}
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                      <span className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-rose-600 text-white text-[9px] font-black shadow-xs">
-                        -{discountPct > 0 ? discountPct : 18}%
+                  <div className="h-36 w-full relative">
+                    <img
+                      src={promo.image}
+                      alt={promo.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/40 to-transparent p-4 flex flex-col justify-end text-white">
+                      <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-rose-600 w-fit mb-1 shadow-xs">
+                        {promo.badge}
                       </span>
-                    </div>
-
-                    <h4 className="text-[11px] font-bold text-slate-900 dark:text-slate-100 line-clamp-2 min-h-[30px]">
-                      {prod.canonical_name}
-                    </h4>
-
-                    <div className="mt-1 flex items-baseline gap-1.5">
-                      <span className="text-sm font-black text-rose-600 dark:text-rose-400">
-                        {promoPrice.toFixed(2)} ₼
-                      </span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 line-through">
-                        {origPrice.toFixed(2)} ₼
+                      <h3 className="text-sm font-black tracking-tight leading-tight">
+                        {promo.title}
+                      </h3>
+                      <span className="text-[11px] text-emerald-300 font-bold mt-1 flex items-center gap-1">
+                        <span>{promo.chain} Jurnalını Aç</span>
+                        <ArrowRight className="w-3 h-3" />
                       </span>
                     </div>
                   </div>
+                </Link>
+              ))}
+            </div>
+          </section>
 
-                  <button
-                    onClick={() => addToBasket(prod, 1)}
-                    className="mt-2.5 w-full py-1.5 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center justify-center gap-1 transition-colors shadow-xs active:scale-95"
-                  >
-                    <ShoppingBag className="w-3 h-3" />
-                    <span>Səbətə at</span>
-                  </button>
+          {/* FLASH DEALS CAROUSEL ("Günün Ən Yaxşı Endirimləri") */}
+          {topDeals.length > 0 && (
+            <section className="space-y-3">
+              <div className="flex items-center justify-between px-0.5">
+                <div className="flex items-center gap-1.5">
+                  <div className="p-1 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400">
+                    <Flame className="w-4 h-4" />
+                  </div>
+                  <h2 className="text-sm font-black text-slate-900 dark:text-slate-100">
+                    Günün Ən Yaxşı Endirimləri
+                  </h2>
                 </div>
-              );
-            })}
+                <span className="text-[10px] font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-full border border-rose-100 dark:border-rose-900/50">
+                  Super Qənaət
+                </span>
+              </div>
+
+              <div className="flex gap-3 overflow-x-auto pb-2 pt-1 -mx-4 px-4 no-scrollbar">
+                {topDeals.map((prod) => {
+                  const promoPrice = prod.min_price || 0;
+                  const origPrice = prod.max_price || promoPrice * 1.25;
+                  const discountPct = Math.round(
+                    ((origPrice - promoPrice) / origPrice) * 100
+                  );
+                  const isAdded = addedDealIds[prod.id];
+
+                  return (
+                    <div
+                      key={`deal-${prod.id}`}
+                      className="w-44 shrink-0 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-3 flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="relative w-full h-28 rounded-2xl bg-slate-50 dark:bg-slate-850 overflow-hidden mb-2.5 flex items-center justify-center border border-slate-100 dark:border-slate-800">
+                          {prod.image_url ? (
+                            <img
+                              src={prod.image_url}
+                              alt={prod.canonical_name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-2xl">📦</span>
+                          )}
+                          <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md bg-rose-600 text-white text-[10px] font-black shadow-xs">
+                            -{discountPct > 0 ? discountPct : 20}%
+                          </span>
+                        </div>
+
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 line-clamp-2 min-h-[32px]">
+                          {prod.canonical_name}
+                        </h4>
+
+                        <div className="mt-1 flex items-baseline gap-1.5">
+                          <span className="text-sm font-black text-rose-600 dark:text-rose-400">
+                            {promoPrice.toFixed(2)} ₼
+                          </span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 line-through">
+                            {origPrice.toFixed(2)} ₼
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleAddDealToBasket(prod)}
+                        className={`mt-2.5 w-full py-2 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-95 ${
+                          isAdded
+                            ? "bg-emerald-700 text-white"
+                            : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                        }`}
+                      >
+                        {isAdded ? (
+                          <>
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Əlavə olundu</span>
+                          </>
+                        ) : (
+                          <>
+                            <ShoppingBag className="w-3.5 h-3.5" />
+                            <span>Səbətə at</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Direct CTA to Merged Catalog & Products */}
+          <div className="p-4 rounded-3xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-lg flex items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <span className="text-[10px] uppercase font-black tracking-wider text-emerald-200">
+                Bütün Marketlər & Rəflər
+              </span>
+              <h3 className="text-sm font-black">
+                1,200+ Məhsul və Həftəlik Jurnallar
+              </h3>
+              <p className="text-[11px] text-emerald-100">
+                Bravo, Araz, OBA, Bazarstore, Al Market, Neptun, Spar
+              </p>
+            </div>
+            <Link
+              href="/flyers"
+              className="px-3.5 py-2 rounded-xl bg-white text-emerald-800 text-xs font-black shrink-0 hover:bg-emerald-50 transition-all flex items-center gap-1 shadow-xs active:scale-95"
+            >
+              <span>Kataloqa Keç</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
-        </section>
+        </>
       )}
 
-      {/* Smart Category Pills */}
-      {categories.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 no-scrollbar">
-            <button
-              onClick={() => setSelectedCategory("")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 ${
-                selectedCategory === ""
-                  ? "bg-slate-900 dark:bg-emerald-600 text-white shadow-xs"
-                  : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-transparent dark:border-slate-800"
-              }`}
-            >
-              <span>🛒</span>
-              <span>Bütün Kateqoriyalar</span>
-            </button>
-            {categories.map((cat) => {
-              const icon = CATEGORY_ICONS[cat.slug] || "🏷️";
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 ${
-                    selectedCategory === cat.id
-                      ? "bg-emerald-600 text-white shadow-xs"
-                      : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-transparent dark:border-slate-800"
-                  }`}
-                >
-                  <span>{icon}</span>
-                  <span>{cat.name_az}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Chain Filter Bar with Supermarket Logos (7 Chains) */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 no-scrollbar">
-        {CHAINS_FILTER.map((cf) => (
-          <button
-            key={cf.slug}
-            onClick={() => setSelectedChain(cf.slug)}
-            className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold shrink-0 border flex items-center gap-1.5 transition-all ${
-              selectedChain === cf.slug
-                ? "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-400 dark:border-emerald-600 text-emerald-900 dark:text-emerald-200 shadow-xs"
-                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-            }`}
-          >
-            {cf.slug ? (
-              <ChainLogo slug={cf.slug} size="xs" />
-            ) : (
-              <span className="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-500" />
-            )}
-            <span>{cf.name}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Quick Catalog / Promo Mode Switch */}
-      <div className="flex items-center gap-2 pt-1">
-        <button
-          onClick={() => setOnlyPromos(false)}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-            !onlyPromos
-              ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
-              : "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
-          }`}
-        >
-          📦 Bütün Rəf Məhsulları ({totalProducts})
-        </button>
-        <button
-          onClick={() => setOnlyPromos(true)}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
-            onlyPromos
-              ? "bg-rose-600 text-white shadow-xs"
-              : "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 hover:bg-rose-100"
-          }`}
-        >
-          <Flame className="w-3.5 h-3.5 text-amber-400" />
-          <span>Yalnız Super Endirimlər</span>
-        </button>
-      </div>
-
-      {/* Products Grid */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-            {searchQuery
-              ? `Axtarış nəticələri: "${searchQuery}" (${products.length})`
-              : onlyPromos
-              ? "Aktiv Həftəlik Endirimlər"
-              : `Rəf Məhsulları (${products.length})`}
-          </h3>
-
-          <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-semibold">
-            <ArrowUpDown className="w-3 h-3" />
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="bg-transparent text-slate-700 dark:text-slate-300 font-bold focus:outline-hidden cursor-pointer"
-            >
-              <option value="cheapest" className="dark:bg-slate-900">Ən ucuz</option>
-              <option value="name" className="dark:bg-slate-900">Ad üzrə</option>
-            </select>
-          </div>
-        </div>
-
-        {isLoading ? (
-          <div className="grid grid-cols-2 gap-3">
-            {[1, 2, 3, 4].map((n) => (
-              <div
-                key={n}
-                className="h-64 rounded-2xl bg-slate-100 dark:bg-slate-900 animate-pulse border border-slate-200 dark:border-slate-800"
-              />
-            ))}
-          </div>
-        ) : (onlyPromos ? products.filter((p) => p.prices.some((sp) => sp.is_promo)) : products).length === 0 ? (
-          <div className="text-center py-12 p-6 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
-            <div className="text-3xl">🔍</div>
-            <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">Məhsul tapılmadı</h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Axtarış sorğusunu dəyişin və ya digər kateqoriyalara baxın.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {(onlyPromos ? products.filter((p) => p.prices.some((sp) => sp.is_promo)) : products).map((prod) => (
-              <ProductCard
-                key={prod.id}
-                product={prod}
-                onOpenDetails={() => setIsScannerOpen(true)}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Barcode Scanner Modal */}
+      {/* Modals */}
       <BarcodeScannerModal
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
       />
 
-      {/* Nearby Markets & Live Map Modal */}
       <NearbyMarketsModal
         isOpen={isNearbyModalOpen}
         onClose={() => setIsNearbyModalOpen(false)}

@@ -80,3 +80,21 @@ async def test_nearby_stores_outside_baku():
         data = res.json()
         assert len(data) > 0
 
+
+@pytest.mark.asyncio
+async def test_search_recommendations():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        res = await ac.get("/api/v1/search/recommendations")
+        assert res.status_code == 200
+        data = res.json()
+        assert len(data["trending"]) > 0
+        assert len(data["categories"]) > 0
+
+        # Query for 'sud'
+        res_q = await ac.get("/api/v1/search/recommendations?q=sud")
+        assert res_q.status_code == 200
+        data_q = res_q.json()
+        assert "suggestions" in data_q
+        assert len(data_q["suggestions"]) > 0
+
+

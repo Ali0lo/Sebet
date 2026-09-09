@@ -7,7 +7,7 @@ import { BasketDrawer } from "@/components/BasketDrawer";
 export const metadata: Metadata = {
   title: "Sebet — Bakıda Market Qiymət Müqayisəsi & Ağıllı Səbət",
   description:
-    "Bravo, Araz, OBA, Bazarstore, Al Market, Neptun və Spar marketlərində real rəf qiymətlərini müqayisə edin, qəbzləri skan edərək xallar qazanın və səbətinizi ən yaxın marketlər arasında bölüşdürərək qənaət edin.",
+    "Bravo, Araz, OBA, Bazarstore, Al Market, Neptun və Spar marketlərində real rəf qiymətlərini müqayisə edin, həftəlik jurnallara baxın və səbətinizi ən yaxın marketlər arasında bölüşdürərək qənaət edin.",
 };
 
 export default function RootLayout({

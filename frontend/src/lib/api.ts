@@ -8,6 +8,7 @@ import {
   User,
   Reward,
   NearbyStore,
+  SearchRecommendationsResponse,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -155,4 +156,13 @@ export async function getNearbyStores(
     `/api/v1/stores/nearby?latitude=${latitude}&longitude=${longitude}&radius_km=${radiusKm}`
   );
 }
+
+export async function getSearchRecommendations(
+  query?: string
+): Promise<SearchRecommendationsResponse> {
+  const params = new URLSearchParams();
+  if (query) params.append("q", query);
+  return fetchJson(`/api/v1/search/recommendations?${params.toString()}`);
+}
+
 

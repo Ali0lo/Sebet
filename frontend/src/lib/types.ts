@@ -190,3 +190,18 @@ export interface Reward {
   icon: string;
 }
 
+export interface SearchRecommendationCategory {
+  name: string;
+  icon: string;
+  slug: string;
+}
+
+export interface SearchRecommendationsResponse {
+  query: string;
+  source: string;
+  suggestions: string[];
+  trending: string[];
+  categories: SearchRecommendationCategory[];
+}
+
+

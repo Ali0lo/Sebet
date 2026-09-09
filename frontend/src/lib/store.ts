@@ -9,14 +9,14 @@ export interface BakuLocation {
 }
 
 export const BAKU_LOCATIONS: BakuLocation[] = [
-  { name: "28 May / Nəsimi", lat: 40.3798, lon: 49.8475 },
+  { name: "28 May", lat: 40.3798, lon: 49.8475 },
   { name: "Nərimanov", lat: 40.4024, lon: 49.8712 },
-  { name: "Yasamal / İnşaatçılar", lat: 40.3872, lon: 49.8055 },
-  { name: "Elmlər Akademiyası", lat: 40.3735, lon: 49.8142 },
-  { name: "Nizami / Tarqovı", lat: 40.3752, lon: 49.8335 },
+  { name: "Yasamal", lat: 40.3872, lon: 49.8055 },
+  { name: "Elmlər", lat: 40.3735, lon: 49.8142 },
+  { name: "Nizami", lat: 40.3752, lon: 49.8335 },
   { name: "Koroğlu", lat: 40.4208, lon: 49.9192 },
-  { name: "Xırdalan (Mərkəz)", lat: 40.4520, lon: 49.7560 },
-  { name: "Biləcəri (Qəsəbə)", lat: 40.4315, lon: 49.8000 },
+  { name: "Xırdalan", lat: 40.4520, lon: 49.7560 },
+  { name: "Biləcəri", lat: 40.4315, lon: 49.8000 },
   { name: "Sumqayıt", lat: 40.5897, lon: 49.6686 },
 ];
 

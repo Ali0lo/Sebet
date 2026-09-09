@@ -1,7 +1,11 @@
 import json
-from typing import List, Union
+from pathlib import Path
+from typing import List, Union, Optional
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_PROJECT_ROOT = Path(__file__).resolve().parents[3]
+_DEFAULT_DB_FILE = _PROJECT_ROOT / "sebet.db"
 
 
 class Settings(BaseSettings):
@@ -10,9 +14,12 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = "development"
 
-    # Database
-    DATABASE_URL: str = "postgresql+asyncpg://sebet:sebet_secret@localhost:5432/sebet_db"
+    # Database: defaults to bundled SQLite database for zero-config plug-and-play
+    DATABASE_URL: str = f"sqlite+aiosqlite:///{_DEFAULT_DB_FILE}"
     REDIS_URL: str = "redis://localhost:6379/0"
+
+    # OpenAI
+    OPENAI_API_KEY: Optional[str] = None
 
     # CORS
     CORS_ORIGINS: Union[List[str], str] = [

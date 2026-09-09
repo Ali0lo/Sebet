@@ -32,7 +32,7 @@ export const BottomNav: React.FC = () => {
       icon: ShoppingBag,
       badge: totalBasketItems > 0 ? totalBasketItems : null,
     },
-    { label: "Kataloqlar", href: "/flyers", icon: BookOpen },
+    { label: "Kataloq & Məhsullar", href: "/flyers", icon: BookOpen },
     { label: "Profil & Xal", href: "/profile", icon: User },
   ];
 

@@ -1,6 +1,7 @@
 import os
 import uuid
 import logging
+from pathlib import Path
 from typing import AsyncGenerator
 from sqlalchemy import text, TypeDecorator, String, JSON
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
@@ -73,13 +74,22 @@ class Base(DeclarativeBase):
 # Build database engine
 db_url = settings.DATABASE_URL
 
-# In non-production, if configured for postgres but unavailable, allow SQLite fallback
-engine = create_async_engine(
-    db_url,
-    echo=False,
-    future=True,
-    pool_pre_ping=True,
-)
+# Fallback to local SQLite if postgres driver or database is missing
+try:
+    engine = create_async_engine(
+        db_url,
+        echo=False,
+        future=True,
+        pool_pre_ping=True,
+    )
+except Exception as ex:
+    logger.warning(f"Database connection error with '{db_url}': {ex}. Falling back to SQLite.")
+    fallback_path = Path(__file__).resolve().parents[3] / "sebet.db"
+    engine = create_async_engine(
+        f"sqlite+aiosqlite:///{fallback_path}",
+        echo=False,
+        future=True,
+    )
 
 async_session_factory = async_sessionmaker(
     bind=engine,

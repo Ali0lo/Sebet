@@ -75,21 +75,21 @@ export const Navbar: React.FC = () => {
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-emerald-100/80 dark:border-slate-800 shadow-xs transition-colors duration-200">
       <div className="max-w-xl mx-auto px-4 py-2.5 flex items-center justify-between">
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-700 via-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-600/20 group-hover:scale-105 transition-transform">
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-600/25 group-hover:scale-105 transition-transform">
             <ShoppingBasket className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">
+              <span className="font-black text-xl tracking-tight text-slate-900 dark:text-white">
                 Seb<span className="text-emerald-600 dark:text-emerald-400">et</span>
               </span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
+              <span className="text-[9px] uppercase font-black tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
                 Baku
               </span>
             </div>
-            <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-none">
-              Səbətini Sebet
+            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 leading-none">
+              Ağıllı Market Bələdçisi
             </p>
           </div>
         </Link>
