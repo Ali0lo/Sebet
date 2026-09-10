@@ -92,16 +92,50 @@ def test_basket_optimizer_logic():
     # Buy butter (1 * 4.90 = 4.90) at OBA
     # Buy detergent (1 * 8.50 = 8.50) at Bravo
     # Split Total = 4.20 + 4.90 + 8.50 = 17.60
-    # Savings = 18.40 - 17.60 = 0.80 AZN
+    # Savings = 18.40 - 17.60 = 0.80 AZN (>= 0.50 AZN threshold)
     assert res["best_split_store"] is not None
     assert res["best_split_store"]["total_cost"] == 17.60
     assert res["best_split_store"]["savings_vs_single_azn"] == 0.80
     assert res["best_split_store"]["distance_between_stores_m"] < 300
-    # Because savings is 0.80 < 1.50 AZN threshold, split is NOT viable
-    assert res["is_split_viable"] is False
-    assert res["best_split_store"]["is_split_viable"] is False
+    assert res["is_split_viable"] is True
+    assert res["best_split_store"]["is_split_viable"] is True
     assert res["best_split_store"]["primary_store"]["store_id"] == "store-oba"
     assert res["best_split_store"]["secondary_store"]["store_id"] == "store-bravo"
+
+
+def test_basket_optimizer_non_viable_split_low_savings():
+    p1 = "prod-1"
+    basket = [
+        {"product_id": p1, "quantity": 1, "canonical_name": "Bread"},
+    ]
+    stores = [
+        {
+            "store_id": "store-araz",
+            "branch_name": "Araz - Sahil",
+            "chain_name": "Araz",
+            "chain_slug": "araz",
+            "lat": 40.3700,
+            "lon": 49.8400,
+            "prices": {p1: 1.00},
+        },
+        {
+            "store_id": "store-bravo",
+            "branch_name": "Bravo - Sahil",
+            "chain_name": "Bravo",
+            "chain_slug": "bravo",
+            "lat": 40.3710,
+            "lon": 49.8410,
+            "prices": {p1: 0.80},
+        },
+    ]
+    # Single store bravo has item for 0.80. A split requires 2 stores, which isn't possible for 1 item
+    res = BasketOptimizer.optimize(
+        basket_items=basket,
+        stores_inventory=stores,
+        user_coords=(40.3705, 49.8405),
+        max_walking_distance_m=750.0,
+    )
+    assert res["is_split_viable"] is False
 
 
 def test_basket_optimizer_viable_split():

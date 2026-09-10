@@ -48,12 +48,28 @@ class BasketOptimizer:
 
         total_skus = len(basket_items)
 
+        # Compute distance to user for all stores
+        for store in stores_inventory:
+            try:
+                store["dist_from_user_m"] = geodesic(user_coords, (store["lat"], store["lon"])).meters
+            except Exception:
+                store["dist_from_user_m"] = 999999.0
+
+        # Filter stores within reachable neighborhood of the user
+        max_user_reach_m = max(max_walking_distance_m * 2.5, 3000.0)
+        local_stores = [s for s in stores_inventory if s["dist_from_user_m"] <= max_user_reach_m]
+
+        # Fallback if no stores within reach (e.g. remote coordinates or test fixtures)
+        if len(local_stores) < 2:
+            sorted_by_user_dist = sorted(stores_inventory, key=lambda s: s["dist_from_user_m"])
+            local_stores = sorted_by_user_dist[:10] if sorted_by_user_dist else stores_inventory
+
         # ---------------------------------------------------------
         # STEP 1: Single Market Baseline Calculation
         # ---------------------------------------------------------
         single_store_results = []
 
-        for store in stores_inventory:
+        for store in local_stores:
             store_id = store["store_id"]
             total_cost = 0.0
             available_items = 0
@@ -114,14 +130,14 @@ class BasketOptimizer:
         single_store_baseline = single_store_results[0] if single_store_results else None
 
         # ---------------------------------------------------------
-        # STEP 2: Pairwise Split Search (Max 2 Stores within 750m)
+        # STEP 2: Pairwise Split Search (Max 2 Stores within walking radius)
         # ---------------------------------------------------------
         best_split_candidate = None
         min_split_cost = float("inf")
-        SAVINGS_THRESHOLD_AZN = 1.50
+        SAVINGS_THRESHOLD_AZN = 0.50
 
-        for i, s1 in enumerate(stores_inventory):
-            for s2 in stores_inventory[i + 1 :]:
+        for i, s1 in enumerate(local_stores):
+            for s2 in local_stores[i + 1 :]:
                 if s1["store_id"] == s2["store_id"]:
                     continue
 
@@ -133,7 +149,7 @@ class BasketOptimizer:
                     logger.warning(f"Distance calculation error between {s1['branch_name']} and {s2['branch_name']}: {e}")
                     continue
 
-                # Must be within the walking radius (default 750m)
+                # Must be within the walking radius
                 if store_dist_m > max_walking_distance_m:
                     continue
 
@@ -213,7 +229,7 @@ class BasketOptimizer:
                 else 0.0
             )
 
-            is_split_viable = savings >= SAVINGS_THRESHOLD_AZN
+            is_split_viable = savings >= SAVINGS_THRESHOLD_AZN and savings > 0
 
             # Order as primary (more items or higher subtotal) and secondary
             cand_s1 = best_split_candidate["s1"]
