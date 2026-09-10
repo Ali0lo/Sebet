@@ -12,6 +12,12 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        slate: {
+          850: "#131c2e",
+        },
+        zinc: {
+          850: "#18181b",
+        },
         brand: {
           DEFAULT: "#235434",
           dark: "#1B4229",

@@ -595,8 +595,8 @@ export default function BasketPage() {
                             onClick={() => toggleChecklistItem(String(item.product_id))}
                             className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 select-none ${
                               isChecked
-                                ? "bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60 opacity-80"
-                                : "bg-slate-50/70 dark:bg-slate-850/60 border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700"
+                                ? "bg-emerald-50/60 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 opacity-80"
+                                : "bg-slate-50/70 dark:bg-slate-850 border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700"
                             }`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
@@ -605,7 +605,7 @@ export default function BasketPage() {
                                 className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 transition-all border ${
                                   isChecked
                                     ? "bg-emerald-600 border-emerald-600 text-white"
-                                    : "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-transparent"
+                                    : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-transparent"
                                 }`}
                               >
                                 <Check className="w-3.5 h-3.5 stroke-[3]" />
@@ -616,7 +616,7 @@ export default function BasketPage() {
                                 <img
                                   src={product.image_url}
                                   alt={item.product_name}
-                                  className="w-10 h-10 rounded-xl object-contain p-0.5 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 shrink-0 mix-blend-multiply dark:mix-blend-normal"
+                                  className="w-10 h-10 rounded-xl object-contain p-0.5 bg-slate-100 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 shrink-0 mix-blend-multiply dark:mix-blend-normal"
                                 />
                               )}
 
@@ -727,8 +727,8 @@ export default function BasketPage() {
                             onClick={() => toggleChecklistItem(String(item.product_id))}
                             className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 select-none ${
                               isChecked
-                                ? "bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60 opacity-80"
-                                : "bg-slate-50/70 dark:bg-slate-850/60 border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700"
+                                ? "bg-emerald-50/60 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 opacity-80"
+                                : "bg-slate-50/70 dark:bg-slate-850 border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700"
                             }`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
@@ -737,7 +737,7 @@ export default function BasketPage() {
                                 className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 transition-all border ${
                                   isChecked
                                     ? "bg-emerald-600 border-emerald-600 text-white"
-                                    : "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-transparent"
+                                    : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-transparent"
                                 }`}
                               >
                                 <Check className="w-3.5 h-3.5 stroke-[3]" />
@@ -748,7 +748,7 @@ export default function BasketPage() {
                                 <img
                                   src={product.image_url}
                                   alt={item.product_name}
-                                  className="w-10 h-10 rounded-xl object-contain p-0.5 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 shrink-0 mix-blend-multiply dark:mix-blend-normal"
+                                  className="w-10 h-10 rounded-xl object-contain p-0.5 bg-slate-100 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 shrink-0 mix-blend-multiply dark:mix-blend-normal"
                                 />
                               )}
 
@@ -856,8 +856,8 @@ export default function BasketPage() {
                             onClick={() => toggleChecklistItem(String(item.product_id))}
                             className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 select-none ${
                               isChecked
-                                ? "bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60 opacity-80"
-                                : "bg-slate-50/70 dark:bg-slate-850/60 border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700"
+                                ? "bg-emerald-50/60 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 opacity-80"
+                                : "bg-slate-50/70 dark:bg-slate-850 border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700"
                             }`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
@@ -866,7 +866,7 @@ export default function BasketPage() {
                                 className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 transition-all border ${
                                   isChecked
                                     ? "bg-emerald-600 border-emerald-600 text-white"
-                                    : "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-transparent"
+                                    : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-transparent"
                                 }`}
                               >
                                 <Check className="w-3.5 h-3.5 stroke-[3]" />
@@ -877,7 +877,7 @@ export default function BasketPage() {
                                 <img
                                   src={product.image_url}
                                   alt={item.product_name}
-                                  className="w-10 h-10 rounded-xl object-contain p-0.5 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 shrink-0 mix-blend-multiply dark:mix-blend-normal"
+                                  className="w-10 h-10 rounded-xl object-contain p-0.5 bg-slate-100 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 shrink-0 mix-blend-multiply dark:mix-blend-normal"
                                 />
                               )}
 
@@ -930,8 +930,8 @@ export default function BasketPage() {
                               key={String(st.store_id)}
                               className={`p-3 rounded-2xl border flex items-center justify-between text-xs transition-colors ${
                                 isCurrent
-                                  ? "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800"
-                                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-200"
+                                  ? "bg-emerald-50/50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800"
+                                  : "bg-white dark:bg-slate-850 border-slate-200 dark:border-slate-800 hover:border-emerald-200 dark:hover:border-emerald-800"
                               }`}
                             >
                               <div className="flex items-center gap-2 min-w-0">
@@ -988,14 +988,14 @@ export default function BasketPage() {
               {basket.map((item) => (
                 <div
                   key={item.product.id}
-                  className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3 shadow-2xs"
+                  className="p-3 rounded-2xl bg-white dark:bg-slate-850 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3 shadow-2xs"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     {item.product.image_url && (
                       <img
                         src={item.product.image_url}
                         alt={item.product.canonical_name}
-                        className="w-10 h-10 rounded-xl object-contain p-0.5 bg-slate-50/60 dark:bg-slate-800/40 border border-slate-100/80 dark:border-slate-700/60 shrink-0 mix-blend-multiply dark:mix-blend-normal"
+                        className="w-10 h-10 rounded-xl object-contain p-0.5 bg-slate-100 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 shrink-0 mix-blend-multiply dark:mix-blend-normal"
                       />
                     )}
                     <div className="min-w-0">
@@ -1012,7 +1012,7 @@ export default function BasketPage() {
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-0.5">
                       <button
                         onClick={() => updateQuantity(item.product.id, -1)}
-                        className="w-6 h-6 rounded-lg bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-xs hover:bg-slate-50"
+                        className="w-6 h-6 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800"
                       >
                         <Minus className="w-3 h-3" />
                       </button>
