@@ -40,6 +40,33 @@ export const translations = {
       total: "Cəmi",
       savings: "Qənaət",
       emptyBasket: "Səbətiniz boşdur",
+      startShopping: "Alış-verişə başla",
+      backToBasket: "Səbətə qayıt",
+      currentLocation: "Cari Məkan",
+      chooseArea: "Ərazi Seçimi",
+      tickedTotal: "Yığılan Məhsulların Cəmi",
+      itemsListTitle: "Səbət Məhsulları",
+      itemsCount: "məhsul",
+      radius: "Radius",
+      detectGps: "Cari koordinatları götür",
+      selectArea: "Ərazi seçin...",
+      singleStoreCheapest: "Ən Sərfəli Tək Market",
+      splitSavings: "2 Market ilə Qənaət",
+      shoppingChecklist: "Alış-veriş Siyahısı",
+    },
+    filterModal: {
+      buttonLabel: "Filterlə",
+      title: "Filterlər",
+      apply: "Tətbiq et",
+      reset: "Sıfırla",
+      brands: "Brendlər",
+      priceRange: "Qiymət aralığı",
+      min: "Min",
+      max: "Max",
+      allBrands: "Bütün brendlər",
+      selectAll: "Hamısını seç",
+      clear: "Təmizlə",
+      noResults: "Filtrlərə uyğun məhsul tapılmadı",
     },
     profile: {
       title: "İstifadəçi Profili",
@@ -93,6 +120,33 @@ export const translations = {
       total: "Итого",
       savings: "Экономия",
       emptyBasket: "Ваша корзина пуста",
+      startShopping: "Начать покупки",
+      backToBasket: "Назад в корзину",
+      currentLocation: "Текущее место",
+      chooseArea: "Выбор района",
+      tickedTotal: "Сумма выбранных",
+      itemsListTitle: "Товары в корзине",
+      itemsCount: "товаров",
+      radius: "Радиус",
+      detectGps: "Определить координаты",
+      selectArea: "Выберите район...",
+      singleStoreCheapest: "Выгодный один магазин",
+      splitSavings: "Экономия с 2 магазинами",
+      shoppingChecklist: "Список покупок",
+    },
+    filterModal: {
+      buttonLabel: "Фильтры",
+      title: "Фильтры",
+      apply: "Применить",
+      reset: "Сбросить",
+      brands: "Бренды",
+      priceRange: "Диапазон цен",
+      min: "Мин",
+      max: "Макс",
+      allBrands: "Все бренды",
+      selectAll: "Выбрать все",
+      clear: "Очистить",
+      noResults: "Товаров по фильтрам не найдено",
     },
     profile: {
       title: "Профиль пользователя",
@@ -146,6 +200,33 @@ export const translations = {
       total: "Total",
       savings: "Savings",
       emptyBasket: "Your basket is empty",
+      startShopping: "Start shopping",
+      backToBasket: "Back to basket",
+      currentLocation: "Current Location",
+      chooseArea: "Choose Area",
+      tickedTotal: "Checked Items Subtotal",
+      itemsListTitle: "Basket Items",
+      itemsCount: "items",
+      radius: "Radius",
+      detectGps: "Get current location",
+      selectArea: "Select area...",
+      singleStoreCheapest: "Cheapest Single Store",
+      splitSavings: "Save with 2 Stores",
+      shoppingChecklist: "Shopping Checklist",
+    },
+    filterModal: {
+      buttonLabel: "Filter",
+      title: "Filters",
+      apply: "Apply",
+      reset: "Reset",
+      brands: "Brands",
+      priceRange: "Price Range",
+      min: "Min",
+      max: "Max",
+      allBrands: "All brands",
+      selectAll: "Select all",
+      clear: "Clear",
+      noResults: "No products match the filters",
     },
     profile: {
       title: "User Profile",
@@ -201,6 +282,33 @@ export interface TranslationSchema {
     total: string;
     savings: string;
     emptyBasket: string;
+    startShopping: string;
+    backToBasket: string;
+    currentLocation: string;
+    chooseArea: string;
+    tickedTotal: string;
+    itemsListTitle: string;
+    itemsCount: string;
+    radius: string;
+    detectGps: string;
+    selectArea: string;
+    singleStoreCheapest: string;
+    splitSavings: string;
+    shoppingChecklist: string;
+  };
+  filterModal: {
+    buttonLabel: string;
+    title: string;
+    apply: string;
+    reset: string;
+    brands: string;
+    priceRange: string;
+    min: string;
+    max: string;
+    allBrands: string;
+    selectAll: string;
+    clear: string;
+    noResults: string;
   };
   profile: {
     title: string;

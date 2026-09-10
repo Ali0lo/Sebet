@@ -18,10 +18,11 @@ import {
   Check,
   RotateCcw,
   ArrowRight,
-  ShieldCheck,
+  ArrowLeft,
+  ChevronDown,
   Info,
 } from "lucide-react";
-import { useSebetStore } from "@/lib/store";
+import { useSebEtStore, BAKU_LOCATIONS } from "@/lib/store";
 import { useTranslation } from "@/lib/translations";
 import { optimizeBasket, searchProducts } from "@/lib/api";
 import {
@@ -45,10 +46,17 @@ function getChainSlug(name?: string | null): string {
   return "bravo";
 }
 
+const GPS_RADIUS_OPTIONS = [
+  { label: "1 km", value: 1000, desc: "1000m" },
+  { label: "3 km", value: 3000, desc: "3000m" },
+  { label: "5 km", value: 5000, desc: "5000m" },
+];
+
 export default function BasketPage() {
   const {
     basket,
     selectedLocation,
+    setLocation,
     updateQuantity,
     removeFromBasket,
     clearBasket,
@@ -57,12 +65,15 @@ export default function BasketPage() {
     toggleChecklistItem,
     checkAllItems,
     uncheckAllItems,
-  } = useSebetStore();
+  } = useSebEtStore();
   const { t } = useTranslation();
 
   const [isMounted, setIsMounted] = useState(false);
+  const [isShoppingMode, setIsShoppingMode] = useState(false);
+  const [locationMode, setLocationMode] = useState<"gps" | "area">("area");
+  const [walkingRadius, setWalkingRadius] = useState<number>(1000);
+  const [isLocating, setIsLocating] = useState(false);
   const [optimizationMode, setOptimizationMode] = useState<"single" | "multi">("single");
-  const [walkingRadius, setWalkingRadius] = useState<number>(750);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizationResult, setOptimizationResult] =
     useState<BasketOptimizationResponse | null>(null);
@@ -72,7 +83,14 @@ export default function BasketPage() {
     setIsMounted(true);
   }, []);
 
-  // Map product id -> product details for fast lookup of image, brand, etc.
+  // Exit shopping mode if basket is cleared
+  useEffect(() => {
+    if (basket.length === 0 && isShoppingMode) {
+      setIsShoppingMode(false);
+    }
+  }, [basket.length, isShoppingMode]);
+
+  // Product map for quick item lookups
   const productMap = useMemo(() => {
     const map = new Map<string, Product>();
     basket.forEach((item) => {
@@ -80,6 +98,36 @@ export default function BasketPage() {
     });
     return map;
   }, [basket]);
+
+  // Estimated baseline subtotal for items in basket
+  const estimatedBasketTotal = useMemo(() => {
+    return basket.reduce((acc, item) => {
+      const price = item.product.min_price ?? item.product.prices?.[0]?.price ?? 0;
+      return acc + price * item.quantity;
+    }, 0);
+  }, [basket]);
+
+  // Handle GPS detection
+  const handleGetLiveGPS = () => {
+    if (typeof window !== "undefined" && navigator.geolocation) {
+      setIsLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLocation({
+            name: "Cari Məkanım (GPS)",
+            lat: pos.coords.latitude,
+            lon: pos.coords.longitude,
+          });
+          setIsLocating(false);
+        },
+        () => {
+          setIsLocating(false);
+          alert("GPS koordinatları alına bilmədi. Zəhmət olmasa siyahıdan ərazi seçin.");
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    }
+  };
 
   // Preset Family Basket loader
   const loadFamilyPreset = async () => {
@@ -117,7 +165,7 @@ export default function BasketPage() {
     }
   };
 
-  // Run optimizer with standard 750m walking radius
+  // Run basket optimizer
   const handleRunOptimizer = async () => {
     if (basket.length === 0) return;
     setIsOptimizing(true);
@@ -137,8 +185,6 @@ export default function BasketPage() {
       );
       setOptimizationResult(res);
 
-      // Preserve multi mode if user selected it and split candidate exists;
-      // otherwise default to multi if split viable, else single
       setOptimizationMode((prev) => {
         if (prev === "multi" && res.best_split_store) return "multi";
         return res.is_split_viable ? "multi" : "single";
@@ -150,7 +196,7 @@ export default function BasketPage() {
     }
   };
 
-  // Re-run optimizer whenever items or quantities in basket change or walking radius / location changes
+  // Trigger optimizer on basket changes, radius or location updates
   const basketSignature = useMemo(
     () => basket.map((i) => `${i.product.id}:${i.quantity}`).join("|"),
     [basket]
@@ -167,14 +213,8 @@ export default function BasketPage() {
   if (!isMounted) return null;
 
   const totalItemsCount = basket.reduce((acc, it) => acc + it.quantity, 0);
-  const allProductIds = basket.map((b) => b.product.id);
-  const checkedCount = allProductIds.filter((id) =>
-    checklistCheckedIds.includes(id)
-  ).length;
-  const isAllChecked = basket.length > 0 && checkedCount === basket.length;
-  const progressPercent =
-    basket.length > 0 ? Math.round((checkedCount / basket.length) * 100) : 0;
 
+  // Active stores and plan
   const bestSingle = optimizationResult?.best_single_store;
   const bestSplit = optimizationResult?.best_split_store;
   const isSplitViable = !!optimizationResult?.is_split_viable;
@@ -191,147 +231,366 @@ export default function BasketPage() {
   const singleStoreQty =
     bestSingle?.items.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0;
 
+  // Active items for the current checklist view
+  const activePlanItems =
+    optimizationMode === "multi" && bestSplit && primaryStore && secondaryStore
+      ? [...primaryStore.items, ...secondaryStore.items]
+      : bestSingle?.items || [];
+
+  // Live dynamic calculation strictly based on currently ticked/checked items
+  const tickedSubtotal = activePlanItems
+    .filter((item) => checklistCheckedIds.includes(String(item.product_id)))
+    .reduce((sum, item) => sum + item.unit_price * (item.quantity || 1), 0);
+
+  const tickedCount = activePlanItems.filter((item) =>
+    checklistCheckedIds.includes(String(item.product_id))
+  ).length;
+
+  const progressPercent =
+    activePlanItems.length > 0
+      ? Math.round((tickedCount / activePlanItems.length) * 100)
+      : 0;
+
   return (
-    <div className="space-y-5 pb-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h1 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
-            <span>{t.basket.title}</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800/50">
-              Sebet
-            </span>
-          </h1>
-        </div>
+    <div className="space-y-5 pb-10">
+      {/* ========================================================================= */}
+      {/* 1. VIEW MODE A: STANDARD BASKET LIST & CONFIGURATION                     */}
+      {/* ========================================================================= */}
+      {!isShoppingMode ? (
+        <div className="space-y-5">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+              <span>{t.basket.title}</span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800/50">
+                Sebet
+              </span>
+            </h1>
 
-        {basket.length > 0 && (
-          <button
-            onClick={clearBasket}
-            className="text-xs text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold flex items-center gap-1 transition-colors"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Təmizlə</span>
-          </button>
-        )}
-      </div>
-
-      {/* Location & Walking Radius Control */}
-      <div className="p-3.5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-3">
-        <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium min-w-0">
-            <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span className="truncate">
-              Ünvan: <strong className="font-bold text-slate-900 dark:text-slate-100">{selectedLocation.name}</strong>
-            </span>
+            {basket.length > 0 && (
+              <button
+                onClick={clearBasket}
+                className="text-xs text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Təmizlə</span>
+              </button>
+            )}
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/50">
-            <Footprints className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>{walkingRadius}m</span>
-          </div>
-        </div>
+          {/* Location & Area Selection Card */}
+          <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs space-y-3.5">
+            {/* Mode Toggle: Cari Məkan (GPS) vs Ərazi Seçimi */}
+            <div className="grid grid-cols-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 gap-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setLocationMode("area");
+                }}
+                className={`py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  locationMode === "area"
+                    ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                }`}
+              >
+                <MapPin className="w-3.5 h-3.5" />
+                <span>{t.basket.chooseArea}</span>
+              </button>
 
-        {/* Radius Quick Presets & Slider */}
-        <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="font-bold text-slate-500 dark:text-slate-400">
-              Maksimum gəzinti radiusu:
-            </span>
-            <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-              {walkingRadius} metr
-            </span>
-          </div>
-
-          {/* Quick Preset Buttons */}
-          <div className="grid grid-cols-4 gap-1.5">
-            {[
-              { label: "500m", value: 500, desc: "Yaxın" },
-              { label: "750m", value: 750, desc: "Standart" },
-              { label: "1000m", value: 1000, desc: "Geniş" },
-              { label: "1500m", value: 1500, desc: "Uzaq" },
-            ].map((p) => {
-              const active = walkingRadius === p.value;
-              return (
-                <button
-                  key={p.value}
-                  type="button"
-                  onClick={() => setWalkingRadius(p.value)}
-                  className={`py-1.5 px-2 rounded-xl text-center transition-all ${
-                    active
-                      ? "bg-emerald-600 text-white shadow-xs font-black ring-1 ring-emerald-600"
-                      : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold"
-                  }`}
-                >
-                  <div className="text-xs">{p.label}</div>
-                  <div
-                    className={`text-[9px] ${
-                      active ? "text-emerald-100" : "text-slate-400 dark:text-slate-500"
-                    }`}
-                  >
-                    {p.desc}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Smooth Slider */}
-          <div className="pt-0.5">
-            <input
-              type="range"
-              min="300"
-              max="2000"
-              step="50"
-              value={walkingRadius}
-              onChange={(e) => setWalkingRadius(Number(e.target.value))}
-              className="w-full accent-emerald-600 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg cursor-pointer"
-            />
-            <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 font-medium px-0.5 mt-0.5">
-              <span>300m</span>
-              <span>750m</span>
-              <span>1200m</span>
-              <span>2000m</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setLocationMode("gps");
+                  if (walkingRadius < 1000) setWalkingRadius(1000);
+                }}
+                className={`py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  locationMode === "gps"
+                    ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                }`}
+              >
+                <Navigation className="w-3.5 h-3.5" />
+                <span>{t.basket.currentLocation}</span>
+              </button>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Empty State with 1-Click Preset */}
-      {basket.length === 0 ? (
-        <div className="p-8 rounded-3xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/50 text-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-600 text-white mx-auto flex items-center justify-center shadow-lg shadow-emerald-600/30">
-            <ShoppingBag className="w-8 h-8" />
-          </div>
-          <div className="space-y-1">
-            <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100">
-              {t.basket.emptyBasket}
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
-              Ərzaqlarınızı əlavə edin və ya dərhal test etmək üçün hazır Bakı ailə səbətini yükləyin.
-            </p>
+            {/* Sub-Panel: Ərazi Seçimi (Dropdown) */}
+            {locationMode === "area" && (
+              <div className="space-y-2">
+                <div className="relative">
+                  <select
+                    value={selectedLocation.name}
+                    onChange={(e) => {
+                      const found = BAKU_LOCATIONS.find((loc) => loc.name === e.target.value);
+                      if (found) {
+                        setLocation(found);
+                        setWalkingRadius(1500);
+                      }
+                    }}
+                    className="w-full appearance-none px-3.5 py-2.5 pr-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer"
+                  >
+                    {BAKU_LOCATIONS.map((loc) => (
+                      <option key={loc.name} value={loc.name} className="dark:bg-slate-900">
+                        {loc.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-slate-400 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" />
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Seçilmiş ərazi daxilindəki bütün tərəfdaş supermarketlər avtomatik müqayisə edilir.
+                </p>
+              </div>
+            )}
+
+            {/* Sub-Panel: Cari Məkan (GPS) & Radius Pills */}
+            {locationMode === "gps" && (
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={handleGetLiveGPS}
+                  disabled={isLocating}
+                  className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs active:scale-98 transition-all cursor-pointer"
+                >
+                  <Navigation className={`w-4 h-4 ${isLocating ? "animate-spin" : ""}`} />
+                  <span>{isLocating ? "Məkan təyin edilir..." : t.basket.detectGps}</span>
+                </button>
+
+                <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 px-1">
+                  <span>Cari koordinatlar:</span>
+                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                    {selectedLocation.lat.toFixed(4)}, {selectedLocation.lon.toFixed(4)}
+                  </span>
+                </div>
+
+                {/* Radius Pills: 1 km (1000m), 3 km (3000m), 5 km (5000m) */}
+                <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="font-bold text-slate-500 dark:text-slate-400">
+                      {t.basket.radius}:
+                    </span>
+                    <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                      {walkingRadius} metr
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    {GPS_RADIUS_OPTIONS.map((opt) => {
+                      const isSelected = walkingRadius === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setWalkingRadius(opt.value)}
+                          className={`py-2 px-2.5 rounded-xl text-center transition-all cursor-pointer ${
+                            isSelected
+                              ? "bg-emerald-600 text-white font-black shadow-xs ring-2 ring-emerald-500/20"
+                              : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 font-semibold"
+                          }`}
+                        >
+                          <div className="text-xs">{opt.label}</div>
+                          <div
+                            className={`text-[9px] ${
+                              isSelected ? "text-emerald-100" : "text-slate-400 dark:text-slate-500"
+                            }`}
+                          >
+                            {opt.desc}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="pt-2 flex flex-col gap-2.5 max-w-xs mx-auto">
-            <button
-              onClick={loadFamilyPreset}
-              disabled={isOptimizing}
-              className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Hazır Bakı Həftəlik Səbətini Yüklə (7 Məhsul)</span>
-            </button>
+          {/* Empty Basket View */}
+          {basket.length === 0 ? (
+            <div className="p-8 rounded-3xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/50 text-center space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-600 text-white mx-auto flex items-center justify-center shadow-lg shadow-emerald-600/30">
+                <ShoppingBag className="w-8 h-8" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100">
+                  {t.basket.emptyBasket}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+                  Məhsullarınızı əlavə edin və ya dərhal test etmək üçün hazır Bakı ailə səbətini yükləyin.
+                </p>
+              </div>
 
-            <Link
-              href="/"
-              className="w-full py-2.5 px-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors"
-            >
-              Məhsul kataloquna qayıt
-            </Link>
-          </div>
+              <div className="pt-2 flex flex-col gap-2.5 max-w-xs mx-auto">
+                <button
+                  onClick={loadFamilyPreset}
+                  disabled={isOptimizing}
+                  className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Hazır Bakı Həftəlik Səbətini Yüklə (7 Məhsul)</span>
+                </button>
+
+                <Link
+                  href="/flyers"
+                  className="w-full py-2.5 px-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors"
+                >
+                  Məhsul kataloquna keç
+                </Link>
+              </div>
+            </div>
+          ) : (
+            /* Basket Items List (`Səbət məhsulları`) with direct quantity controls & line subtotal */
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider">
+                  {t.basket.itemsListTitle} ({totalItemsCount} {t.basket.itemsCount})
+                </h2>
+
+                <Link
+                  href="/flyers"
+                  className="text-xs text-emerald-600 dark:text-emerald-400 font-bold hover:underline flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Məhsul əlavə et</span>
+                </Link>
+              </div>
+
+              {/* Product Cards List */}
+              <div className="space-y-2.5">
+                {basket.map((item) => {
+                  const unitPrice =
+                    item.product.min_price ?? item.product.prices?.[0]?.price ?? 0;
+                  const lineTotal = unitPrice * item.quantity;
+
+                  return (
+                    <div
+                      key={item.product.id}
+                      className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs flex items-center justify-between gap-3"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {item.product.image_url ? (
+                          <img
+                            src={item.product.image_url}
+                            alt={item.product.canonical_name}
+                            className="w-12 h-12 rounded-xl object-contain p-1 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 shrink-0 mix-blend-multiply dark:mix-blend-normal"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 shrink-0">
+                            <StoreIcon className="w-5 h-5" />
+                          </div>
+                        )}
+
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                            {item.product.canonical_name}
+                          </h4>
+                          {item.product.brand && (
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 block truncate">
+                              {item.product.brand}
+                            </span>
+                          )}
+                          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
+                            {unitPrice.toFixed(2)} ₼ / ədəd
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Quantity Adjusters, Line Subtotal, Trash Button */}
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div className="text-right">
+                          <span className="text-xs font-black text-slate-900 dark:text-slate-100 block">
+                            {lineTotal.toFixed(2)} ₼
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-0.5">
+                          <button
+                            onClick={() => updateQuantity(item.product.id, -1)}
+                            className="w-6 h-6 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="text-xs font-black px-1.5 text-slate-900 dark:text-slate-100">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(item.product.id, 1)}
+                            className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs hover:bg-emerald-700 cursor-pointer"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => removeFromBasket(item.product.id)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                          title="Sil"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Basket Summary Card */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block">
+                    Təxmini İlkin Cəmi:
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {totalItemsCount} {t.basket.itemsCount}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-xl font-black text-slate-900 dark:text-slate-100">
+                    {estimatedBasketTotal.toFixed(2)} ₼
+                  </span>
+                </div>
+              </div>
+
+              {/* Action CTA Button: "Alış-verişə başla" */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsShoppingMode(true)}
+                  className="w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-black text-sm flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-600/25 transition-all cursor-pointer"
+                >
+                  <ShoppingBag className="w-5 h-5" />
+                  <span>{t.basket.startShopping}</span>
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
-        /* ================= OPTIMIZED BASKET CONTENT ================= */
-        <div className="space-y-4">
+        /* ========================================================================= */
+        /* 2. VIEW MODE B: INTERACTIVE CHECKLIST SHOPPING MODE                      */
+        /* ========================================================================= */
+        <div className="space-y-4 animate-in fade-in duration-200">
+          {/* Top Bar with Back Button */}
+          <div className="flex items-center justify-between pb-1">
+            <button
+              onClick={() => setIsShoppingMode(false)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>{t.basket.backToBasket}</span>
+            </button>
+
+            <div className="text-right">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                {t.basket.shoppingChecklist}
+              </span>
+              <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">
+                {selectedLocation.name.split("/")[0].trim()}
+              </span>
+            </div>
+          </div>
+
           {error && (
             <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
@@ -340,7 +599,7 @@ export default function BasketPage() {
           )}
 
           {isOptimizing ? (
-            <div className="p-10 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center space-y-3 shadow-xs">
+            <div className="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center space-y-3 shadow-xs">
               <div className="w-10 h-10 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
               <div className="text-xs font-bold text-slate-700 dark:text-slate-300">
                 Bakı marketlərinin qiymətləri müqayisə edilir...
@@ -348,14 +607,14 @@ export default function BasketPage() {
             </div>
           ) : optimizationResult ? (
             <>
-              {/* TOP CHOICE CARDS: Tək Market (Sürətli) VS 2 Marketə Böl (Maksimum Qənaət) */}
+              {/* TOP CHOICE CARDS: Tək Market vs 2 Marketə Böl */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* CARD 1: Tək Market (Sürətli) */}
                 {bestSingle && (
                   <button
                     type="button"
                     onClick={() => setOptimizationMode("single")}
-                    className={`text-left p-4 rounded-3xl transition-all relative flex flex-col justify-between select-none ${
+                    className={`text-left p-4 rounded-3xl transition-all relative flex flex-col justify-between select-none cursor-pointer ${
                       optimizationMode === "single"
                         ? "bg-emerald-50/70 dark:bg-emerald-950/20 border-2 border-emerald-600 dark:border-emerald-500 shadow-md ring-2 ring-emerald-500/20"
                         : "bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 shadow-2xs"
@@ -381,7 +640,7 @@ export default function BasketPage() {
                             {bestSingle.branch_name}
                           </h4>
                           <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                            {singleStoreQty} məhsul ({bestSingle.coverage_pct}% stokda)
+                            {singleStoreQty} {t.basket.itemsCount} ({bestSingle.coverage_pct}% stokda)
                           </span>
                         </div>
                       </div>
@@ -402,12 +661,12 @@ export default function BasketPage() {
                   </button>
                 )}
 
-                {/* CARD 2: 2 Marketə Böl (Maksimum Qənaət) */}
+                {/* CARD 2: 2 Marketə Böl */}
                 {bestSplit && primaryStore && secondaryStore ? (
                   <button
                     type="button"
                     onClick={() => setOptimizationMode("multi")}
-                    className={`text-left p-4 rounded-3xl transition-all relative flex flex-col justify-between select-none ${
+                    className={`text-left p-4 rounded-3xl transition-all relative flex flex-col justify-between select-none cursor-pointer ${
                       optimizationMode === "multi"
                         ? "bg-emerald-50/70 dark:bg-emerald-950/20 border-2 border-emerald-600 dark:border-emerald-500 shadow-md ring-2 ring-emerald-500/20"
                         : "bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 shadow-2xs"
@@ -445,8 +704,7 @@ export default function BasketPage() {
                             {primaryStore.chain_name} + {secondaryStore.chain_name}
                           </h4>
                           <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                            {primaryStore.items.length} məhsul + {secondaryStore.items.length} məhsul
-                            {primaryStoreQty} məhsul + {secondaryStoreQty} məhsul
+                            {primaryStoreQty} + {secondaryStoreQty} {t.basket.itemsCount}
                           </span>
                         </div>
                       </div>
@@ -455,12 +713,6 @@ export default function BasketPage() {
                         <Footprints className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                         <span>Aralarındakı məsafə: ~{bestSplit.walking_distance_meters || bestSplit.distance_between_stores_m}m</span>
                       </div>
-
-                      {!isSplitViable && (
-                        <p className="text-[10px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-1 rounded-xl border border-amber-200/60 dark:border-amber-900/40">
-                          Qənaət azdır, lakin 2 market üzrə siyahını görmək üçün seçə bilərsiniz.
-                        </p>
-                      )}
                     </div>
 
                     <div className="pt-3 mt-2 border-t border-slate-200/80 dark:border-slate-800 flex items-baseline justify-between">
@@ -475,7 +727,6 @@ export default function BasketPage() {
                     </div>
                   </button>
                 ) : (
-                  /* Disabled/Muted Card 2 when no split pair exists */
                   <div className="p-4 rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 text-left flex flex-col justify-between opacity-75 select-none">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -495,24 +746,29 @@ export default function BasketPage() {
                       </div>
                     </div>
 
-                    <div className="pt-3 mt-2 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400 gap-2 flex-wrap">
-                      <span>Tək marketdən almaq daha rahatdır.</span>
-                      {walkingRadius < 1500 && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setWalkingRadius(walkingRadius < 750 ? 750 : walkingRadius < 1000 ? 1000 : 1500);
-                          }}
-                          className="px-2 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-bold transition-colors flex items-center gap-1 shadow-xs"
-                        >
-                          <Footprints className="w-3 h-3" />
-                          <span>Radiusu artır ({walkingRadius < 750 ? "750m" : walkingRadius < 1000 ? "1000m" : "1500m"})</span>
-                        </button>
-                      )}
+                    <div className="pt-3 mt-2 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                      <span>Tək marketdən almaq tövsiyə olunur.</span>
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* LIVE DYNAMIC TICKED SUBTOTAL COUNTER CARD */}
+              <div className="p-4 rounded-3xl bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-600/20 flex items-center justify-between">
+                <div>
+                  <div className="text-[11px] font-black uppercase tracking-wider text-emerald-100">
+                    {t.basket.tickedTotal}
+                  </div>
+                  <div className="text-2xl font-black">
+                    {tickedSubtotal.toFixed(2)} ₼
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-xs font-black bg-white/20 px-3 py-1.5 rounded-xl inline-block">
+                    {tickedCount} / {activePlanItems.length} {t.basket.itemsCount}
+                  </span>
+                </div>
               </div>
 
               {/* CHECKLIST PROGRESS & ACTIONS BAR */}
@@ -521,21 +777,21 @@ export default function BasketPage() {
                   <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <span>
-                      {t.basket.checklistMode}: {checkedCount} / {basket.length}
+                      {t.basket.checklistMode}: {tickedCount} / {activePlanItems.length}
                     </span>
                   </span>
 
                   <div className="flex items-center gap-2">
                     <button
                       onClick={checkAllItems}
-                      className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+                      className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
                     >
                       Hamısını seç
                     </button>
                     <span className="text-slate-300 dark:text-slate-700">•</span>
                     <button
                       onClick={uncheckAllItems}
-                      className="text-[11px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                      className="text-[11px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                     >
                       Sıfırla
                     </button>
@@ -552,7 +808,7 @@ export default function BasketPage() {
               </div>
 
               {/* ================================================================ */}
-              {/* MODE A: 2 MARKET CHECKLISTS (SPLIT MODE)                         */}
+              {/* CHECKLIST MODE A: 2 MARKET SPLIT                                 */}
               {/* ================================================================ */}
               {optimizationMode === "multi" && bestSplit && primaryStore && secondaryStore && (
                 <div className="space-y-4">
@@ -569,14 +825,10 @@ export default function BasketPage() {
                         />
                         <div className="min-w-0">
                           <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 truncate">
-                            {primaryStore.branch_name}-dan alınacaqlar
+                            {primaryStore.branch_name}
                           </h3>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                            {primaryStore.items.length} ədəd —{" "}
-                            {primaryStoreQty === primaryStore.items.length
-                              ? `${primaryStoreQty} ədəd`
-                              : `${primaryStoreQty} ədəd (${primaryStore.items.length} çeşid)`}{" "}
-                            —{" "}
+                            {primaryStoreQty} {t.basket.itemsCount} —{" "}
                             <strong className="text-emerald-600 dark:text-emerald-400 font-black">
                               {primaryStore.subtotal.toFixed(2)} ₼
                             </strong>
@@ -597,7 +849,7 @@ export default function BasketPage() {
                       </a>
                     </div>
 
-                    {/* Items for Store 1 */}
+                    {/* Store 1 Items */}
                     <div className="space-y-2 pt-1">
                       {primaryStore.items.map((item) => {
                         const isChecked = checklistCheckedIds.includes(String(item.product_id));
@@ -614,7 +866,6 @@ export default function BasketPage() {
                             }`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              {/* Custom Checkbox */}
                               <div
                                 className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 transition-all border ${
                                   isChecked
@@ -625,7 +876,6 @@ export default function BasketPage() {
                                 <Check className="w-3.5 h-3.5 stroke-[3]" />
                               </div>
 
-                              {/* Thumbnail */}
                               {product?.image_url && (
                                 <img
                                   src={product.image_url}
@@ -687,7 +937,7 @@ export default function BasketPage() {
                       className="py-1.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs shrink-0 active:scale-95"
                     >
                       <Navigation className="w-3.5 h-3.5 text-amber-300" />
-                      <span>2 Market Arası Marşrut</span>
+                      <span>Marşrutu Aç</span>
                       <ExternalLink className="w-3 h-3 opacity-80" />
                     </a>
                   </div>
@@ -705,14 +955,10 @@ export default function BasketPage() {
                         />
                         <div className="min-w-0">
                           <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 truncate">
-                            {secondaryStore.branch_name}-dən alınacaqlar
+                            {secondaryStore.branch_name}
                           </h3>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                            {secondaryStore.items.length} ədəd —{" "}
-                            {secondaryStoreQty === secondaryStore.items.length
-                              ? `${secondaryStoreQty} ədəd`
-                              : `${secondaryStoreQty} ədəd (${secondaryStore.items.length} çeşid)`}{" "}
-                            —{" "}
+                            {secondaryStoreQty} {t.basket.itemsCount} —{" "}
                             <strong className="text-emerald-600 dark:text-emerald-400 font-black">
                               {secondaryStore.subtotal.toFixed(2)} ₼
                             </strong>
@@ -733,7 +979,7 @@ export default function BasketPage() {
                       </a>
                     </div>
 
-                    {/* Items for Store 2 */}
+                    {/* Store 2 Items */}
                     <div className="space-y-2 pt-1">
                       {secondaryStore.items.map((item) => {
                         const isChecked = checklistCheckedIds.includes(String(item.product_id));
@@ -750,7 +996,6 @@ export default function BasketPage() {
                             }`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              {/* Custom Checkbox */}
                               <div
                                 className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 transition-all border ${
                                   isChecked
@@ -761,7 +1006,6 @@ export default function BasketPage() {
                                 <Check className="w-3.5 h-3.5 stroke-[3]" />
                               </div>
 
-                              {/* Thumbnail */}
                               {product?.image_url && (
                                 <img
                                   src={product.image_url}
@@ -825,7 +1069,7 @@ export default function BasketPage() {
               )}
 
               {/* ================================================================ */}
-              {/* MODE B: SINGLE STORE CHECKLIST                                    */}
+              {/* CHECKLIST MODE B: SINGLE STORE                                   */}
               {/* ================================================================ */}
               {optimizationMode === "single" && bestSingle && (
                 <div className="space-y-4">
@@ -838,14 +1082,10 @@ export default function BasketPage() {
                         />
                         <div className="min-w-0">
                           <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100 truncate">
-                            {bestSingle.branch_name}-dan alınacaqlar
+                            {bestSingle.branch_name}
                           </h3>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                            {bestSingle.items.length} məhsul —{" "}
-                            {singleStoreQty === bestSingle.items.length
-                              ? `${singleStoreQty} məhsul`
-                              : `${singleStoreQty} ədəd (${bestSingle.items.length} çeşid)`}{" "}
-                            —{" "}
+                            {singleStoreQty} {t.basket.itemsCount} —{" "}
                             <strong className="text-emerald-600 dark:text-emerald-400 font-black">
                               {bestSingle.total_cost.toFixed(2)} ₼
                             </strong>
@@ -866,7 +1106,7 @@ export default function BasketPage() {
                       </a>
                     </div>
 
-                    {/* Items for Single Store */}
+                    {/* Single Store Items */}
                     <div className="space-y-2 pt-1">
                       {bestSingle.items.map((item) => {
                         const isChecked = checklistCheckedIds.includes(String(item.product_id));
@@ -883,7 +1123,6 @@ export default function BasketPage() {
                             }`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              {/* Checkbox */}
                               <div
                                 className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 transition-all border ${
                                   isChecked
@@ -894,7 +1133,6 @@ export default function BasketPage() {
                                 <Check className="w-3.5 h-3.5 stroke-[3]" />
                               </div>
 
-                              {/* Thumbnail */}
                               {product?.image_url && (
                                 <img
                                   src={product.image_url}
@@ -989,77 +1227,6 @@ export default function BasketPage() {
               )}
             </>
           ) : null}
-
-          {/* SƏBƏTİN İDARƏ EDİLMƏSİ (Basket Items & Quantity Adjusters) */}
-          <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-                Səbətdəki Məhsullar ({totalItemsCount} ədəd)
-              </h4>
-
-              <Link
-                href="/"
-                className="text-xs text-emerald-600 dark:text-emerald-400 font-bold hover:underline flex items-center gap-1"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Məhsul əlavə et</span>
-              </Link>
-            </div>
-
-            <div className="space-y-2">
-              {basket.map((item) => (
-                <div
-                  key={item.product.id}
-                  className="p-3 rounded-2xl bg-white dark:bg-slate-850 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3 shadow-2xs"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    {item.product.image_url && (
-                      <img
-                        src={item.product.image_url}
-                        alt={item.product.canonical_name}
-                        className="w-10 h-10 rounded-xl object-contain p-0.5 bg-slate-100 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 shrink-0 mix-blend-multiply dark:mix-blend-normal"
-                      />
-                    )}
-                    <div className="min-w-0">
-                      <div className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
-                        {item.product.canonical_name}
-                      </div>
-                      <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">
-                        Ən ucuz: {(item.product.min_price || 0).toFixed(2)} ₼
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-0.5">
-                      <button
-                        onClick={() => updateQuantity(item.product.id, -1)}
-                        className="w-6 h-6 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800"
-                      >
-                        <Minus className="w-3 h-3" />
-                      </button>
-                      <span className="text-xs font-black px-1.5 text-slate-900 dark:text-slate-100">
-                        {item.quantity}
-                      </span>
-                      <button
-                        onClick={() => updateQuantity(item.product.id, 1)}
-                        className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs hover:bg-emerald-700"
-                      >
-                        <Plus className="w-3 h-3" />
-                      </button>
-                    </div>
-
-                    <button
-                      onClick={() => removeFromBasket(item.product.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       )}
     </div>

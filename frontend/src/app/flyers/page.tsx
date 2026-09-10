@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   BookOpen,
@@ -24,10 +24,13 @@ import {
   GlassWater,
   Smile,
   Tag,
+  SlidersHorizontal,
+  X,
 } from "lucide-react";
 import { getActiveFlyers, searchProducts, getCategories, getProductById } from "@/lib/api";
 import { Flyer, Product, Category } from "@/lib/types";
 import { useSebetStore } from "@/lib/store";
+import { useTranslation } from "@/lib/translations";
 import { ChainLogo } from "@/components/ChainLogo";
 import { ProductCard } from "@/components/ProductCard";
 
@@ -84,13 +87,15 @@ function getCategoryPillInfo(cat: Category): FlyerCategoryMeta {
 }
 
 function CatalogContent() {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const initialChain = searchParams.get("chain") || "bravo";
   const initialCat = searchParams.get("cat") || "";
   const initialQuery = searchParams.get("q") || "";
+  const initialTab = searchParams.get("tab");
 
   const [activeTab, setActiveTab] = useState<"products" | "flyers">(
-    initialChain && !initialCat && !initialQuery ? "flyers" : "products"
+    initialTab === "flyers" ? "flyers" : "products"
   );
 
   // Flyers state
@@ -108,7 +113,51 @@ function CatalogContent() {
   const [isProductsLoading, setIsProductsLoading] = useState(true);
   const [totalProducts, setTotalProducts] = useState(0);
 
+  // Filter states
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [pendingBrands, setPendingBrands] = useState<string[]>([]);
+  const [pendingMinPrice, setPendingMinPrice] = useState<string>("");
+  const [pendingMaxPrice, setPendingMaxPrice] = useState<string>("");
+
+  const [appliedBrands, setAppliedBrands] = useState<string[]>([]);
+  const [appliedMinPrice, setAppliedMinPrice] = useState<string>("");
+  const [appliedMaxPrice, setAppliedMaxPrice] = useState<string>("");
+
   const { addToBasket } = useSebetStore();
+
+  // Dynamic available brands from active product search/fetch results
+  const availableBrands = useMemo(() => {
+    const brandsSet = new Set<string>();
+    products.forEach((p) => {
+      if (p.brand && p.brand.trim()) {
+        brandsSet.add(p.brand.trim());
+      }
+    });
+    return Array.from(brandsSet).sort();
+  }, [products]);
+
+  // Dynamic client-side filtered products
+  const displayedProducts = useMemo(() => {
+    return products.filter((prod) => {
+      const price = prod.min_price ?? prod.prices[0]?.price ?? 0;
+      if (appliedBrands.length > 0) {
+        if (!prod.brand || !appliedBrands.includes(prod.brand.trim())) {
+          return false;
+        }
+      }
+      if (appliedMinPrice !== "") {
+        const min = parseFloat(appliedMinPrice);
+        if (!isNaN(min) && price < min) return false;
+      }
+      if (appliedMaxPrice !== "") {
+        const max = parseFloat(appliedMaxPrice);
+        if (!isNaN(max) && price > max) return false;
+      }
+      return true;
+    });
+  }, [products, appliedBrands, appliedMinPrice, appliedMaxPrice]);
+
+  const hasActiveFilters = appliedBrands.length > 0 || appliedMinPrice !== "" || appliedMaxPrice !== "";
 
   // Load initial metadata and flyers
   useEffect(() => {
@@ -342,6 +391,45 @@ function CatalogContent() {
             ))}
           </div>
 
+          {/* Filter Trigger Button directly beneath markets slider */}
+          <div className="flex items-center justify-between pt-0.5">
+            <button
+              onClick={() => {
+                setPendingBrands(appliedBrands);
+                setPendingMinPrice(appliedMinPrice);
+                setPendingMaxPrice(appliedMaxPrice);
+                setIsFilterModalOpen(true);
+              }}
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs ${
+                hasActiveFilters
+                  ? "bg-emerald-600 text-white shadow-emerald-500/20"
+                  : "bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+              }`}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>{t.filterModal.buttonLabel}</span>
+              {hasActiveFilters && (
+                <span className="w-4.5 h-4.5 rounded-full bg-white text-emerald-700 text-[10px] font-black flex items-center justify-center">
+                  {appliedBrands.length > 0 ? appliedBrands.length : "•"}
+                </span>
+              )}
+            </button>
+
+            {hasActiveFilters && (
+              <button
+                onClick={() => {
+                  setAppliedBrands([]);
+                  setAppliedMinPrice("");
+                  setAppliedMaxPrice("");
+                }}
+                className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline px-1 flex items-center gap-1"
+              >
+                <X className="w-3 h-3" />
+                <span>{t.filterModal.reset}</span>
+              </button>
+            )}
+          </div>
+
           {/* Products Grid */}
           {isProductsLoading ? (
             <div className="grid grid-cols-2 gap-3">
@@ -352,19 +440,33 @@ function CatalogContent() {
                 />
               ))}
             </div>
-          ) : products.length === 0 ? (
+          ) : displayedProducts.length === 0 ? (
             <div className="text-center py-12 p-6 bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 space-y-2">
               <div className="text-3xl">🔍</div>
               <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                Məhsul tapılmadı
+                {hasActiveFilters ? t.filterModal.noResults : "Məhsul tapılmadı"}
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Axtarış sorğusunu dəyişin və ya digər marketləri seçin.
+                {hasActiveFilters
+                  ? "Seçilmiş filtrlərə uyğun məhsul tapılmadı. Filtrləri tənzimləyin və ya sıfırlayın."
+                  : "Axtarış sorğusunu dəyişin və ya digər marketləri seçin."}
               </p>
+              {hasActiveFilters && (
+                <button
+                  onClick={() => {
+                    setAppliedBrands([]);
+                    setAppliedMinPrice("");
+                    setAppliedMaxPrice("");
+                  }}
+                  className="mt-2 px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-xs hover:bg-emerald-700 transition-colors"
+                >
+                  {t.filterModal.reset}
+                </button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
-              {products.map((prod) => (
+              {displayedProducts.map((prod) => (
                 <ProductCard key={prod.id} product={prod} />
               ))}
             </div>
@@ -522,6 +624,177 @@ function CatalogContent() {
               </p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Dynamic Filter Modal / Panel */}
+      {isFilterModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-200"
+          onClick={() => setIsFilterModalOpen(false)}
+        >
+          <div
+            className="w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col animate-in slide-in-from-bottom-5 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <h3 className="text-base font-black text-slate-900 dark:text-slate-100">
+                  {t.filterModal.title}
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsFilterModalOpen(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 space-y-5 overflow-y-auto">
+              {/* Brand Selection */}
+              <div>
+                <div className="flex items-center justify-between mb-2.5">
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                    {t.filterModal.brands} {availableBrands.length > 0 && `(${availableBrands.length})`}
+                  </label>
+                  {availableBrands.length > 0 && (
+                    <div className="flex items-center gap-2 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setPendingBrands([...availableBrands])}
+                        className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline"
+                      >
+                        {t.filterModal.selectAll}
+                      </button>
+                      <span className="text-slate-300 dark:text-slate-700">|</span>
+                      <button
+                        type="button"
+                        onClick={() => setPendingBrands([])}
+                        className="text-slate-500 dark:text-slate-400 hover:underline"
+                      >
+                        {t.filterModal.clear}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {availableBrands.length === 0 ? (
+                  <div className="text-xs text-slate-400 italic py-2">
+                    Aktiv axtarış nəticələrində brend tapılmadı
+                  </div>
+                ) : (
+                  <div className="max-h-48 overflow-y-auto space-y-1 pr-1 no-scrollbar border border-slate-100 dark:border-slate-800 rounded-2xl p-2.5 bg-slate-50/50 dark:bg-slate-950/40">
+                    {availableBrands.map((b) => {
+                      const isChecked = pendingBrands.includes(b);
+                      return (
+                        <label
+                          key={b}
+                          className="flex items-center justify-between p-2 rounded-xl hover:bg-white dark:hover:bg-slate-800/80 cursor-pointer transition-colors text-xs font-semibold text-slate-700 dark:text-slate-200"
+                        >
+                          <span className="truncate mr-2">{b}</span>
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setPendingBrands((prev) => [...prev, b]);
+                              } else {
+                                setPendingBrands((prev) => prev.filter((item) => item !== b));
+                              }
+                            }}
+                            className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-emerald-600 focus:ring-emerald-500 accent-emerald-600 shrink-0"
+                          />
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Price Range */}
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
+                  {t.filterModal.priceRange} (₼)
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                      {t.filterModal.min}
+                    </span>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        placeholder="0.00"
+                        value={pendingMinPrice}
+                        onChange={(e) => setPendingMinPrice(e.target.value)}
+                        className="w-full pl-3 pr-7 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                      />
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                        ₼
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                      {t.filterModal.max}
+                    </span>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        placeholder="99.00"
+                        value={pendingMaxPrice}
+                        onChange={(e) => setPendingMaxPrice(e.target.value)}
+                        className="w-full pl-3 pr-7 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                      />
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                        ₼
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setPendingBrands([]);
+                  setPendingMinPrice("");
+                  setPendingMaxPrice("");
+                  setAppliedBrands([]);
+                  setAppliedMinPrice("");
+                  setAppliedMaxPrice("");
+                  setIsFilterModalOpen(false);
+                }}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-center"
+              >
+                {t.filterModal.reset}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAppliedBrands(pendingBrands);
+                  setAppliedMinPrice(pendingMinPrice);
+                  setAppliedMaxPrice(pendingMaxPrice);
+                  setIsFilterModalOpen(false);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-xs font-bold transition-all shadow-xs text-center"
+              >
+                {t.filterModal.apply}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
