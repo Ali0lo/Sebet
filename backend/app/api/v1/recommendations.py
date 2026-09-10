@@ -128,3 +128,4 @@ async def get_search_recommendations(
         "trending": TRENDING_QUERIES,
         "categories": POPULAR_CATEGORIES,
     }
+

@@ -75,23 +75,13 @@ export const Navbar: React.FC = () => {
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-emerald-100/80 dark:border-slate-800 shadow-xs transition-colors duration-200">
       <div className="max-w-xl mx-auto px-4 py-2.5 flex items-center justify-between">
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-600/25 group-hover:scale-105 transition-transform">
-            <ShoppingBasket className="w-5 h-5" />
+        <Link href="/" className="flex items-center gap-2 group shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform">
+            <ShoppingBasket className="w-4 h-4" />
           </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-black text-xl tracking-tight text-slate-900 dark:text-white">
-                Seb<span className="text-emerald-600 dark:text-emerald-400">et</span>
-              </span>
-              <span className="text-[9px] uppercase font-black tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
-                Baku
-              </span>
-            </div>
-            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 leading-none">
-              Ağıllı Market Bələdçisi
-            </p>
-          </div>
+          <span className="font-black text-xl tracking-tight text-slate-900 dark:text-white">
+            Seb<span className="text-emerald-600 dark:text-emerald-400">et</span>
+          </span>
         </Link>
 
         {/* Location & Theme Toggle & Points & Cart */}
@@ -176,25 +166,25 @@ export const Navbar: React.FC = () => {
             )}
           </button>
 
-          {/* Sebet Points */}
+          {/* Sebet Points - Compact Coin Counter */}
           <Link
             href="/profile"
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-700/40 text-amber-900 dark:text-amber-300 text-xs font-bold hover:bg-amber-100/70 dark:hover:bg-amber-900/40 transition-colors"
+            className="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition-colors shrink-0"
+            title="Sebet Xallarım"
           >
             <Coins className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-            <span>{isMounted ? userPoints : 250}</span>
-            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-normal">xal</span>
+            <span className="tabular-nums font-extrabold">{isMounted ? userPoints : 250}</span>
           </Link>
 
           {/* Floating Cart Button */}
           <button
             onClick={() => toggleBasketDrawer(true)}
-            className="relative p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors"
-            title="Səbət"
+            className="relative p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors shrink-0"
+            title="Səbətim"
           >
             <ShoppingBasket className="w-4 h-4" />
             {isMounted && totalBasketItems > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-emerald-600 text-white rounded-full text-[11px] font-black flex items-center justify-center shadow-xs">
+              <span className="absolute -top-1 -right-1 w-4.5 h-4.5 bg-emerald-600 text-white rounded-full text-[10px] font-black flex items-center justify-center shadow-xs">
                 {totalBasketItems}
               </span>
             )}
