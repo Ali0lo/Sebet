@@ -22,6 +22,7 @@ import {
   Info,
 } from "lucide-react";
 import { useSebetStore } from "@/lib/store";
+import { useTranslation } from "@/lib/translations";
 import { optimizeBasket, searchProducts } from "@/lib/api";
 import {
   BasketOptimizationResponse,
@@ -57,6 +58,7 @@ export default function BasketPage() {
     checkAllItems,
     uncheckAllItems,
   } = useSebetStore();
+  const { t } = useTranslation();
 
   const [isMounted, setIsMounted] = useState(false);
   const [optimizationMode, setOptimizationMode] = useState<"single" | "multi">("single");
@@ -195,7 +197,7 @@ export default function BasketPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h1 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
-            <span>Ağıllı Səbət</span>
+            <span>{t.basket.title}</span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800/50">
               Sebet
             </span>
@@ -302,7 +304,7 @@ export default function BasketPage() {
           </div>
           <div className="space-y-1">
             <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100">
-              Səbətim hələlik boşdur
+              {t.basket.emptyBasket}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
               Ərzaqlarınızı əlavə edin və ya dərhal test etmək üçün hazır Bakı ailə səbətini yükləyin.
@@ -362,7 +364,7 @@ export default function BasketPage() {
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                          Tək Market (Sürətli)
+                          {t.basket.singleStoreTab}
                         </span>
                         <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                           {bestSingle.distance_km} km
@@ -379,7 +381,6 @@ export default function BasketPage() {
                             {bestSingle.branch_name}
                           </h4>
                           <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                            {bestSingle.items.length} məhsul ({bestSingle.coverage_pct}% stokda)
                             {singleStoreQty} məhsul ({bestSingle.coverage_pct}% stokda)
                           </span>
                         </div>
@@ -392,7 +393,7 @@ export default function BasketPage() {
 
                     <div className="pt-3 mt-2 border-t border-slate-200/80 dark:border-slate-800 flex items-baseline justify-between">
                       <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                        Cəmi Məbləğ:
+                        {t.basket.total}:
                       </span>
                       <span className="text-lg font-black text-slate-900 dark:text-slate-100">
                         {bestSingle.total_cost.toFixed(2)} ₼
@@ -415,15 +416,15 @@ export default function BasketPage() {
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
-                          2 Marketə Böl
+                          {t.basket.splitStoreTab}
                         </span>
                         {isSplitViable ? (
                           <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white font-black text-[11px] shadow-xs">
-                            {bestSplit.savings_azn.toFixed(2)} ₼ Qənaət
+                            {bestSplit.savings_azn.toFixed(2)} ₼ {t.basket.savings}
                           </span>
                         ) : (
                           <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 font-bold text-[10px] border border-amber-200 dark:border-amber-800">
-                            +{bestSplit.savings_azn.toFixed(2)} ₼ Qənaət
+                            +{bestSplit.savings_azn.toFixed(2)} ₼ {t.basket.savings}
                           </span>
                         )}
                       </div>
@@ -464,7 +465,7 @@ export default function BasketPage() {
 
                     <div className="pt-3 mt-2 border-t border-slate-200/80 dark:border-slate-800 flex items-baseline justify-between">
                       <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                        Bölünmüş Cəm:
+                        {t.basket.total}:
                       </span>
                       <div className="text-right">
                         <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">
@@ -520,7 +521,7 @@ export default function BasketPage() {
                   <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <span>
-                      Mağazada Götürülənlər: {checkedCount} / {basket.length}
+                      {t.basket.checklistMode}: {checkedCount} / {basket.length}
                     </span>
                   </span>
 

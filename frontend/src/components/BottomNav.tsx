@@ -10,10 +10,12 @@ import {
   User,
 } from "lucide-react";
 import { useSebEtStore } from "@/lib/store";
+import { useTranslation } from "@/lib/translations";
 
 export const BottomNav: React.FC = () => {
   const pathname = usePathname();
   const { basket } = useSebEtStore();
+  const { t } = useTranslation();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -25,15 +27,15 @@ export const BottomNav: React.FC = () => {
     : 0;
 
   const navItems = [
-    { label: "Ana Səhifə", href: "/", icon: Home },
-    { label: "Kataloq & Məhsullar", href: "/flyers", icon: BookOpen },
+    { label: t.nav.home, href: "/", icon: Home },
+    { label: t.nav.catalog, href: "/flyers", icon: BookOpen },
     {
-      label: "Ağıllı Səbət",
+      label: t.nav.basket,
       href: "/basket",
       icon: ShoppingBag,
       badge: totalBasketItems > 0 ? totalBasketItems : null,
     },
-    { label: "Profil", href: "/profile", icon: User },
+    { label: t.nav.profile, href: "/profile", icon: User },
   ];
 
   return (

@@ -182,7 +182,13 @@ export const Navbar: React.FC = () => {
             >
               <Globe className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
               <span className="uppercase text-[11px]">
-                {isMounted ? language : "aze"}
+                {isMounted
+                  ? language === "ru"
+                    ? "RUS"
+                    : language === "en"
+                    ? "ENG"
+                    : "AZE"
+                  : "AZE"}
               </span>
               <ChevronDown className="w-3 h-3 text-slate-400" />
             </button>
@@ -193,7 +199,8 @@ export const Navbar: React.FC = () => {
                   Dil / Language
                 </div>
                 {SUPPORTED_LANGUAGES.map((lang) => {
-                  const isSelected = (isMounted ? language : "aze") === lang.code;
+                  const current = isMounted ? language : "az";
+                  const isSelected = current === lang.code;
                   return (
                     <button
                       key={lang.code}

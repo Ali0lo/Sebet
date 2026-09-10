@@ -33,92 +33,64 @@ import { ProductCard } from "@/components/ProductCard";
 import { BarcodeScannerModal } from "@/components/BarcodeScannerModal";
 import { NearbyMarketsModal } from "@/components/NearbyMarketsModal";
 import { useSebetStore } from "@/lib/store";
+import { useTranslation, TranslationDictionary } from "@/lib/translations";
 
-interface CategoryDisplayInfo {
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
-  shortName: string;
-  fullName: string;
-}
-
-const CATEGORY_MAP: Record<string, CategoryDisplayInfo> = {
-  "dairy-eggs": {
-    icon: Milk,
-    shortName: "Süd Məhsulları",
-    fullName: "Süd Məhsulları",
-  },
-  "meat-poultry": {
-    icon: Beef,
-    shortName: "Ət & Toyuq",
-    fullName: "Ət & Toyuq",
-  },
-  "bakery": {
-    icon: Croissant,
-    shortName: "Çörək & Un",
-    fullName: "Çörək & Un Məmulatları",
-  },
-  "fruit-veg": {
-    icon: Apple,
-    shortName: "Meyvə-Tərəvəz",
-    fullName: "Meyvə & Tərəvəz",
-  },
-  "pantry-cooking": {
-    icon: Package,
-    shortName: "Əsas Ərzaq",
-    fullName: "Əsas Ərzaqlar",
-  },
-  "tea-coffee": {
-    icon: Coffee,
-    shortName: "Çay & Qəhvə",
-    fullName: "Çay & Qəhvə",
-  },
-  "beverages-tea": {
-    icon: Coffee,
-    shortName: "Çay & Qəhvə",
-    fullName: "Çay & Qəhvə",
-  },
-  "snacks-sweets": {
-    icon: Cookie,
-    shortName: "Şirniyyat",
-    fullName: "Şirniyyat & Qəlyanaltı",
-  },
-  "drinks-water": {
-    icon: GlassWater,
-    shortName: "İçkilər",
-    fullName: "İçkilər & Su",
-  },
-  "cleaning-household": {
-    icon: Sparkles,
-    shortName: "Təmizlik",
-    fullName: "Yuyucu & Təmizlik",
-  },
-  "personal-care-baby": {
-    icon: Smile,
-    shortName: "Qulluq",
-    fullName: "Şəxsi Qulluq & Gigiyena",
-  },
+const CATEGORY_ICONS: Record<
+  string,
+  React.ComponentType<{ className?: string; strokeWidth?: number }>
+> = {
+  "dairy-eggs": Milk,
+  "meat-poultry": Beef,
+  "bakery": Croissant,
+  "fruit-veg": Apple,
+  "pantry-cooking": Package,
+  "tea-coffee": Coffee,
+  "beverages-tea": Coffee,
+  "snacks-sweets": Cookie,
+  "drinks-water": GlassWater,
+  "cleaning-household": Sparkles,
+  "personal-care-baby": Smile,
 };
 
-function getCategoryMeta(cat: Category): CategoryDisplayInfo {
-  const bySlug = CATEGORY_MAP[cat.slug];
-  if (bySlug) return bySlug;
+const CATEGORY_TRANSLATION_KEYS: Record<
+  string,
+  keyof TranslationDictionary["categoriesList"]
+> = {
+  "dairy-eggs": "dairy",
+  "meat-poultry": "meat",
+  "bakery": "bakery",
+  "fruit-veg": "produce",
+  "pantry-cooking": "staples",
+  "tea-coffee": "teaCoffee",
+  "beverages-tea": "teaCoffee",
+  "snacks-sweets": "sweets",
+  "drinks-water": "drinks",
+  "cleaning-household": "cleaning",
+  "personal-care-baby": "care",
+};
 
+function getCategoryName(cat: Category, t: TranslationDictionary): string {
+  const transKey = CATEGORY_TRANSLATION_KEYS[cat.slug];
+  if (transKey && t.categoriesList[transKey]) {
+    return t.categoriesList[transKey];
+  }
   const name = (cat.name_az || "").toLowerCase();
-  if (name.includes("süd") || name.includes("ağartı")) return CATEGORY_MAP["dairy-eggs"];
-  if (name.includes("ət") || name.includes("toyuq")) return CATEGORY_MAP["meat-poultry"];
-  if (name.includes("çörək") || name.includes("un")) return CATEGORY_MAP["bakery"];
-  if (name.includes("meyvə") || name.includes("tərəvəz")) return CATEGORY_MAP["fruit-veg"];
-  if (name.includes("ərzaq") || name.includes("yağ")) return CATEGORY_MAP["pantry-cooking"];
-  if (name.includes("çay") || name.includes("qəhvə")) return CATEGORY_MAP["tea-coffee"];
-  if (name.includes("şirniyyat") || name.includes("qəlyanaltı")) return CATEGORY_MAP["snacks-sweets"];
-  if (name.includes("içki") || name.includes("su")) return CATEGORY_MAP["drinks-water"];
-  if (name.includes("təmizlik") || name.includes("yuyucu")) return CATEGORY_MAP["cleaning-household"];
-  if (name.includes("qulluq") || name.includes("gigiyena")) return CATEGORY_MAP["personal-care-baby"];
+  if (name.includes("süd") || name.includes("ağartı")) return t.categoriesList.dairy;
+  if (name.includes("ət") || name.includes("toyuq")) return t.categoriesList.meat;
+  if (name.includes("çörək") || name.includes("un")) return t.categoriesList.bakery;
+  if (name.includes("meyvə") || name.includes("tərəvəz")) return t.categoriesList.produce;
+  if (name.includes("ərzaq") || name.includes("yağ")) return t.categoriesList.staples;
+  if (name.includes("çay") || name.includes("qəhvə")) return t.categoriesList.teaCoffee;
+  if (name.includes("şirniyyat") || name.includes("qəlyanaltı")) return t.categoriesList.sweets;
+  if (name.includes("içki") || name.includes("su")) return t.categoriesList.drinks;
+  if (name.includes("təmizlik") || name.includes("yuyucu")) return t.categoriesList.cleaning;
+  if (name.includes("qulluq") || name.includes("gigiyena")) return t.categoriesList.care;
 
-  return {
-    icon: Package,
-    shortName: cat.name_az.split("&")[0].split("(")[0].trim(),
-    fullName: cat.name_az,
-  };
+  return cat.name_az.split("&")[0].split("(")[0].trim();
+}
+
+function getCategoryIcon(cat: Category) {
+  return CATEGORY_ICONS[cat.slug] || Package;
 }
 
 const HERO_PROMOS = [
@@ -144,6 +116,7 @@ const HERO_PROMOS = [
 
 export default function HomePage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [recommendations, setRecommendations] = useState<SearchRecommendationsResponse | null>(null);
@@ -262,7 +235,7 @@ export default function HomePage() {
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-zinc-500 pointer-events-none" />
           <input
             type="text"
-            placeholder="Məhsul, brend və ya kateqoriya axtarın..."
+            placeholder={t.home.searchPlaceholder}
             value={searchQuery}
             onFocus={() => setIsSearchFocused(true)}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -367,21 +340,21 @@ export default function HomePage() {
       <section className="space-y-2">
         <div className="flex items-center justify-between px-0.5">
           <h2 className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
-            <span>Kateqoriyalar</span>
+            <span>{t.home.categories}</span>
           </h2>
           <Link
             href="/flyers"
             className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5"
           >
-            <span>Hamısına bax</span>
+            <span>{t.home.viewAll}</span>
             <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
 
         <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 pt-1 -mx-4 px-4 scrollbar-none no-scrollbar">
           {categories.map((cat) => {
-            const meta = getCategoryMeta(cat);
-            const IconComponent = meta.icon;
+            const IconComponent = getCategoryIcon(cat);
+            const categoryName = getCategoryName(cat, t);
 
             return (
               <Link
@@ -393,7 +366,7 @@ export default function HomePage() {
                   <IconComponent className="w-6 h-6" strokeWidth={1.75} />
                 </div>
                 <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 whitespace-nowrap text-center mt-1.5">
-                  {meta.shortName}
+                  {categoryName}
                 </span>
               </Link>
             );
@@ -454,7 +427,7 @@ export default function HomePage() {
           <section className="space-y-2">
             <div className="flex items-center justify-between px-0.5">
               <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                Həftəlik Kampaniyalar
+                {t.home.weeklyFlyers}
               </span>
               <button
                 onClick={() => setIsNearbyModalOpen(true)}
@@ -483,7 +456,7 @@ export default function HomePage() {
                         {promo.chain}
                       </div>
                       <span className="text-xs text-emerald-400 font-bold mt-0.5 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                        <span>{promo.chain} jurnalına keçid et</span>
+                        <span>{t.home.openFlyer.replace("{chain}", promo.chain)}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </span>
                     </div>
@@ -502,7 +475,7 @@ export default function HomePage() {
                     <Flame className="w-4 h-4" />
                   </div>
                   <h2 className="text-sm font-black text-slate-900 dark:text-slate-100">
-                    Günün Ən Yaxşı Endirimləri
+                    {t.home.topDeals}
                   </h2>
                 </div>
               </div>
@@ -567,12 +540,12 @@ export default function HomePage() {
                         {isAdded ? (
                           <>
                             <Check className="w-3.5 h-3.5" />
-                            <span>Əlavə olundu</span>
+                            <span>{t.home.added}</span>
                           </>
                         ) : (
                           <>
                             <ShoppingBag className="w-3.5 h-3.5" />
-                            <span>Səbətə at</span>
+                            <span>{t.home.addToCart}</span>
                           </>
                         )}
                       </button>

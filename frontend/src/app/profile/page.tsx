@@ -18,10 +18,12 @@ import {
   MapPin,
   Info,
   ExternalLink,
+  Globe,
 } from "lucide-react";
 import { getUserProfile, getAvailableRewards, redeemReward } from "@/lib/api";
 import { User, Reward } from "@/lib/types";
-import { useSebetStore } from "@/lib/store";
+import { useSebetStore, SUPPORTED_LANGUAGES } from "@/lib/store";
+import { useTranslation } from "@/lib/translations";
 import { NearbyMarketsModal } from "@/components/NearbyMarketsModal";
 import { ChainLogo } from "@/components/ChainLogo";
 
@@ -36,12 +38,15 @@ const PARTNER_CHAINS = [
 ];
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const {
     userPoints,
     setPoints,
     theme,
     toggleTheme,
     selectedLocation,
+    language,
+    setLanguage,
   } = useSebetStore();
 
   const [isMounted, setIsMounted] = useState(false);
@@ -109,7 +114,7 @@ export default function ProfilePage() {
       <div className="flex items-center justify-between px-0.5">
         <div>
           <h1 className="text-xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight">
-            Profil
+            {t.profile.title}
           </h1>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
             Şəxsi məlumatlar və loyallıq seçimləri
@@ -142,7 +147,7 @@ export default function ProfilePage() {
           <div>
             <span className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Sadiqlik Balansı</span>
+              <span>{t.profile.pointsBalance}</span>
             </span>
             <div className="flex items-baseline gap-1.5 mt-1">
               <span className="text-xl font-black text-zinc-900 dark:text-zinc-100 tabular-nums">
@@ -203,7 +208,7 @@ export default function ProfilePage() {
         <div className="flex items-center justify-between px-0.5">
           <h3 className="text-xs font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-wider flex items-center gap-1.5">
             <Gift className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Market Hədiyyələri & Kuponlar</span>
+            <span>{t.profile.rewards}</span>
           </h3>
           <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500">
             Dərhal aktivləşir
@@ -259,7 +264,7 @@ export default function ProfilePage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-black text-zinc-900 dark:text-zinc-100">
             <Store className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Tərəfdaş Supermarketlər</span>
+            <span>{t.profile.partnerChains}</span>
           </div>
           <button
             onClick={() => setIsNearbyModalOpen(true)}
@@ -288,25 +293,54 @@ export default function ProfilePage() {
       {/* SECTION 4: Application Settings & Preferences */}
       <section className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3 shadow-xs">
         <h3 className="text-xs font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
-          Tətbiq Parametrləri
+          {t.profile.settings}
         </h3>
 
         <div className="space-y-2 divide-y divide-zinc-100 dark:divide-zinc-800 text-xs">
-          {/* Theme Toggle */}
+          {/* Language Preference */}
           <div className="pt-2 flex items-center justify-between">
+            <div className="flex items-center gap-2.5 text-zinc-700 dark:text-zinc-300 font-semibold">
+              <Globe className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span>{t.profile.language}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {SUPPORTED_LANGUAGES.map((lang) => {
+                const current = isMounted ? language : "az";
+                const isSelected = current === lang.code;
+                return (
+                  <button
+                    key={lang.code}
+                    onClick={() => setLanguage(lang.code)}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
+                      isSelected
+                        ? "bg-emerald-600 text-white shadow-xs"
+                        : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                    }`}
+                  >
+                    {lang.shortLabel}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Theme Toggle */}
+          <div className="pt-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2.5 text-zinc-700 dark:text-zinc-300 font-semibold">
               {isMounted && theme === "dark" ? (
                 <Sun className="w-4 h-4 text-amber-400" />
               ) : (
                 <Moon className="w-4 h-4 text-zinc-400" />
               )}
-              <span>Qaranlıq Rejim (Dark Mode)</span>
+              <span>{t.profile.darkMode}</span>
             </div>
             <button
               onClick={toggleTheme}
               className="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs transition-colors"
             >
-              {isMounted && theme === "dark" ? "Aktiv" : "Deaktiv"}
+              {isMounted && theme === "dark"
+                ? (language === "ru" ? "Вкл" : language === "en" ? "Active" : "Aktiv")
+                : (language === "ru" ? "Выкл" : language === "en" ? "Disabled" : "Deaktiv")}
             </button>
           </div>
 

@@ -20,7 +20,7 @@ export const BAKU_LOCATIONS: BakuLocation[] = [
   { name: "Sumqayıt", lat: 40.5897, lon: 49.6686 },
 ];
 
-export type Language = "aze" | "rus" | "eng";
+export type Language = "az" | "ru" | "en";
 
 export interface LanguageOption {
   code: Language;
@@ -29,9 +29,9 @@ export interface LanguageOption {
 }
 
 export const SUPPORTED_LANGUAGES: LanguageOption[] = [
-  { code: "aze", label: "Azərbaycan dili", shortLabel: "AZE" },
-  { code: "rus", label: "Русский", shortLabel: "RUS" },
-  { code: "eng", label: "English", shortLabel: "ENG" },
+  { code: "az", label: "Azərbaycan dili", shortLabel: "AZE" },
+  { code: "ru", label: "Русский", shortLabel: "RUS" },
+  { code: "en", label: "English", shortLabel: "ENG" },
 ];
 
 interface SebEtState {
@@ -73,7 +73,7 @@ export const useSebEtStore = create<SebEtState>()(
       userPoints: 250,
       isBasketDrawerOpen: false,
       theme: "light",
-      language: "aze",
+      language: "az",
       checklistCheckedIds: [],
       checklistSelectedMarket: "bravo",
 
@@ -177,8 +177,14 @@ export const useSebEtStore = create<SebEtState>()(
         set({ checklistSelectedMarket });
       },
 
-      setLanguage: (language) => {
-        set({ language });
+      setLanguage: (lang) => {
+        const normalized: Language =
+          lang === "ru" || (lang as string) === "rus"
+            ? "ru"
+            : lang === "en" || (lang as string) === "eng"
+            ? "en"
+            : "az";
+        set({ language: normalized });
       },
     }),
     {
