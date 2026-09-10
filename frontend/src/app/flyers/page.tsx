@@ -32,16 +32,41 @@ const CHAINS_FILTER = [
   { name: "Spar", slug: "spar", color: "#007A3D" },
 ];
 
-const CATEGORY_ICONS: Record<string, string> = {
-  "dairy-eggs": "🥛",
-  "bakery": "🍞",
-  "meat-poultry": "🥩",
-  "pantry-cooking": "🥫",
-  "beverages-tea": "☕",
-  "snacks-sweets": "🍫",
-  "cleaning-household": "🧼",
-  "personal-care-baby": "👶",
+const CATEGORY_MAP: Record<string, { emoji: string; shortName: string }> = {
+  "dairy-eggs": { emoji: "🥛", shortName: "Süd Məhsulları" },
+  "meat-poultry": { emoji: "🥩", shortName: "Ət & Toyuq" },
+  "bakery": { emoji: "🥖", shortName: "Çörək & Un" },
+  "fruit-veg": { emoji: "🍎", shortName: "Meyvə-Tərəvəz" },
+  "pantry-cooking": { emoji: "🥫", shortName: "Əsas Ərzaq" },
+  "tea-coffee": { emoji: "☕", shortName: "Çay & Qəhvə" },
+  "beverages-tea": { emoji: "☕", shortName: "Çay & Qəhvə" },
+  "snacks-sweets": { emoji: "🍫", shortName: "Şirniyyat" },
+  "drinks-water": { emoji: "🧃", shortName: "İçkilər" },
+  "cleaning-household": { emoji: "🧼", shortName: "Təmizlik" },
+  "personal-care-baby": { emoji: "🧴", shortName: "Qulluq" },
 };
+
+function getCategoryPillInfo(cat: Category): { emoji: string; shortName: string } {
+  const bySlug = CATEGORY_MAP[cat.slug];
+  if (bySlug) return bySlug;
+
+  const name = (cat.name_az || "").toLowerCase();
+  if (name.includes("süd") || name.includes("ağartı")) return CATEGORY_MAP["dairy-eggs"];
+  if (name.includes("ət") || name.includes("toyuq")) return CATEGORY_MAP["meat-poultry"];
+  if (name.includes("çörək") || name.includes("un")) return CATEGORY_MAP["bakery"];
+  if (name.includes("meyvə") || name.includes("tərəvəz")) return CATEGORY_MAP["fruit-veg"];
+  if (name.includes("ərzaq") || name.includes("yağ")) return CATEGORY_MAP["pantry-cooking"];
+  if (name.includes("çay") || name.includes("qəhvə")) return CATEGORY_MAP["tea-coffee"];
+  if (name.includes("şirniyyat") || name.includes("qəlyanaltı")) return CATEGORY_MAP["snacks-sweets"];
+  if (name.includes("içki") || name.includes("su")) return CATEGORY_MAP["drinks-water"];
+  if (name.includes("təmizlik") || name.includes("yuyucu")) return CATEGORY_MAP["cleaning-household"];
+  if (name.includes("qulluq") || name.includes("gigiyena")) return CATEGORY_MAP["personal-care-baby"];
+
+  return {
+    emoji: "🏷️",
+    shortName: cat.name_az.split("&")[0].split("(")[0].trim(),
+  };
+}
 
 function CatalogContent() {
   const searchParams = useSearchParams();
@@ -243,7 +268,7 @@ function CatalogContent() {
               <span>Hamısı</span>
             </button>
             {categories.map((cat) => {
-              const icon = CATEGORY_ICONS[cat.slug] || "🏷️";
+              const pillInfo = getCategoryPillInfo(cat);
               const isSelected = selectedCategory === cat.slug || selectedCategory === cat.id;
               return (
                 <button
@@ -255,8 +280,8 @@ function CatalogContent() {
                       : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-transparent dark:border-slate-800"
                   }`}
                 >
-                  <span>{icon}</span>
-                  <span>{cat.name_az.split("&")[0].split("(")[0].trim()}</span>
+                  <span>{pillInfo.emoji}</span>
+                  <span className="whitespace-nowrap">{pillInfo.shortName}</span>
                 </button>
               );
             })}

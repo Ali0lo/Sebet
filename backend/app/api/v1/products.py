@@ -63,10 +63,27 @@ def format_product_out(product: Product) -> ProductOut:
     )
 
 
+CATEGORY_SLUG_ALIASES: dict[str, str] = {
+    "beverages-tea": "tea-coffee",
+    "tea-coffee": "tea-coffee",
+    "drinks": "drinks-water",
+    "drinks-water": "drinks-water",
+    "beverages": "drinks-water",
+    "produce": "fruit-veg",
+    "fruit-veg": "fruit-veg",
+    "fruits-vegetables": "fruit-veg",
+    "cleaning": "cleaning-household",
+    "cleaning-household": "cleaning-household",
+    "personal-care": "personal-care-baby",
+    "personal-care-baby": "personal-care-baby",
+}
+
+
 @router.get("/search", response_model=ProductSearchResponse)
 async def search_products(
     q: Optional[str] = Query(None, description="Search query by name, brand or barcode"),
-    category_id: Optional[UUID] = Query(None, description="Category filter"),
+    category_id: Optional[str] = Query(None, description="Category filter by ID or slug"),
+    category_slug: Optional[str] = Query(None, description="Category filter by slug"),
     chain_slug: Optional[str] = Query(None, description="Filter by retail chain"),
     sort_by: str = Query("popularity", description="Sort by: popularity, cheapest, name"),
     page: int = Query(1, ge=1),
@@ -85,8 +102,38 @@ async def search_products(
         )
     )
 
-    if category_id:
-        stmt = stmt.where(Product.category_id == category_id)
+    target_cat_ref = category_slug or category_id
+    if target_cat_ref:
+        cat_ref_str = str(target_cat_ref).strip()
+        aliased = CATEGORY_SLUG_ALIASES.get(cat_ref_str, cat_ref_str)
+        is_uuid = False
+        parsed_uuid = None
+        try:
+            parsed_uuid = UUID(cat_ref_str)
+            is_uuid = True
+        except (ValueError, AttributeError, TypeError):
+            pass
+
+        if is_uuid and parsed_uuid:
+            cat_stmt = select(Category.id).where(
+                or_(
+                    Category.id == parsed_uuid,
+                    Category.slug == cat_ref_str,
+                    Category.slug == aliased,
+                )
+            )
+        else:
+            cat_stmt = select(Category.id).where(
+                or_(
+                    Category.slug == cat_ref_str,
+                    Category.slug == aliased,
+                )
+            )
+
+        cat_res = await db.execute(cat_stmt)
+        matched_cat_id = cat_res.scalar_one_or_none()
+        if matched_cat_id:
+            stmt = stmt.where(Product.category_id == matched_cat_id)
 
     # Fetch candidates
     result = await db.execute(stmt)

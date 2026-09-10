@@ -25,43 +25,117 @@ import { BarcodeScannerModal } from "@/components/BarcodeScannerModal";
 import { NearbyMarketsModal } from "@/components/NearbyMarketsModal";
 import { useSebetStore } from "@/lib/store";
 
-const CATEGORY_ICONS: Record<string, { emoji: string; bg: string; border: string }> = {
-  "dairy-eggs": { emoji: "🥛", bg: "from-blue-500/20 to-sky-500/10", border: "border-sky-200 dark:border-sky-800" },
-  "bakery": { emoji: "🍞", bg: "from-amber-500/20 to-yellow-500/10", border: "border-amber-200 dark:border-amber-800" },
-  "meat-poultry": { emoji: "🥩", bg: "from-rose-500/20 to-red-500/10", border: "border-rose-200 dark:border-rose-800" },
-  "pantry-cooking": { emoji: "🥫", bg: "from-emerald-500/20 to-teal-500/10", border: "border-emerald-200 dark:border-emerald-800" },
-  "beverages-tea": { emoji: "☕", bg: "from-orange-500/20 to-amber-500/10", border: "border-orange-200 dark:border-orange-800" },
-  "snacks-sweets": { emoji: "🍫", bg: "from-purple-500/20 to-pink-500/10", border: "border-purple-200 dark:border-purple-800" },
-  "cleaning-household": { emoji: "🧼", bg: "from-teal-500/20 to-cyan-500/10", border: "border-teal-200 dark:border-teal-800" },
-  "personal-care-baby": { emoji: "👶", bg: "from-pink-500/20 to-rose-500/10", border: "border-pink-200 dark:border-pink-800" },
+interface CategoryDisplayInfo {
+  emoji: string;
+  shortName: string;
+  fullName: string;
+  bg: string;
+  border: string;
+}
+
+const CATEGORY_MAP: Record<string, CategoryDisplayInfo> = {
+  "dairy-eggs": {
+    emoji: "🥛",
+    shortName: "Süd Məhsulları",
+    fullName: "Süd Məhsulları",
+    bg: "from-blue-500/20 to-sky-500/10",
+    border: "border-sky-200 dark:border-sky-800",
+  },
+  "meat-poultry": {
+    emoji: "🥩",
+    shortName: "Ət & Toyuq",
+    fullName: "Ət & Toyuq",
+    bg: "from-rose-500/20 to-red-500/10",
+    border: "border-rose-200 dark:border-rose-800",
+  },
+  "bakery": {
+    emoji: "🥖",
+    shortName: "Çörək & Un",
+    fullName: "Çörək & Un Məmulatları",
+    bg: "from-amber-500/20 to-yellow-500/10",
+    border: "border-amber-200 dark:border-amber-800",
+  },
+  "fruit-veg": {
+    emoji: "🍎",
+    shortName: "Meyvə-Tərəvəz",
+    fullName: "Meyvə & Tərəvəz",
+    bg: "from-emerald-500/20 to-green-500/10",
+    border: "border-emerald-200 dark:border-emerald-800",
+  },
+  "pantry-cooking": {
+    emoji: "🥫",
+    shortName: "Əsas Ərzaq",
+    fullName: "Əsas Ərzaqlar",
+    bg: "from-teal-500/20 to-emerald-500/10",
+    border: "border-teal-200 dark:border-teal-800",
+  },
+  "tea-coffee": {
+    emoji: "☕",
+    shortName: "Çay & Qəhvə",
+    fullName: "Çay & Qəhvə",
+    bg: "from-orange-500/20 to-amber-500/10",
+    border: "border-orange-200 dark:border-orange-800",
+  },
+  "beverages-tea": {
+    emoji: "☕",
+    shortName: "Çay & Qəhvə",
+    fullName: "Çay & Qəhvə",
+    bg: "from-orange-500/20 to-amber-500/10",
+    border: "border-orange-200 dark:border-orange-800",
+  },
+  "snacks-sweets": {
+    emoji: "🍫",
+    shortName: "Şirniyyat",
+    fullName: "Şirniyyat & Qəlyanaltı",
+    bg: "from-purple-500/20 to-pink-500/10",
+    border: "border-purple-200 dark:border-purple-800",
+  },
+  "drinks-water": {
+    emoji: "🧃",
+    shortName: "İçkilər",
+    fullName: "İçkilər & Su",
+    bg: "from-cyan-500/20 to-blue-500/10",
+    border: "border-cyan-200 dark:border-cyan-800",
+  },
+  "cleaning-household": {
+    emoji: "🧼",
+    shortName: "Təmizlik",
+    fullName: "Yuyucu & Təmizlik",
+    bg: "from-indigo-500/20 to-teal-500/10",
+    border: "border-indigo-200 dark:border-indigo-800",
+  },
+  "personal-care-baby": {
+    emoji: "🧴",
+    shortName: "Qulluq",
+    fullName: "Şəxsi Qulluq & Gigiyena",
+    bg: "from-pink-500/20 to-rose-500/10",
+    border: "border-pink-200 dark:border-pink-800",
+  },
 };
 
-const SHORT_CATEGORY_NAMES: Record<string, string> = {
-  "dairy-eggs": "Süd",
-  "cleaning-household": "Təmizlik",
-  "beverages-tea": "Çay & Qəhvə",
-  "bakery": "Çörək",
-  "snacks-sweets": "Şirniyyat",
-  "personal-care-baby": "Qulluq",
-  "pantry-cooking": "Əsas Ərzaq",
-  "meat-poultry": "Ət & Balıq",
-};
+function getCategoryMeta(cat: Category): CategoryDisplayInfo {
+  const bySlug = CATEGORY_MAP[cat.slug];
+  if (bySlug) return bySlug;
 
-function getCategoryShortName(cat: Category): string {
-  if (cat.slug && SHORT_CATEGORY_NAMES[cat.slug]) {
-    return SHORT_CATEGORY_NAMES[cat.slug];
-  }
   const name = (cat.name_az || "").toLowerCase();
-  if (name.includes("süd")) return "Süd";
-  if (name.includes("təmizlik")) return "Təmizlik";
-  if (name.includes("çay") || name.includes("qəhvə") || name.includes("içki")) return "Çay & Qəhvə";
-  if (name.includes("çörək")) return "Çörək";
-  if (name.includes("şirniyyat")) return "Şirniyyat";
-  if (name.includes("qulluq") || name.includes("şəxsi")) return "Qulluq";
-  if (name.includes("ərzaq") || name.includes("yağ")) return "Əsas Ərzaq";
-  if (name.includes("ət") || name.includes("balıq")) return "Ət & Balıq";
-  if (name.includes("meyvə") || name.includes("tərəvəz")) return "Meyvə";
-  return cat.name_az.split("&")[0].split("(")[0].split(",")[0].trim();
+  if (name.includes("süd") || name.includes("ağartı")) return CATEGORY_MAP["dairy-eggs"];
+  if (name.includes("ət") || name.includes("toyuq")) return CATEGORY_MAP["meat-poultry"];
+  if (name.includes("çörək") || name.includes("un")) return CATEGORY_MAP["bakery"];
+  if (name.includes("meyvə") || name.includes("tərəvəz")) return CATEGORY_MAP["fruit-veg"];
+  if (name.includes("ərzaq") || name.includes("yağ")) return CATEGORY_MAP["pantry-cooking"];
+  if (name.includes("çay") || name.includes("qəhvə")) return CATEGORY_MAP["tea-coffee"];
+  if (name.includes("şirniyyat") || name.includes("qəlyanaltı")) return CATEGORY_MAP["snacks-sweets"];
+  if (name.includes("içki") || name.includes("su")) return CATEGORY_MAP["drinks-water"];
+  if (name.includes("təmizlik") || name.includes("yuyucu")) return CATEGORY_MAP["cleaning-household"];
+  if (name.includes("qulluq") || name.includes("gigiyena")) return CATEGORY_MAP["personal-care-baby"];
+
+  return {
+    emoji: "🛍️",
+    shortName: cat.name_az.split("&")[0].split("(")[0].trim(),
+    fullName: cat.name_az,
+    bg: "from-emerald-500/20 to-teal-500/10",
+    border: "border-slate-200 dark:border-zinc-800",
+  };
 }
 
 const HERO_PROMOS = [
@@ -332,25 +406,21 @@ export default function HomePage() {
 
         <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 pt-1 -mx-4 px-4 scrollbar-none no-scrollbar">
           {categories.map((cat) => {
-            const conf = CATEGORY_ICONS[cat.slug] || {
-              emoji: "🛍️",
-              bg: "from-emerald-500/20 to-teal-500/10",
-              border: "border-slate-200 dark:border-zinc-800",
-            };
+            const meta = getCategoryMeta(cat);
 
             return (
               <Link
                 key={cat.id}
-                href={`/flyers?cat=${cat.slug}`}
+                href={`/flyers?cat=${encodeURIComponent(cat.slug)}`}
                 className="flex flex-col items-center gap-1.5 shrink-0 snap-start group focus:outline-hidden"
               >
                 <div
-                  className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${conf.bg} ${conf.border} border flex items-center justify-center text-2xl sm:text-3xl shadow-xs group-hover:scale-105 group-active:scale-95 transition-all`}
+                  className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${meta.bg} ${meta.border} border flex items-center justify-center text-2xl sm:text-3xl shadow-xs group-hover:scale-105 group-active:scale-95 group-hover:shadow-md transition-all`}
                 >
-                  <span>{conf.emoji}</span>
+                  <span className="select-none">{meta.emoji}</span>
                 </div>
-                <span className="whitespace-nowrap text-[11px] font-medium text-slate-700 dark:text-zinc-300 text-center group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                  {getCategoryShortName(cat)}
+                <span className="whitespace-nowrap text-[11px] font-semibold text-slate-700 dark:text-zinc-300 text-center group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                  {meta.shortName}
                 </span>
               </Link>
             );

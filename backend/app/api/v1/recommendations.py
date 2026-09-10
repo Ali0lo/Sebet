@@ -29,10 +29,15 @@ TRENDING_QUERIES = [
 
 POPULAR_CATEGORIES = [
     {"name": "Süd Məhsulları", "icon": "🥛", "slug": "dairy-eggs"},
-    {"name": "Kərə Yağları", "icon": "🧈", "slug": "pantry-cooking"},
-    {"name": "Təmizlik", "icon": "🧼", "slug": "cleaning-household"},
-    {"name": "İçkilər & Çay", "icon": "☕", "slug": "beverages-tea"},
-    {"name": "Şirniyyat", "icon": "🍫", "slug": "snacks-sweets"},
+    {"name": "Ət & Toyuq", "icon": "🥩", "slug": "meat-poultry"},
+    {"name": "Çörək & Un Məmulatları", "icon": "🥖", "slug": "bakery"},
+    {"name": "Meyvə & Tərəvəz", "icon": "🍎", "slug": "fruit-veg"},
+    {"name": "Əsas Ərzaqlar", "icon": "🥫", "slug": "pantry-cooking"},
+    {"name": "Çay & Qəhvə", "icon": "☕", "slug": "tea-coffee"},
+    {"name": "Şirniyyat & Qəlyanaltı", "icon": "🍫", "slug": "snacks-sweets"},
+    {"name": "İçkilər & Su", "icon": "🧃", "slug": "drinks-water"},
+    {"name": "Yuyucu & Təmizlik", "icon": "🧼", "slug": "cleaning-household"},
+    {"name": "Şəxsi Qulluq & Gigiyena", "icon": "🧴", "slug": "personal-care-baby"},
 ]
 
 
