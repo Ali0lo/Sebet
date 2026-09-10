@@ -17,6 +17,15 @@ import {
   Percent,
   Layers,
   Store,
+  Milk,
+  Beef,
+  Croissant,
+  Apple,
+  Package,
+  Coffee,
+  Cookie,
+  GlassWater,
+  Smile,
 } from "lucide-react";
 import { searchProducts, getTopDeals, getCategories, getSearchRecommendations } from "@/lib/api";
 import { Product, Category, SearchRecommendationsResponse } from "@/lib/types";
@@ -26,90 +35,66 @@ import { NearbyMarketsModal } from "@/components/NearbyMarketsModal";
 import { useSebetStore } from "@/lib/store";
 
 interface CategoryDisplayInfo {
-  emoji: string;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   shortName: string;
   fullName: string;
-  bg: string;
-  border: string;
 }
 
 const CATEGORY_MAP: Record<string, CategoryDisplayInfo> = {
   "dairy-eggs": {
-    emoji: "🥛",
+    icon: Milk,
     shortName: "Süd Məhsulları",
     fullName: "Süd Məhsulları",
-    bg: "from-blue-500/20 to-sky-500/10",
-    border: "border-sky-200 dark:border-sky-800",
   },
   "meat-poultry": {
-    emoji: "🥩",
+    icon: Beef,
     shortName: "Ət & Toyuq",
     fullName: "Ət & Toyuq",
-    bg: "from-rose-500/20 to-red-500/10",
-    border: "border-rose-200 dark:border-rose-800",
   },
   "bakery": {
-    emoji: "🥖",
+    icon: Croissant,
     shortName: "Çörək & Un",
     fullName: "Çörək & Un Məmulatları",
-    bg: "from-amber-500/20 to-yellow-500/10",
-    border: "border-amber-200 dark:border-amber-800",
   },
   "fruit-veg": {
-    emoji: "🍎",
+    icon: Apple,
     shortName: "Meyvə-Tərəvəz",
     fullName: "Meyvə & Tərəvəz",
-    bg: "from-emerald-500/20 to-green-500/10",
-    border: "border-emerald-200 dark:border-emerald-800",
   },
   "pantry-cooking": {
-    emoji: "🥫",
+    icon: Package,
     shortName: "Əsas Ərzaq",
     fullName: "Əsas Ərzaqlar",
-    bg: "from-teal-500/20 to-emerald-500/10",
-    border: "border-teal-200 dark:border-teal-800",
   },
   "tea-coffee": {
-    emoji: "☕",
+    icon: Coffee,
     shortName: "Çay & Qəhvə",
     fullName: "Çay & Qəhvə",
-    bg: "from-orange-500/20 to-amber-500/10",
-    border: "border-orange-200 dark:border-orange-800",
   },
   "beverages-tea": {
-    emoji: "☕",
+    icon: Coffee,
     shortName: "Çay & Qəhvə",
     fullName: "Çay & Qəhvə",
-    bg: "from-orange-500/20 to-amber-500/10",
-    border: "border-orange-200 dark:border-orange-800",
   },
   "snacks-sweets": {
-    emoji: "🍫",
+    icon: Cookie,
     shortName: "Şirniyyat",
     fullName: "Şirniyyat & Qəlyanaltı",
-    bg: "from-purple-500/20 to-pink-500/10",
-    border: "border-purple-200 dark:border-purple-800",
   },
   "drinks-water": {
-    emoji: "🧃",
+    icon: GlassWater,
     shortName: "İçkilər",
     fullName: "İçkilər & Su",
-    bg: "from-cyan-500/20 to-blue-500/10",
-    border: "border-cyan-200 dark:border-cyan-800",
   },
   "cleaning-household": {
-    emoji: "🧼",
+    icon: Sparkles,
     shortName: "Təmizlik",
     fullName: "Yuyucu & Təmizlik",
-    bg: "from-indigo-500/20 to-teal-500/10",
-    border: "border-indigo-200 dark:border-indigo-800",
   },
   "personal-care-baby": {
-    emoji: "🧴",
+    icon: Smile,
     shortName: "Qulluq",
     fullName: "Şəxsi Qulluq & Gigiyena",
-    bg: "from-pink-500/20 to-rose-500/10",
-    border: "border-pink-200 dark:border-pink-800",
   },
 };
 
@@ -130,11 +115,9 @@ function getCategoryMeta(cat: Category): CategoryDisplayInfo {
   if (name.includes("qulluq") || name.includes("gigiyena")) return CATEGORY_MAP["personal-care-baby"];
 
   return {
-    emoji: "🛍️",
+    icon: Package,
     shortName: cat.name_az.split("&")[0].split("(")[0].trim(),
     fullName: cat.name_az,
-    bg: "from-emerald-500/20 to-teal-500/10",
-    border: "border-slate-200 dark:border-zinc-800",
   };
 }
 
@@ -407,19 +390,18 @@ export default function HomePage() {
         <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 pt-1 -mx-4 px-4 scrollbar-none no-scrollbar">
           {categories.map((cat) => {
             const meta = getCategoryMeta(cat);
+            const IconComponent = meta.icon;
 
             return (
               <Link
                 key={cat.id}
                 href={`/flyers?cat=${encodeURIComponent(cat.slug)}`}
-                className="flex flex-col items-center gap-1.5 shrink-0 snap-start group focus:outline-hidden"
+                className="flex flex-col items-center shrink-0 snap-start group focus:outline-hidden"
               >
-                <div
-                  className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${meta.bg} ${meta.border} border flex items-center justify-center text-2xl sm:text-3xl shadow-xs group-hover:scale-105 group-active:scale-95 group-hover:shadow-md transition-all`}
-                >
-                  <span className="select-none">{meta.emoji}</span>
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-700/60 text-zinc-700 dark:text-zinc-200 group-hover:border-emerald-500 group-hover:text-emerald-500 transition-all shadow-xs">
+                  <IconComponent className="w-6 h-6" strokeWidth={1.75} />
                 </div>
-                <span className="whitespace-nowrap text-[11px] font-semibold text-slate-700 dark:text-zinc-300 text-center group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 whitespace-nowrap text-center mt-1.5">
                   {meta.shortName}
                 </span>
               </Link>

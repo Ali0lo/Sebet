@@ -108,54 +108,54 @@ export default function ProfilePage() {
       {/* SECTION 1: Clean Profile Header & User Info Card */}
       <div className="flex items-center justify-between px-0.5">
         <div>
-          <h1 className="text-xl font-black text-slate-900 dark:text-zinc-100 tracking-tight">
+          <h1 className="text-xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight">
             Profil
           </h1>
-          <p className="text-xs text-slate-500 dark:text-zinc-400">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
             Şəxsi məlumatlar və loyallıq seçimləri
           </p>
         </div>
       </div>
 
-      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 shadow-xs space-y-3.5">
+      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-sm space-y-3.5">
         <div className="flex items-center gap-3.5">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-black text-lg shadow-xs shrink-0">
             AI
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h2 className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900 dark:text-zinc-100 truncate">
+              <h2 className="font-extrabold text-sm sm:text-base tracking-tight text-zinc-900 dark:text-zinc-100 truncate">
                 {user?.full_name || "Ali Iskandarli"}
               </h2>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
                 Ağıllı Alıcı
               </span>
             </div>
-            <p className="text-xs text-slate-400 dark:text-zinc-500 font-mono mt-0.5">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
               {user?.phone_number || "+994 50 123 45 67"}
             </p>
           </div>
         </div>
 
         {/* Secondary Loyalty Status Sub-Card */}
-        <div className="p-3 rounded-xl bg-slate-50 dark:bg-zinc-850/80 border border-slate-100 dark:border-zinc-800/80 flex items-center justify-between">
+        <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-850/90 border border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between shadow-2xs">
           <div>
-            <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 flex items-center gap-1">
+            <span className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-amber-500" />
               <span>Sadiqlik Balansı</span>
             </span>
-            <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="text-lg font-black text-slate-900 dark:text-zinc-100 tabular-nums">
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <span className="text-xl font-black text-zinc-900 dark:text-zinc-100 tabular-nums">
                 {isMounted ? userPoints : 250}
               </span>
-              <span className="text-xs text-slate-500 dark:text-zinc-400 font-medium">
+              <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
                 xal (~{((isMounted ? userPoints : 250) * 0.01).toFixed(2)} ₼)
               </span>
             </div>
           </div>
 
           <div className="text-right">
-            <span className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 px-2 py-1 rounded-lg border border-slate-200/70 dark:border-zinc-700/70 shadow-2xs">
+            <span className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-2xs">
               1 xal = 0.01 ₼
             </span>
           </div>
@@ -172,20 +172,20 @@ export default function ProfilePage() {
             </span>
             <button
               onClick={() => setRedeemedCode(null)}
-              className="text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 text-xs font-bold"
+              className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 text-xs font-bold"
             >
               ✕
             </button>
           </div>
 
-          <div className="text-xs font-bold text-slate-800 dark:text-zinc-100">
+          <div className="text-xs font-bold text-zinc-800 dark:text-zinc-100">
             {redeemedCode.title}
           </div>
 
           <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-800 text-center font-mono font-black text-sm tracking-widest text-emerald-800 dark:text-emerald-300 selection:bg-emerald-100">
             {redeemedCode.code}
           </div>
-          <p className="text-[10px] text-slate-500 dark:text-zinc-400 text-center">
+          <p className="text-[10px] text-zinc-500 dark:text-zinc-400 text-center">
             Bu promokodu tərəfdaş kassa və ya mobil tətbiqində təqdim edin.
           </p>
         </div>
@@ -201,11 +201,11 @@ export default function ProfilePage() {
       {/* SECTION 2: Market Rewards & Gifts */}
       <section className="space-y-3">
         <div className="flex items-center justify-between px-0.5">
-          <h3 className="text-xs font-black text-slate-900 dark:text-zinc-100 uppercase tracking-wider flex items-center gap-1.5">
+          <h3 className="text-xs font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-wider flex items-center gap-1.5">
             <Gift className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>Market Hədiyyələri & Kuponlar</span>
           </h3>
-          <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500">
+          <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500">
             Dərhal aktivləşir
           </span>
         </div>
@@ -217,17 +217,17 @@ export default function ProfilePage() {
             return (
               <div
                 key={r.id}
-                className="p-3.5 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 shadow-xs flex items-center justify-between gap-3 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all"
+                className="p-3.5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs flex items-center justify-between gap-3 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-100 dark:border-zinc-700/80 flex items-center justify-center shrink-0 shadow-2xs">
+                  <div className="w-12 h-12 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700/80 flex items-center justify-center shrink-0 shadow-2xs">
                     {getRewardIcon(r.icon)}
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[9px] font-bold uppercase text-slate-400 dark:text-zinc-500 block">
+                    <span className="text-[9px] font-bold uppercase text-zinc-400 dark:text-zinc-500 block">
                       {r.category}
                     </span>
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">
+                    <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
                       {r.title}
                     </h4>
                     <span className="text-xs font-black text-amber-600 dark:text-amber-400 mt-0.5 inline-flex items-center gap-1">
@@ -243,7 +243,7 @@ export default function ProfilePage() {
                   className={`px-4 py-2 rounded-xl text-xs font-black transition-all shrink-0 active:scale-95 ${
                     canAfford
                       ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
-                      : "bg-slate-100 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500 cursor-not-allowed"
+                      : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed"
                   }`}
                 >
                   {redeemingId === r.id ? "..." : canAfford ? "Əldə Et" : "Çatmır"}
@@ -255,9 +255,9 @@ export default function ProfilePage() {
       </section>
 
       {/* SECTION 3: Partner Supermarkets */}
-      <section className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 space-y-3 shadow-xs">
+      <section className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3 shadow-xs">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs font-black text-slate-900 dark:text-zinc-100">
+          <div className="flex items-center gap-2 text-xs font-black text-zinc-900 dark:text-zinc-100">
             <Store className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>Tərəfdaş Supermarketlər</span>
           </div>
@@ -274,10 +274,10 @@ export default function ProfilePage() {
           {PARTNER_CHAINS.map((chain) => (
             <div
               key={chain.slug}
-              className="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-zinc-800/80 border border-slate-100 dark:border-zinc-800 flex items-center gap-1.5 shrink-0"
+              className="px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-100 dark:border-zinc-800 flex items-center gap-1.5 shrink-0"
             >
               <ChainLogo slug={chain.slug} size="xs" />
-              <span className="text-[11px] font-bold text-slate-700 dark:text-zinc-300">
+              <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
                 {chain.name}
               </span>
             </div>
@@ -286,25 +286,25 @@ export default function ProfilePage() {
       </section>
 
       {/* SECTION 4: Application Settings & Preferences */}
-      <section className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 space-y-3 shadow-xs">
-        <h3 className="text-xs font-black text-slate-900 dark:text-zinc-100 uppercase tracking-wider">
+      <section className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3 shadow-xs">
+        <h3 className="text-xs font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
           Tətbiq Parametrləri
         </h3>
 
-        <div className="space-y-2 divide-y divide-slate-100 dark:divide-zinc-800 text-xs">
+        <div className="space-y-2 divide-y divide-zinc-100 dark:divide-zinc-800 text-xs">
           {/* Theme Toggle */}
           <div className="pt-2 flex items-center justify-between">
-            <div className="flex items-center gap-2.5 text-slate-700 dark:text-zinc-300 font-semibold">
+            <div className="flex items-center gap-2.5 text-zinc-700 dark:text-zinc-300 font-semibold">
               {isMounted && theme === "dark" ? (
                 <Sun className="w-4 h-4 text-amber-400" />
               ) : (
-                <Moon className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
+                <Moon className="w-4 h-4 text-zinc-400" />
               )}
               <span>Qaranlıq Rejim (Dark Mode)</span>
             </div>
             <button
               onClick={toggleTheme}
-              className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 font-bold text-xs transition-colors"
+              className="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs transition-colors"
             >
               {isMounted && theme === "dark" ? "Aktiv" : "Deaktiv"}
             </button>
@@ -312,7 +312,7 @@ export default function ProfilePage() {
 
           {/* Location Preference */}
           <div className="pt-2.5 flex items-center justify-between">
-            <div className="flex items-center gap-2.5 text-slate-700 dark:text-zinc-300 font-semibold">
+            <div className="flex items-center gap-2.5 text-zinc-700 dark:text-zinc-300 font-semibold">
               <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>Ərazi / Məkan</span>
             </div>
@@ -326,7 +326,7 @@ export default function ProfilePage() {
           </div>
 
           {/* App Info */}
-          <div className="pt-2.5 flex items-center justify-between text-slate-500 dark:text-zinc-400 text-[11px]">
+          <div className="pt-2.5 flex items-center justify-between text-zinc-500 dark:text-zinc-400 text-[11px]">
             <div className="flex items-center gap-2">
               <Info className="w-4 h-4" />
               <span>Sebet Versiya</span>

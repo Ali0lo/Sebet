@@ -14,6 +14,16 @@ import {
   Layers,
   ShoppingBag,
   Store,
+  Milk,
+  Beef,
+  Croissant,
+  Apple,
+  Package,
+  Coffee,
+  Cookie,
+  GlassWater,
+  Smile,
+  Tag,
 } from "lucide-react";
 import { getActiveFlyers, searchProducts, getCategories } from "@/lib/api";
 import { Flyer, Product, Category } from "@/lib/types";
@@ -32,21 +42,26 @@ const CHAINS_FILTER = [
   { name: "Spar", slug: "spar", color: "#007A3D" },
 ];
 
-const CATEGORY_MAP: Record<string, { emoji: string; shortName: string }> = {
-  "dairy-eggs": { emoji: "🥛", shortName: "Süd Məhsulları" },
-  "meat-poultry": { emoji: "🥩", shortName: "Ət & Toyuq" },
-  "bakery": { emoji: "🥖", shortName: "Çörək & Un" },
-  "fruit-veg": { emoji: "🍎", shortName: "Meyvə-Tərəvəz" },
-  "pantry-cooking": { emoji: "🥫", shortName: "Əsas Ərzaq" },
-  "tea-coffee": { emoji: "☕", shortName: "Çay & Qəhvə" },
-  "beverages-tea": { emoji: "☕", shortName: "Çay & Qəhvə" },
-  "snacks-sweets": { emoji: "🍫", shortName: "Şirniyyat" },
-  "drinks-water": { emoji: "🧃", shortName: "İçkilər" },
-  "cleaning-household": { emoji: "🧼", shortName: "Təmizlik" },
-  "personal-care-baby": { emoji: "🧴", shortName: "Qulluq" },
+interface FlyerCategoryMeta {
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  shortName: string;
+}
+
+const CATEGORY_MAP: Record<string, FlyerCategoryMeta> = {
+  "dairy-eggs": { icon: Milk, shortName: "Süd Məhsulları" },
+  "meat-poultry": { icon: Beef, shortName: "Ət & Toyuq" },
+  "bakery": { icon: Croissant, shortName: "Çörək & Un" },
+  "fruit-veg": { icon: Apple, shortName: "Meyvə-Tərəvəz" },
+  "pantry-cooking": { icon: Package, shortName: "Əsas Ərzaq" },
+  "tea-coffee": { icon: Coffee, shortName: "Çay & Qəhvə" },
+  "beverages-tea": { icon: Coffee, shortName: "Çay & Qəhvə" },
+  "snacks-sweets": { icon: Cookie, shortName: "Şirniyyat" },
+  "drinks-water": { icon: GlassWater, shortName: "İçkilər" },
+  "cleaning-household": { icon: Sparkles, shortName: "Təmizlik" },
+  "personal-care-baby": { icon: Smile, shortName: "Qulluq" },
 };
 
-function getCategoryPillInfo(cat: Category): { emoji: string; shortName: string } {
+function getCategoryPillInfo(cat: Category): FlyerCategoryMeta {
   const bySlug = CATEGORY_MAP[cat.slug];
   if (bySlug) return bySlug;
 
@@ -63,7 +78,7 @@ function getCategoryPillInfo(cat: Category): { emoji: string; shortName: string 
   if (name.includes("qulluq") || name.includes("gigiyena")) return CATEGORY_MAP["personal-care-baby"];
 
   return {
-    emoji: "🏷️",
+    icon: Tag,
     shortName: cat.name_az.split("&")[0].split("(")[0].trim(),
   };
 }
@@ -264,11 +279,12 @@ function CatalogContent() {
                   : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-transparent dark:border-slate-800"
               }`}
             >
-              <span>🛒</span>
+              <Store className="w-3.5 h-3.5" strokeWidth={1.75} />
               <span>Hamısı</span>
             </button>
             {categories.map((cat) => {
               const pillInfo = getCategoryPillInfo(cat);
+              const IconComp = pillInfo.icon;
               const isSelected = selectedCategory === cat.slug || selectedCategory === cat.id;
               return (
                 <button
@@ -280,7 +296,7 @@ function CatalogContent() {
                       : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-transparent dark:border-slate-800"
                   }`}
                 >
-                  <span>{pillInfo.emoji}</span>
+                  <IconComp className="w-3.5 h-3.5" strokeWidth={1.75} />
                   <span className="whitespace-nowrap">{pillInfo.shortName}</span>
                 </button>
               );
