@@ -135,12 +135,12 @@ export default function BasketPage() {
       );
       setOptimizationResult(res);
 
-      // Default to multi-market if viable, else single market
-      if (res.is_split_viable) {
-        setOptimizationMode("multi");
-      } else {
-        setOptimizationMode("single");
-      }
+      // Preserve multi mode if user selected it and split candidate exists;
+      // otherwise default to multi if split viable, else single
+      setOptimizationMode((prev) => {
+        if (prev === "multi" && res.best_split_store) return "multi";
+        return res.is_split_viable ? "multi" : "single";
+      });
     } catch (err: any) {
       setError(err.message || "Optimizasiya zamanı xəta baş verdi.");
     } finally {
@@ -181,6 +181,13 @@ export default function BasketPage() {
     bestSplit?.primary_store || bestSplit?.store_1;
   const secondaryStore: SplitStoreInfo | undefined =
     bestSplit?.secondary_store || bestSplit?.store_2;
+
+  const primaryStoreQty =
+    primaryStore?.items.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0;
+  const secondaryStoreQty =
+    secondaryStore?.items.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0;
+  const singleStoreQty =
+    bestSingle?.items.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0;
 
   return (
     <div className="space-y-5 pb-8">
@@ -372,7 +379,7 @@ export default function BasketPage() {
                             {bestSingle.branch_name}
                           </h4>
                           <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                            {bestSingle.items.length} məhsul ({bestSingle.coverage_pct}% stokda)
+                            {singleStoreQty} məhsul ({bestSingle.coverage_pct}% stokda)
                           </span>
                         </div>
                       </div>
@@ -436,7 +443,7 @@ export default function BasketPage() {
                             {primaryStore.chain_name} + {secondaryStore.chain_name}
                           </h4>
                           <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                            {primaryStore.items.length} məhsul + {secondaryStore.items.length} məhsul
+                            {primaryStoreQty} məhsul + {secondaryStoreQty} məhsul
                           </span>
                         </div>
                       </div>
@@ -562,7 +569,10 @@ export default function BasketPage() {
                             {primaryStore.branch_name}-dan alınacaqlar
                           </h3>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                            {primaryStore.items.length} ədəd —{" "}
+                            {primaryStoreQty === primaryStore.items.length
+                              ? `${primaryStoreQty} ədəd`
+                              : `${primaryStoreQty} ədəd (${primaryStore.items.length} çeşid)`}{" "}
+                            —{" "}
                             <strong className="text-emerald-600 dark:text-emerald-400 font-black">
                               {primaryStore.subtotal.toFixed(2)} ₼
                             </strong>
@@ -694,7 +704,10 @@ export default function BasketPage() {
                             {secondaryStore.branch_name}-dən alınacaqlar
                           </h3>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                            {secondaryStore.items.length} ədəd —{" "}
+                            {secondaryStoreQty === secondaryStore.items.length
+                              ? `${secondaryStoreQty} ədəd`
+                              : `${secondaryStoreQty} ədəd (${secondaryStore.items.length} çeşid)`}{" "}
+                            —{" "}
                             <strong className="text-emerald-600 dark:text-emerald-400 font-black">
                               {secondaryStore.subtotal.toFixed(2)} ₼
                             </strong>
@@ -823,7 +836,10 @@ export default function BasketPage() {
                             {bestSingle.branch_name}-dan alınacaqlar
                           </h3>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                            {bestSingle.items.length} məhsul —{" "}
+                            {singleStoreQty === bestSingle.items.length
+                              ? `${singleStoreQty} məhsul`
+                              : `${singleStoreQty} ədəd (${bestSingle.items.length} çeşid)`}{" "}
+                            —{" "}
                             <strong className="text-emerald-600 dark:text-emerald-400 font-black">
                               {bestSingle.total_cost.toFixed(2)} ₼
                             </strong>

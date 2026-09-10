@@ -25,7 +25,7 @@ import {
   Smile,
   Tag,
 } from "lucide-react";
-import { getActiveFlyers, searchProducts, getCategories } from "@/lib/api";
+import { getActiveFlyers, searchProducts, getCategories, getProductById } from "@/lib/api";
 import { Flyer, Product, Category } from "@/lib/types";
 import { useSebetStore } from "@/lib/store";
 import { ChainLogo } from "@/components/ChainLogo";
@@ -187,19 +187,36 @@ function CatalogContent() {
 
   const handleAddFlyerItem = async (item: any) => {
     try {
-      const res = await searchProducts(item.title);
-      const prod = res.items.find((p) => p.id === item.product_id) || res.items[0];
+      let prod: Product | null = null;
+      if (item.product_id) {
+        try {
+          prod = await getProductById(item.product_id);
+        } catch {
+          // fallback to search if direct lookup fails
+        }
+      }
+
+      if (!prod) {
+        const res = await searchProducts(item.title);
+        prod = res.items.find((p) => p.id === item.product_id) || res.items[0];
+      }
+
+      if (!prod && item.title) {
+        const firstWords = item.title.split(" ").slice(0, 2).join(" ");
+        const res = await searchProducts(firstWords);
+        prod = res.items.find((p) => p.id === item.product_id) || res.items[0];
+      }
+
       if (prod) {
         addToBasket(prod, 1);
+        setAddedFlyerIds((prev) => ({ ...prev, [item.id]: true }));
+        setTimeout(() => {
+          setAddedFlyerIds((prev) => ({ ...prev, [item.id]: false }));
+        }, 1800);
       }
-    } catch {
-      // fallback
+    } catch (e) {
+      console.error("Failed to add flyer item to basket", e);
     }
-
-    setAddedFlyerIds((prev) => ({ ...prev, [item.id]: true }));
-    setTimeout(() => {
-      setAddedFlyerIds((prev) => ({ ...prev, [item.id]: false }));
-    }, 1800);
   };
 
   return (

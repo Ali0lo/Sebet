@@ -134,7 +134,7 @@ class BasketOptimizer:
         # ---------------------------------------------------------
         best_split_candidate = None
         min_split_cost = float("inf")
-        SAVINGS_THRESHOLD_AZN = 0.50
+        SAVINGS_THRESHOLD_AZN = 0.15
 
         for i, s1 in enumerate(local_stores):
             for s2 in local_stores[i + 1 :]:

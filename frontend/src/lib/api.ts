@@ -62,6 +62,10 @@ export async function getProductByBarcode(barcode: string): Promise<Product> {
   return fetchJson(`/api/v1/products/${encodeURIComponent(barcode)}`);
 }
 
+export async function getProductById(id: string): Promise<Product> {
+  return fetchJson(`/api/v1/products/${encodeURIComponent(id)}`);
+}
+
 export async function optimizeBasket(
   items: { product_id: string; quantity: number }[],
   latitude: number = 40.3800,
