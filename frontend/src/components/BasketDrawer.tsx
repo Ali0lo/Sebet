@@ -33,7 +33,7 @@ export const BasketDrawer: React.FC = () => {
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-900/90">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+            <div className="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center shadow-xs">
               <ShoppingBag className="w-4 h-4" />
             </div>
             <div>
@@ -157,7 +157,7 @@ export const BasketDrawer: React.FC = () => {
               <Link
                 href="/basket"
                 onClick={() => toggleBasketDrawer(false)}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-black flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition-all active:scale-95"
+                className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-900 text-white text-xs font-black flex items-center justify-center gap-2 shadow-lg shadow-emerald-700/25 transition-all active:scale-95"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Ağıllı Səbətə Keç (Optimizasiya)</span>

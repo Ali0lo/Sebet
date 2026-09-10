@@ -119,7 +119,7 @@ export default function ProfilePage() {
 
       <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-sm space-y-3.5">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-black text-lg shadow-xs shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-800 to-emerald-700 text-white flex items-center justify-center font-black text-lg shadow-xs shrink-0">
             AI
           </div>
           <div className="min-w-0 flex-1">

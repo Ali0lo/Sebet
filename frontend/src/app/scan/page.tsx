@@ -127,7 +127,7 @@ export default function ScanReceiptPage() {
       </div>
 
       {/* Camera / Upload Box */}
-      <div className="p-6 rounded-3xl bg-gradient-to-b from-emerald-50/70 to-teal-50/40 dark:from-emerald-950/30 dark:to-teal-950/20 border-2 border-dashed border-emerald-300 dark:border-emerald-700/60 flex flex-col items-center justify-center text-center space-y-3 relative overflow-hidden">
+      <div className="p-6 rounded-3xl bg-gradient-to-b from-emerald-50/80 to-emerald-100/30 dark:from-emerald-950/40 dark:to-emerald-900/20 border-2 border-dashed border-emerald-300 dark:border-emerald-700/60 flex flex-col items-center justify-center text-center space-y-3 relative overflow-hidden">
         {/* Laser scanner animation while processing */}
         {isProcessing && (
           <div className="absolute inset-0 bg-emerald-950/30 backdrop-blur-xs flex flex-col items-center justify-center z-10">
@@ -226,7 +226,7 @@ export default function ScanReceiptPage() {
       {parsedResult && (
         <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border-2 border-emerald-500 dark:border-emerald-600 shadow-xl space-y-4 animate-in fade-in zoom-in-95 duration-300">
           {/* Success Banner */}
-          <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center justify-between shadow-md">
+          <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-700 to-emerald-800 text-white flex items-center justify-between shadow-md">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-emerald-200" />
               <div>

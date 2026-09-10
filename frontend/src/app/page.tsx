@@ -599,7 +599,7 @@ export default function HomePage() {
           )}
 
           {/* Direct CTA to Merged Catalog & Products */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-md flex items-center justify-between gap-3">
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-700 to-emerald-800 text-white shadow-md flex items-center justify-between gap-3">
             <div className="space-y-0.5">
               <span className="text-[10px] uppercase font-black tracking-wider text-emerald-200">
                 Bütün Marketlər & Rəflər

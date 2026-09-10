@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   title: "Sebet — Bakıda Market Qiymət Müqayisəsi & Ağıllı Səbət",
   description:
     "Bravo, Araz, OBA, Bazarstore, Al Market, Neptun və Spar marketlərində real rəf qiymətlərini müqayisə edin, həftəlik jurnallara baxın və səbətinizi ən yaxın marketlər arasında bölüşdürərək qənaət edin.",
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/sebet-icon.png",
+  },
 };
 
 export default function RootLayout({

@@ -688,7 +688,7 @@ export default function BasketPage() {
                 <div className="space-y-4">
                   {optimizationResult.best_split_store &&
                   optimizationResult.best_split_store.savings_vs_single_azn > 0.1 ? (
-                    <div className="p-4 rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-xl space-y-3">
+                    <div className="p-4 rounded-3xl bg-gradient-to-br from-emerald-700 to-emerald-800 text-white shadow-xl space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-black uppercase tracking-wider backdrop-blur-md">
                           Maksimum Qənaət Təklifi (2 Market)

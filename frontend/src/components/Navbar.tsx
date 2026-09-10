@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useSebEtStore, BAKU_LOCATIONS } from "@/lib/store";
 import { NearbyMarketsModal } from "@/components/NearbyMarketsModal";
+import { SebetLogo } from "@/components/SebetLogo";
 
 export const Navbar: React.FC = () => {
   const {
@@ -75,13 +76,8 @@ export const Navbar: React.FC = () => {
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-emerald-100/80 dark:border-slate-800 shadow-xs transition-colors duration-200">
       <div className="max-w-xl mx-auto px-4 py-2.5 flex items-center justify-between">
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-2 group shrink-0">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform">
-            <ShoppingBasket className="w-4 h-4" />
-          </div>
-          <span className="font-black text-xl tracking-tight text-slate-900 dark:text-white">
-            Seb<span className="text-emerald-600 dark:text-emerald-400">et</span>
-          </span>
+        <Link href="/" className="flex items-center group shrink-0" aria-label="Sebet Ana Səhifə">
+          <SebetLogo variant="full" size="md" className="group-hover:opacity-90 transition-opacity" />
         </Link>
 
         {/* Location & Theme Toggle & Points & Cart */}
@@ -106,7 +102,7 @@ export const Navbar: React.FC = () => {
                   <button
                     onClick={handleGetLiveGPS}
                     disabled={isLocating}
-                    className="w-full py-2 px-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition-all"
+                    className="w-full py-2 px-2.5 rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-900 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition-all"
                   >
                     <Navigation className={`w-3.5 h-3.5 ${isLocating ? "animate-spin" : ""}`} />
                     <span>{isLocating ? "Məkan təyin edilir..." : "Cari Məkanımı Tap (GPS)"}</span>

@@ -165,7 +165,7 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
         {/* Modal Body */}
         <div className="p-4 sm:p-5 overflow-y-auto space-y-4">
           {/* Real-time GPS Trigger Banner */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md flex items-center justify-between gap-3">
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-700 to-emerald-800 text-white shadow-md flex items-center justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 text-xs font-black">
                 <Navigation className="w-4 h-4 text-amber-300 shrink-0" />
