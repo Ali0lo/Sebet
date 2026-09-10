@@ -495,7 +495,7 @@ export default function BasketPage() {
                       <img
                         src={item.product.image_url}
                         alt={item.product.canonical_name}
-                        className="w-11 h-11 rounded-xl object-cover bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 shrink-0"
+                        className="w-11 h-11 rounded-xl object-contain p-0.5 bg-slate-50/60 dark:bg-slate-800/40 border border-slate-100/80 dark:border-slate-800/60 shrink-0 mix-blend-multiply dark:mix-blend-normal"
                       />
                     )}
 
@@ -972,7 +972,7 @@ export default function BasketPage() {
                       <img
                         src={item.product.image_url}
                         alt={item.product.canonical_name}
-                        className="w-10 h-10 rounded-xl object-cover bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shrink-0"
+                        className="w-10 h-10 rounded-xl object-contain p-0.5 bg-slate-50/60 dark:bg-slate-800/40 border border-slate-100/80 dark:border-slate-700/60 shrink-0 mix-blend-multiply dark:mix-blend-normal"
                       />
                     )}
                     <div className="min-w-0">

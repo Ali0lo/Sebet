@@ -81,7 +81,7 @@ export const BasketDrawer: React.FC = () => {
                     <img
                       src={item.product.image_url}
                       alt={item.product.canonical_name}
-                      className="w-12 h-12 rounded-xl object-cover bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shrink-0"
+                      className="w-12 h-12 rounded-xl object-contain p-1 bg-white/70 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-700/60 shrink-0 mix-blend-multiply dark:mix-blend-normal"
                     />
                   )}
 

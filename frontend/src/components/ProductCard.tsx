@@ -45,13 +45,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xs hover:shadow-md transition-all p-3 flex flex-col justify-between group">
       <div>
         {/* Image & Badges */}
-        <div className="relative w-full h-32 rounded-xl bg-slate-50 dark:bg-slate-800/60 overflow-hidden mb-2.5 flex items-center justify-center border border-slate-100 dark:border-slate-800">
+        <div className="relative w-full h-32 rounded-xl bg-slate-50/50 dark:bg-slate-800/40 overflow-hidden mb-2.5 flex items-center justify-center border border-slate-100/80 dark:border-slate-800/80">
           {imgSrc ? (
             <img
               src={imgSrc}
               alt={product.canonical_name}
               onError={() => setImgSrc(null)}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300 mix-blend-multiply dark:mix-blend-normal"
               loading="lazy"
             />
           ) : (

@@ -1190,7 +1190,7 @@ PRODUCTS_DATA = [
         "cat_slug": "drinks-water",
         "unit": "piece",
         "pack_size": "0.5L",
-        "image_url": "/products/borjomi.jpg",
+        "image_url": "/products/borjomi.png",
         "base_price": 1.70,
         "variations": {"oba": 1.48, "almarket": 1.45, "araz": 1.65, "bravo": 1.75, "bazarstore": 1.70, "neptun": 1.85, "spar": 1.75},
         "promo": None,

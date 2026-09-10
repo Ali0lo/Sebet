@@ -538,12 +538,12 @@ export default function HomePage() {
                       className="w-44 shrink-0 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-xs hover:shadow-md transition-all p-3 flex flex-col justify-between"
                     >
                       <div>
-                        <div className="relative w-full h-28 rounded-xl bg-slate-50 dark:bg-zinc-850 overflow-hidden mb-2.5 flex items-center justify-center border border-slate-100 dark:border-zinc-800/80">
+                        <div className="relative w-full h-28 rounded-xl bg-slate-50/50 dark:bg-zinc-800/40 overflow-hidden mb-2.5 flex items-center justify-center border border-slate-100/80 dark:border-zinc-800/80">
                           {prod.image_url ? (
                             <img
                               src={prod.image_url}
                               alt={prod.canonical_name}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain p-2 mix-blend-multiply dark:mix-blend-normal"
                             />
                           ) : (
                             <span className="text-2xl">📦</span>

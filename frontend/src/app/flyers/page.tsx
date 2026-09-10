@@ -445,7 +445,7 @@ function CatalogContent() {
                             <img
                               src={item.image_url}
                               alt={item.title}
-                              className="w-14 h-14 rounded-xl object-cover bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shrink-0"
+                              className="w-14 h-14 rounded-xl object-contain p-1 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-100/80 dark:border-slate-700/60 shrink-0 mix-blend-multiply dark:mix-blend-normal"
                             />
                           ) : (
                             <div className="w-14 h-14 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 shrink-0">

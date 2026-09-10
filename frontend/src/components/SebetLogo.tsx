@@ -71,3 +71,4 @@ export const SebetLogo: React.FC<SebetLogoProps> = ({
     </div>
   );
 };
+

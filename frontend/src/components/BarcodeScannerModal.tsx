@@ -171,7 +171,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                   <img
                     src={scannedProduct.image_url}
                     alt={scannedProduct.canonical_name}
-                    className="w-16 h-16 rounded-xl object-cover bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                    className="w-16 h-16 rounded-xl object-contain p-1 bg-white/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 shrink-0 mix-blend-multiply dark:mix-blend-normal"
                   />
                 )}
                 <div className="flex-1 min-w-0">
