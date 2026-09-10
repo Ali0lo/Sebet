@@ -89,16 +89,23 @@ export interface SplitStoreInfo {
 }
 
 export interface SplitStoreResult {
-  store_1: SplitStoreInfo;
-  store_2: SplitStoreInfo;
+  is_split_viable: boolean;
+  primary_store: SplitStoreInfo;
+  secondary_store: SplitStoreInfo;
+  store_1?: SplitStoreInfo;
+  store_2?: SplitStoreInfo;
   total_cost: number;
-  distance_between_stores_m: number;
-  savings_vs_single_azn: number;
+  savings_azn: number;
+  savings_vs_single_azn?: number;
   savings_percent: number;
+  walking_distance_meters: number;
+  distance_between_stores_m?: number;
 }
 
 export interface BasketOptimizationResponse {
   basket_count: number;
+  is_split_viable: boolean;
+  single_store_baseline?: SingleStoreResult | null;
   best_single_store: SingleStoreResult | null;
   best_split_store: SplitStoreResult | null;
   all_single_stores: SingleStoreResult[];

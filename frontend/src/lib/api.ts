@@ -66,7 +66,7 @@ export async function optimizeBasket(
   items: { product_id: string; quantity: number }[],
   latitude: number = 40.3800,
   longitude: number = 49.8475,
-  maxWalkingDistanceM: number = 600.0
+  maxWalkingDistanceM: number = 750.0
 ): Promise<BasketOptimizationResponse> {
   return fetchJson("/api/v1/basket/optimize", {
     method: "POST",

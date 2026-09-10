@@ -97,4 +97,58 @@ def test_basket_optimizer_logic():
     assert res["best_split_store"]["total_cost"] == 17.60
     assert res["best_split_store"]["savings_vs_single_azn"] == 0.80
     assert res["best_split_store"]["distance_between_stores_m"] < 300
+    # Because savings is 0.80 < 1.50 AZN threshold, split is NOT viable
+    assert res["is_split_viable"] is False
+    assert res["best_split_store"]["is_split_viable"] is False
+    assert res["best_split_store"]["primary_store"]["store_id"] == "store-oba"
+    assert res["best_split_store"]["secondary_store"]["store_id"] == "store-bravo"
+
+
+def test_basket_optimizer_viable_split():
+    p1 = "prod-1"
+    p2 = "prod-2"
+    basket = [
+        {"product_id": p1, "quantity": 1, "canonical_name": "Coffee"},
+        {"product_id": p2, "quantity": 1, "canonical_name": "Olive Oil"},
+    ]
+    stores = [
+        {
+            "store_id": "store-araz",
+            "branch_name": "Araz - Sahil",
+            "chain_name": "Araz",
+            "chain_slug": "araz",
+            "lat": 40.3700,
+            "lon": 49.8400,
+            "prices": {p1: 15.00, p2: 20.00},  # Single store total = 35.00
+        },
+        {
+            "store_id": "store-bravo",
+            "branch_name": "Bravo - Sahil",
+            "chain_name": "Bravo",
+            "chain_slug": "bravo",
+            "lat": 40.3710,
+            "lon": 49.8410,  # ~135m away
+            "prices": {p1: 22.00, p2: 12.00},  # Single store total = 34.00 (cheapest baseline)
+        },
+    ]
+    # Split: p1 at Araz (15.00), p2 at Bravo (12.00) -> Split total = 27.00
+    # Savings = 34.00 - 27.00 = 7.00 AZN (>= 1.50 AZN threshold)
+    user_coords = (40.3705, 49.8405)
+    res = BasketOptimizer.optimize(
+        basket_items=basket,
+        stores_inventory=stores,
+        user_coords=user_coords,
+        max_walking_distance_m=750.0,
+    )
+
+    assert res["is_split_viable"] is True
+    assert res["best_single_store"]["store_id"] == "store-bravo"
+    assert res["best_single_store"]["total_cost"] == 34.00
+    assert res["best_split_store"] is not None
+    assert res["best_split_store"]["is_split_viable"] is True
+    assert res["best_split_store"]["total_cost"] == 27.00
+    assert res["best_split_store"]["savings_azn"] == 7.00
+    assert res["best_split_store"]["walking_distance_meters"] < 300
+    assert res["best_split_store"]["primary_store"] is not None
+    assert res["best_split_store"]["secondary_store"] is not None
 
