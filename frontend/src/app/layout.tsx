@@ -3,6 +3,7 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { BottomNav } from "@/components/BottomNav";
 import { BasketDrawer } from "@/components/BasketDrawer";
+import { SplashScreen } from "@/components/SplashScreen";
 
 export const metadata: Metadata = {
   title: "Sebet — Bakıda Market Qiymət Müqayisəsi & Ağıllı Səbət",
@@ -23,6 +24,7 @@ export default function RootLayout({
   return (
     <html lang="az" suppressHydrationWarning>
       <body className="antialiased bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200">
+        <SplashScreen />
         {/* Mobile Device Frame / Container */}
         <div className="max-w-xl mx-auto min-h-screen bg-white dark:bg-slate-900 shadow-xl relative pb-24 flex flex-col border-x border-slate-200/60 dark:border-slate-800 transition-colors duration-200">
           <Navbar />

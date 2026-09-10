@@ -26,13 +26,13 @@ export const BottomNav: React.FC = () => {
 
   const navItems = [
     { label: "Ana Səhifə", href: "/", icon: Home },
+    { label: "Kataloq & Məhsullar", href: "/flyers", icon: BookOpen },
     {
       label: "Ağıllı Səbət",
       href: "/basket",
       icon: ShoppingBag,
       badge: totalBasketItems > 0 ? totalBasketItems : null,
     },
-    { label: "Kataloq & Məhsullar", href: "/flyers", icon: BookOpen },
     { label: "Profil", href: "/profile", icon: User },
   ];
 

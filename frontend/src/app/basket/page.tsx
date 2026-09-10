@@ -379,6 +379,7 @@ export default function BasketPage() {
                             {bestSingle.branch_name}
                           </h4>
                           <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                            {bestSingle.items.length} məhsul ({bestSingle.coverage_pct}% stokda)
                             {singleStoreQty} məhsul ({bestSingle.coverage_pct}% stokda)
                           </span>
                         </div>
@@ -443,6 +444,7 @@ export default function BasketPage() {
                             {primaryStore.chain_name} + {secondaryStore.chain_name}
                           </h4>
                           <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                            {primaryStore.items.length} məhsul + {secondaryStore.items.length} məhsul
                             {primaryStoreQty} məhsul + {secondaryStoreQty} məhsul
                           </span>
                         </div>
@@ -569,6 +571,7 @@ export default function BasketPage() {
                             {primaryStore.branch_name}-dan alınacaqlar
                           </h3>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                            {primaryStore.items.length} ədəd —{" "}
                             {primaryStoreQty === primaryStore.items.length
                               ? `${primaryStoreQty} ədəd`
                               : `${primaryStoreQty} ədəd (${primaryStore.items.length} çeşid)`}{" "}
@@ -704,6 +707,7 @@ export default function BasketPage() {
                             {secondaryStore.branch_name}-dən alınacaqlar
                           </h3>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                            {secondaryStore.items.length} ədəd —{" "}
                             {secondaryStoreQty === secondaryStore.items.length
                               ? `${secondaryStoreQty} ədəd`
                               : `${secondaryStoreQty} ədəd (${secondaryStore.items.length} çeşid)`}{" "}
@@ -836,6 +840,7 @@ export default function BasketPage() {
                             {bestSingle.branch_name}-dan alınacaqlar
                           </h3>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                            {bestSingle.items.length} məhsul —{" "}
                             {singleStoreQty === bestSingle.items.length
                               ? `${singleStoreQty} məhsul`
                               : `${singleStoreQty} ədəd (${bestSingle.items.length} çeşid)`}{" "}

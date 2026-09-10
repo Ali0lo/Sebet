@@ -20,12 +20,27 @@ export const BAKU_LOCATIONS: BakuLocation[] = [
   { name: "Sumqayıt", lat: 40.5897, lon: 49.6686 },
 ];
 
+export type Language = "aze" | "rus" | "eng";
+
+export interface LanguageOption {
+  code: Language;
+  label: string;
+  shortLabel: string;
+}
+
+export const SUPPORTED_LANGUAGES: LanguageOption[] = [
+  { code: "aze", label: "Azərbaycan dili", shortLabel: "AZE" },
+  { code: "rus", label: "Русский", shortLabel: "RUS" },
+  { code: "eng", label: "English", shortLabel: "ENG" },
+];
+
 interface SebEtState {
   basket: BasketItem[];
   selectedLocation: BakuLocation;
   userPoints: number;
   isBasketDrawerOpen: boolean;
   theme: "light" | "dark";
+  language: Language;
 
   // In-Store Shopping Checklist
   checklistCheckedIds: string[];
@@ -38,6 +53,7 @@ interface SebEtState {
   clearBasket: () => void;
   setBasket: (items: BasketItem[]) => void;
   setLocation: (location: BakuLocation) => void;
+  setLanguage: (language: Language) => void;
   addPoints: (points: number) => void;
   setPoints: (points: number) => void;
   toggleBasketDrawer: (open?: boolean) => void;
@@ -57,6 +73,7 @@ export const useSebEtStore = create<SebEtState>()(
       userPoints: 250,
       isBasketDrawerOpen: false,
       theme: "light",
+      language: "aze",
       checklistCheckedIds: [],
       checklistSelectedMarket: "bravo",
 
@@ -159,6 +176,10 @@ export const useSebEtStore = create<SebEtState>()(
       setChecklistMarket: (checklistSelectedMarket) => {
         set({ checklistSelectedMarket });
       },
+
+      setLanguage: (language) => {
+        set({ language });
+      },
     }),
     {
       name: "sebet-storage-v1",
@@ -168,6 +189,7 @@ export const useSebEtStore = create<SebEtState>()(
         selectedLocation: state.selectedLocation,
         userPoints: state.userPoints,
         theme: state.theme,
+        language: state.language,
         checklistCheckedIds: state.checklistCheckedIds,
         checklistSelectedMarket: state.checklistSelectedMarket,
       }),
