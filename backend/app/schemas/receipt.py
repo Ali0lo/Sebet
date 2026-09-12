@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -45,6 +45,9 @@ class SampleReceiptOut(BaseModel):
     raw_text: str
 
 
+from app.schemas.retail_media import BrandBoostInfo
+
+
 class ReceiptSubmitRequest(BaseModel):
     user_id: Optional[UUID] = None
     merchant_id: Optional[UUID] = None
@@ -58,6 +61,7 @@ class ReceiptSubmitRequest(BaseModel):
     image_url: Optional[str] = None
     raw_ocr_text: Optional[str] = None
     earn_rate: Optional[Decimal] = Decimal("0.03")
+    line_items: Optional[List[Dict[str, Any]]] = None
 
 
 class ReceiptSubmitResponse(BaseModel):
@@ -68,6 +72,9 @@ class ReceiptSubmitResponse(BaseModel):
     is_rejected: bool = False
     rejection_reason: Optional[str] = None
     points_awarded: int = 0
+    base_points: Optional[int] = None
+    bonus_points: Optional[int] = 0
+    brand_boost: Optional[BrandBoostInfo] = None
     ledger_transaction_id: Optional[UUID] = None
     total_amount: Decimal
     message: str

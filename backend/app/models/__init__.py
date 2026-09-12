@@ -18,6 +18,7 @@ from app.models.ledger import (
 )
 
 from app.models.voucher import RedemptionVoucher, RedemptionVoucherStatus
+from app.models.retail_media import BrandCampaign, CampaignImpressionLog, AdEventType
 
 __all__ = [
     "Base",
@@ -41,5 +42,8 @@ __all__ = [
     "EntryDirection",
     "RedemptionVoucher",
     "RedemptionVoucherStatus",
+    "BrandCampaign",
+    "CampaignImpressionLog",
+    "AdEventType",
 ]
 

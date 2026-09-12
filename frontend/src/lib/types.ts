@@ -275,6 +275,16 @@ export interface RawTransaction {
   merchant_id?: string | null;
 }
 
+export interface BrandBoostResult {
+  campaign_id: string;
+  brand_name: string;
+  campaign_title: string;
+  multiplier: number;
+  matched_keywords: string[];
+  bonus_points: number;
+  bonus_usd: number;
+}
+
 export interface ReceiptSubmitPayload {
   user_id?: string;
   merchant_id?: string;
@@ -287,19 +297,85 @@ export interface ReceiptSubmitPayload {
   terminal_id?: string;
   image_url?: string;
   raw_ocr_text?: string;
+  earn_rate?: number;
+  line_items?: Array<{ raw_name: string; total_price?: number; price?: number }>;
 }
 
 export interface ReceiptSubmitResult {
   success: boolean;
   receipt_id: string;
-  status: "APPROVED" | "FLAGGED_REVIEW" | "REJECTED";
+  status: "APPROVED" | "FLAGGED_REVIEW" | "REJECTED" | string;
   is_flagged: boolean;
   is_rejected: boolean;
   rejection_reason?: string | null;
   points_awarded: number;
+  base_points?: number;
+  bonus_points?: number;
+  brand_boost?: BrandBoostResult | null;
   ledger_transaction_id?: string | null;
   total_amount: number | string;
   message: string;
+}
+
+export interface BrandCampaign {
+  id: string;
+  brand_name: string;
+  title: string;
+  description?: string | null;
+  target_sku_keywords: string[];
+  multiplier: number;
+  cpc_bid: number;
+  budget_pool_remaining: number;
+  starts_at: string;
+  ends_at: string;
+  is_active: boolean;
+  banner_image_url?: string | null;
+  category: string;
+  created_at: string;
+}
+
+export interface AdEventRequest {
+  campaign_id: string;
+  event_type: "IMPRESSION" | "CLICK" | "CONVERSION_EARN" | string;
+  user_id?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface AdEventResponse {
+  success: boolean;
+  event_id: string;
+  campaign_id: string;
+  event_type: string;
+  cost_deducted: number;
+  budget_pool_remaining: number;
+  message: string;
+}
+
+export interface BrandAnalyticsCampaignItem {
+  id: string;
+  brand_name: string;
+  title: string;
+  multiplier: number;
+  category: string;
+  is_active: boolean;
+  cpc_bid: number;
+  budget_pool_remaining: number;
+  impressions: number;
+  clicks: number;
+  ctr_percent: number;
+  conversions: number;
+  spent_usd: number;
+}
+
+export interface BrandAnalyticsResponse {
+  total_campaigns: number;
+  total_impressions: number;
+  total_clicks: number;
+  ctr_percent: number;
+  total_conversions: number;
+  total_spent_usd: number;
+  total_budget_remaining_usd: number;
+  campaigns: BrandAnalyticsCampaignItem[];
 }
 
 export interface LedgerBalanceResponse {

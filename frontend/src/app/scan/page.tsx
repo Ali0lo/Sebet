@@ -22,6 +22,7 @@ import {
   RefreshCw,
   Info,
   Tag,
+  Flame,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import {
@@ -36,17 +37,21 @@ import {
   LedgerBalanceResponse,
   ParsedReceipt,
   SampleReceipt,
+  BrandBoostResult,
 } from "@/lib/types";
 import { useSebEtStore } from "@/lib/store";
 import { ChainLogo } from "@/components/ChainLogo";
 
-function getChainSlug(name?: string | null): string {
-  const n = (name || "").toLowerCase();
+function getChainSlug(merchantName?: string): string {
+  const n = (merchantName || "").toLowerCase();
   if (n.includes("bravo")) return "bravo";
   if (n.includes("araz")) return "araz";
-  if (n.includes("oba")) return "oba";
   if (n.includes("bazarstore")) return "bazarstore";
+  if (n.includes("oba")) return "oba";
+  if (n.includes("spar")) return "spar";
   if (n.includes("neptun")) return "neptun";
+  if (n.includes("al market") || n.includes("almarket")) return "almarket";
+  if (n.includes("grandmart")) return "grandmart";
   if (n.includes("bolmart")) return "bolmart";
   return "bravo";
 }
@@ -58,6 +63,9 @@ interface ApprovedDetails {
   merchantName: string;
   totalAmount: number;
   pointsAwarded: number;
+  basePoints?: number;
+  bonusPoints?: number;
+  brandBoost?: BrandBoostResult | null;
   ledgerTransactionId?: string | null;
   receiptNumber?: string;
   purchasedAt: string;
@@ -263,6 +271,60 @@ export default function ScanReceiptPage() {
         merchantName: "Bravo Supermarket",
         totalAmount: 50.00,
         pointsAwarded: result.points_awarded,
+        basePoints: result.base_points,
+        bonusPoints: result.bonus_points,
+        brandBoost: result.brand_boost,
+        ledgerTransactionId: result.ledger_transaction_id,
+        receiptNumber: receiptNo,
+        purchasedAt: new Date().toISOString(),
+        message: result.message,
+      });
+
+      triggerCelebration(result.points_awarded);
+      fetchLiveBalance();
+    } catch (err: any) {
+      setOutcome("REJECTED");
+      setRejectedData({
+        reason: err.message || "Gözlənilməz xəta baş verdi.",
+        statusCode: 400,
+        attemptedAmount: 50.00,
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Scenario 5: Brand SKU Boost ($50 purchase with $10 Coca-Cola -> 5x Bal = +270 bal)
+  const handleTestBrandBoost = async () => {
+    setIsProcessing(true);
+    setProcessingStatusText("Sponsorlu Coca-Cola 5x bal analizi aparılır...");
+    resetOutcome();
+
+    try {
+      const receiptNo = `BOOST-COCA-${Math.floor(100000 + Math.random() * 900000)}`;
+      const cleanHash = `boost-img-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+      const result: ReceiptSubmitResult = await submitReceipt({
+        merchant_name: "Bravo Supermarket",
+        total_amount: 50.00,
+        receipt_number: receiptNo,
+        image_hash: cleanHash,
+        purchased_at: new Date().toISOString(),
+        raw_ocr_text: "1. COCA-COLA 1.5L QAZLI ICKI   10.00 AZN\n2. MILLI COREK 40.00 AZN",
+        line_items: [
+          { raw_name: "COCA-COLA 1.5L QAZLI ICKI", total_price: 10.00 },
+          { raw_name: "MILLI COREK", total_price: 40.00 },
+        ],
+      });
+
+      setOutcome("APPROVED");
+      setApprovedData({
+        receiptId: result.receipt_id,
+        merchantName: "Bravo Supermarket",
+        totalAmount: 50.00,
+        pointsAwarded: result.points_awarded,
+        basePoints: result.base_points,
+        bonusPoints: result.bonus_points,
+        brandBoost: result.brand_boost,
         ledgerTransactionId: result.ledger_transaction_id,
         receiptNumber: receiptNo,
         purchasedAt: new Date().toISOString(),
@@ -520,6 +582,30 @@ export default function ScanReceiptPage() {
         </div>
       </div>
 
+      {/* Retail Media Sponsored Boost Banner */}
+      <Link
+        href="/offers"
+        className="block p-4 rounded-3xl bg-gradient-to-r from-amber-500/15 via-emerald-500/15 to-transparent border border-amber-500/30 hover:border-amber-500/60 transition-all group shadow-xs"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-emerald-400 flex items-center justify-center text-slate-950 font-black shadow-md shrink-0">
+              <Flame className="w-5 h-5 fill-slate-950" />
+            </div>
+            <div>
+              <div className="text-xs font-black text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <span>Brendlərdən 5x Bal Qazan!</span>
+                <span className="text-[9px] bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded">YENİ</span>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Coca-Cola, Milla və Ariel məhsullarına 5 qat Sebet balı təkliflərinə baxın →
+              </p>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-amber-500 group-hover:translate-x-1 transition-transform shrink-0" />
+        </div>
+      </Link>
+
       {/* 2. Camera / Upload Box */}
       <div className="p-6 rounded-3xl bg-gradient-to-b from-emerald-50/90 to-emerald-100/30 dark:from-slate-800/90 dark:to-slate-900/90 border-2 border-dashed border-emerald-400/80 dark:border-emerald-600/60 flex flex-col items-center justify-center text-center space-y-4 relative overflow-hidden shadow-sm">
         {/* Laser scanner animation overlay while processing */}
@@ -595,6 +681,33 @@ export default function ScanReceiptPage() {
               +{approvedData.pointsAwarded} Bal
             </div>
           </div>
+
+          {/* Brand Boost Bonus Banner if applicable */}
+          {approvedData.brandBoost && (
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-transparent border border-amber-500/30 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shrink-0 shadow-xs">
+                  <Flame className="w-4 h-4 fill-slate-950" />
+                </div>
+                <div>
+                  <div className="text-xs font-black text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <span>{approvedData.brandBoost.brand_name} {approvedData.brandBoost.multiplier}x Bal Boostu</span>
+                    <span className="text-[9px] bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded">
+                      SPONSORLU
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    +{approvedData.brandBoost.bonus_points} əlavə bal brendin media büdcəsi tərəfindən hədiyyə edildi
+                  </div>
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="text-xs font-black text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/70 px-2 py-1 rounded-xl border border-amber-400/30">
+                  +{approvedData.brandBoost.bonus_points} bal
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Details Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
@@ -830,6 +943,26 @@ export default function ScanReceiptPage() {
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
               Eyni kassadan ±2 dəqiqə içində fərqli istifadəçilər • Auditor növbəsinə alınır.
+            </p>
+          </button>
+
+          {/* Preset 5: Brand SKU Boost */}
+          <button
+            disabled={isProcessing}
+            onClick={handleTestBrandBoost}
+            className="col-span-1 sm:col-span-2 p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-transparent hover:from-amber-500/20 hover:to-emerald-500/20 dark:bg-slate-800 border border-amber-400/40 hover:border-amber-400 text-left transition-all group shadow-xs active:scale-98 cursor-pointer disabled:opacity-50"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 flex items-center gap-1.5">
+                <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
+                5. Sponsorlu Brend Boost (Coca-Cola 5x Bal = +270 Bal)
+              </span>
+              <span className="text-[10px] font-black text-amber-900 dark:text-amber-300 bg-amber-200 dark:bg-amber-950/80 px-2 py-0.5 rounded-md border border-amber-400/40">
+                5X BONUS
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+              $50.00 qəbz ($10.00 Coca-Cola) • Market 150 bal (3%), Brend Media Hovuzu 120 bal subsidiyalaşdırır (Cəmi: 270 bal).
             </p>
           </button>
         </div>

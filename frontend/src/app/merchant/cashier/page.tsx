@@ -569,3 +569,4 @@ export default function CashierBurnPage() {
     </div>
   );
 }
+

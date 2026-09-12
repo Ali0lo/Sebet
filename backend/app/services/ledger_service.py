@@ -123,6 +123,34 @@ async def get_or_create_merchant_account(
     return account
 
 
+async def get_or_create_brand_account(
+    db: AsyncSession,
+    brand_name: Optional[str] = None,
+    campaign_id: Optional[uuid.UUID] = None,
+) -> LedgerAccount:
+    """
+    Retrieves or initializes a brand sponsor clearing account.
+    - ASSET (Receivable): for brand-sponsored point subsidies (Brand owes platform / ad pool).
+    """
+    cleaned_name = (brand_name or "BRAND").upper().replace(" ", "-").replace("&", "AND")
+    code = f"BRD-ADV-{cleaned_name}"
+
+    stmt = select(LedgerAccount).where(LedgerAccount.account_code == code)
+    account = (await db.execute(stmt)).scalar_one_or_none()
+
+    if not account:
+        account = LedgerAccount(
+            account_code=code,
+            name=f"Brand Ad Pool - {brand_name or cleaned_name}",
+            category=AccountCategory.ASSET,
+            currency="USD",
+        )
+        db.add(account)
+        await db.flush()
+
+    return account
+
+
 async def get_or_create_system_account(
     db: AsyncSession, code: str, name: str, category: AccountCategory
 ) -> LedgerAccount:
@@ -195,6 +223,10 @@ async def record_earn_transaction(
     platform_fee: Optional[Decimal] = None,
     reference_id: Optional[str] = None,
     description: Optional[str] = None,
+    brand_bonus_points: int = 0,
+    brand_bonus_usd: Decimal = Decimal("0.0000"),
+    brand_campaign_id: Optional[uuid.UUID] = None,
+    brand_name: Optional[str] = None,
 ) -> Tuple[LedgerTransaction, int, Decimal, Decimal]:
     """
     Records an earn transaction according to clearinghouse rules:
@@ -202,20 +234,30 @@ async def record_earn_transaction(
     - Platform fee: $0.30 platform clearing fee credit.
     - Merchant debit: $1.80 ($1.50 point liability + $0.30 clearing fee).
     
+    If Brand-Sponsored Boost (e.g. 5x on brand SKUs):
+    - Merchant pays strictly their base obligation ($1.80) protecting store margins.
+    - Brand Ad Pool is debited for brand_bonus_usd (e.g. $1.20).
+    - User receives base points + brand bonus points.
+    
     Returns (LedgerTransaction, points_awarded, merchant_debit, platform_fee)
     """
     # 1. Exact decimal calculations
     purchase_amount = Decimal(str(purchase_amount)).quantize(Decimal("0.0001"))
     earn_rate = Decimal(str(earn_rate))
-    points_usd = (purchase_amount * earn_rate).quantize(Decimal("0.0001"))
-    points_awarded = int(points_usd * POINTS_PER_DOLLAR)
+    base_points_usd = (purchase_amount * earn_rate).quantize(Decimal("0.0001"))
+    base_points_awarded = int(base_points_usd * POINTS_PER_DOLLAR)
+
+    brand_bonus_usd = Decimal(str(brand_bonus_usd)).quantize(Decimal("0.0001"))
+    total_user_points_usd = (base_points_usd + brand_bonus_usd).quantize(Decimal("0.0001"))
+    total_points_awarded = base_points_awarded + int(brand_bonus_points)
 
     if platform_fee is None:
         fee_usd = Decimal("0.3000")
     else:
         fee_usd = Decimal(str(platform_fee)).quantize(Decimal("0.0001"))
 
-    merchant_total_debit = (points_usd + fee_usd).quantize(Decimal("0.0001"))
+    # Supermarket merchant is STRICTLY debited for their base earn + fee
+    merchant_total_debit = (base_points_usd + fee_usd).quantize(Decimal("0.0001"))
 
     # 2. Resolve accounts
     merchant_account = await get_or_create_merchant_account(
@@ -229,35 +271,42 @@ async def record_earn_transaction(
         category=AccountCategory.REVENUE,
     )
 
+    brand_account = None
+    if brand_bonus_usd > Decimal("0.0000"):
+        brand_account = await get_or_create_brand_account(
+            db, brand_name=brand_name, campaign_id=brand_campaign_id
+        )
+
     # 3. Create journal transaction header
+    desc_extra = f" (+{brand_bonus_points} {brand_name or 'Brand'} boost)" if brand_bonus_points > 0 else ""
     tx = LedgerTransaction(
         transaction_type=TransactionType.EARN,
         reference_id=reference_id or f"EARN-{uuid.uuid4().hex[:8]}",
         description=description
-        or f"Earned {points_awarded} pts on ${purchase_amount:.2f} purchase at {merchant_name}",
+        or f"Earned {total_points_awarded} pts{desc_extra} on ${purchase_amount:.2f} purchase at {merchant_name}",
     )
     db.add(tx)
     await db.flush()
 
     # 4. Prepare atomic balanced entries
     entries = [
-        # Merchant A is debited $1.80 (Asset / Receivable)
+        # Merchant A is debited base liability + fee (Asset / Receivable)
         LedgerEntry(
             transaction_id=tx.id,
             account_id=merchant_account.id,
             direction=EntryDirection.DEBIT,
             amount=merchant_total_debit,
             points_amount=None,
-            description=f"Merchant {merchant_name} debit (${points_usd:.4f} liability + ${fee_usd:.4f} fee)",
+            description=f"Merchant {merchant_name} base debit (${base_points_usd:.4f} liability + ${fee_usd:.4f} fee)",
         ),
-        # User receives 150 points ($1.50 credit) (Liability / Customer Points)
+        # User receives points credit (Liability / Customer Points)
         LedgerEntry(
             transaction_id=tx.id,
             account_id=user_account.id,
             direction=EntryDirection.CREDIT,
-            amount=points_usd,
-            points_amount=points_awarded,
-            description=f"Points earned by user ({points_awarded} pts = ${points_usd:.4f})",
+            amount=total_user_points_usd,
+            points_amount=total_points_awarded,
+            description=f"Points earned by user ({total_points_awarded} pts = ${total_user_points_usd:.4f})",
         ),
         # Platform retains $0.30 clearing fee revenue (Revenue)
         LedgerEntry(
@@ -270,14 +319,29 @@ async def record_earn_transaction(
         ),
     ]
 
+    # If brand bonus exists, Brand Ad Pool is debited (Asset / Receivable from Brand)
+    if brand_account and brand_bonus_usd > Decimal("0.0000"):
+        entries.append(
+            LedgerEntry(
+                transaction_id=tx.id,
+                account_id=brand_account.id,
+                direction=EntryDirection.DEBIT,
+                amount=brand_bonus_usd,
+                points_amount=brand_bonus_points,
+                description=f"Brand {brand_name or 'Sponsor'} subsidy ({brand_bonus_points} pts = ${brand_bonus_usd:.4f})",
+            )
+        )
+
     # 5. Invariant check: Assert debits == credits
     assert_balanced_entries(entries)
     db.add_all(entries)
 
     # 6. Update current balances
-    user_account.current_balance = (user_account.current_balance or Decimal("0.0000")) + points_usd
+    user_account.current_balance = (user_account.current_balance or Decimal("0.0000")) + total_user_points_usd
     merchant_account.current_balance = (merchant_account.current_balance or Decimal("0.0000")) + merchant_total_debit
     clearing_revenue_account.current_balance = (clearing_revenue_account.current_balance or Decimal("0.0000")) + fee_usd
+    if brand_account and brand_bonus_usd > Decimal("0.0000"):
+        brand_account.current_balance = (brand_account.current_balance or Decimal("0.0000")) + brand_bonus_usd
 
     # 7. Synchronize cached user sebet_points
     user = await db.get(User, user_id)
@@ -285,7 +349,7 @@ async def record_earn_transaction(
         user.sebet_points = int(user_account.current_balance * POINTS_PER_DOLLAR)
 
     await db.flush()
-    return tx, points_awarded, merchant_total_debit, fee_usd
+    return tx, total_points_awarded, merchant_total_debit, fee_usd
 
 
 async def record_redeem_transaction(

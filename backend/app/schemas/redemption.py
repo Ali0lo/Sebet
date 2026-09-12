@@ -78,3 +78,4 @@ class VoucherPreviewResponse(BaseModel):
     user_name: str
 
     model_config = ConfigDict(from_attributes=True)
+

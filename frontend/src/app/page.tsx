@@ -466,6 +466,30 @@ export default function HomePage() {
             </div>
           </section>
 
+          {/* RETAIL MEDIA BRAND MULTIPLIER BANNER */}
+          <Link
+            href="/offers"
+            className="block p-4 rounded-3xl bg-gradient-to-r from-amber-500/15 via-emerald-500/15 to-transparent border border-amber-500/30 hover:border-amber-500/60 transition-all group shadow-xs"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 to-emerald-400 flex items-center justify-center text-slate-950 font-black shadow-md shrink-0">
+                  <Flame className="w-6 h-6 fill-slate-950" />
+                </div>
+                <div>
+                  <div className="text-xs font-black text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <span>Sponsorlu Brendlərdən 5x Bal Qazan!</span>
+                    <span className="text-[9px] bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded">YENİ</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    Coca-Cola, Milla, Ariel və Red Bull üçün xüsusi SKU multiplikatorlarına baxın →
+                  </p>
+                </div>
+              </div>
+              <ArrowRight className="w-4 h-4 text-amber-500 group-hover:translate-x-1 transition-transform shrink-0" />
+            </div>
+          </Link>
+
           {/* FLASH DEALS CAROUSEL ("Günün Ən Yaxşı Endirimləri") */}
           {topDeals.length > 0 && (
             <section className="space-y-3">

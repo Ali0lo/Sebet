@@ -28,6 +28,7 @@ from app.schemas.receipt import (
     ReceiptSubmitResponse,
     ReceiptApproveResponse,
 )
+from app.schemas.retail_media import BrandBoostInfo
 from app.services.ocr_service import (
     AzerbaijaniReceiptParser,
     SAMPLE_BAKU_RECEIPTS,
@@ -40,6 +41,10 @@ from app.services.receipt_fraud_service import (
 from app.services.ledger_service import (
     record_earn_transaction,
     get_user_points_balance,
+)
+from app.services.retail_media_service import (
+    evaluate_receipt_brand_boost,
+    apply_brand_conversion,
 )
 
 router = APIRouter(prefix="/receipts", tags=["receipts"])
@@ -368,6 +373,36 @@ async def submit_receipt(
         db.add(approved_receipt)
         await db.flush()
 
+        # Check for Brand-Sponsored SKU Multipliers
+        brand_boost_data = await evaluate_receipt_brand_boost(
+            db=db,
+            line_items=payload.line_items,
+            raw_text=payload.raw_ocr_text,
+            total_amount=total_amount,
+            base_earn_rate=payload.earn_rate or Decimal("0.03"),
+        )
+
+        brand_bonus_points = 0
+        brand_bonus_usd = Decimal("0.0000")
+        brand_campaign_id = None
+        brand_name_str = None
+        brand_boost_info = None
+
+        if brand_boost_data:
+            brand_bonus_points = brand_boost_data["bonus_points"]
+            brand_bonus_usd = brand_boost_data["bonus_usd"]
+            brand_campaign_id = brand_boost_data["campaign_id"]
+            brand_name_str = brand_boost_data["brand_name"]
+            brand_boost_info = BrandBoostInfo(
+                campaign_id=brand_boost_data["campaign_id"],
+                brand_name=brand_boost_data["brand_name"],
+                campaign_title=brand_boost_data["campaign_title"],
+                multiplier=brand_boost_data["multiplier"],
+                matched_keywords=brand_boost_data["matched_keywords"],
+                bonus_points=brand_boost_data["bonus_points"],
+                bonus_usd=float(brand_boost_data["bonus_usd"]),
+            )
+
         tx, points_awarded, merchant_debit, platform_fee = await record_earn_transaction(
             db=db,
             user_id=user.id,
@@ -377,11 +412,31 @@ async def submit_receipt(
             earn_rate=payload.earn_rate or Decimal("0.03"),
             reference_id=f"RECEIPT-{approved_receipt.id}",
             description=f"Receipt earn: {payload.receipt_number or str(approved_receipt.id)[:8]}",
+            brand_bonus_points=brand_bonus_points,
+            brand_bonus_usd=brand_bonus_usd,
+            brand_campaign_id=brand_campaign_id,
+            brand_name=brand_name_str,
         )
+
+        # If brand boost was applied, record the conversion in retail media engine
+        if brand_campaign_id and brand_bonus_usd > Decimal("0.0000"):
+            await apply_brand_conversion(
+                db=db,
+                campaign_id=brand_campaign_id,
+                user_id=user.id,
+                receipt_id=approved_receipt.id,
+                bonus_usd=brand_bonus_usd,
+                metadata={"receipt_number": payload.receipt_number, "merchant_name": merchant_name},
+            )
 
         approved_receipt.ledger_transaction_id = tx.id
         approved_receipt.sebet_points_awarded = points_awarded
         await db.commit()
+
+        base_points = points_awarded - brand_bonus_points
+        msg = f"Qəbz təsdiqləndi! +{points_awarded} bal balansınıza əlavə edildi."
+        if brand_boost_info:
+            msg += f" ({brand_boost_info.brand_name} {brand_boost_info.multiplier:g}x bonusu: +{brand_boost_info.bonus_points} bal daxil)"
 
         return ReceiptSubmitResponse(
             success=True,
@@ -391,9 +446,12 @@ async def submit_receipt(
             is_rejected=False,
             rejection_reason=None,
             points_awarded=points_awarded,
+            base_points=base_points,
+            bonus_points=brand_bonus_points,
+            brand_boost=brand_boost_info,
             ledger_transaction_id=tx.id,
             total_amount=total_amount,
-            message=f"Qəbz təsdiqləndi! +{points_awarded} bal balansınıza əlavə edildi.",
+            message=msg,
         )
 
 

@@ -60,3 +60,4 @@ class RedemptionVoucher(Base):
     merchant = relationship("Chain", foreign_keys=[merchant_id])
     redeemed_by_merchant = relationship("Chain", foreign_keys=[redeemed_by_merchant_id])
     ledger_transaction = relationship("LedgerTransaction")
+

@@ -22,6 +22,10 @@ import {
   ClaimVoucherPayload,
   ClaimVoucherResult,
   VoucherPreviewResult,
+  BrandCampaign,
+  AdEventRequest,
+  AdEventResponse,
+  BrandAnalyticsResponse,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -259,6 +263,37 @@ export async function claimVoucher(
     headers: { "X-Merchant-Id": merchantId },
     body: JSON.stringify(payload),
   });
+}
+
+export async function getSponsoredCampaigns(
+  category?: string,
+  limit: number = 20
+): Promise<BrandCampaign[]> {
+  const query = new URLSearchParams();
+  if (category) query.set("category", category);
+  if (limit) query.set("limit", limit.toString());
+  const queryString = query.toString() ? `?${query.toString()}` : "";
+  return fetchJson(`/api/v1/media/campaigns${queryString}`);
+}
+
+export async function trackAdEvent(
+  payload: AdEventRequest
+): Promise<AdEventResponse> {
+  return fetchJson("/api/v1/media/track", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getBrandAnalytics(
+  brandName?: string,
+  campaignId?: string
+): Promise<BrandAnalyticsResponse> {
+  const query = new URLSearchParams();
+  if (brandName) query.set("brand_name", brandName);
+  if (campaignId) query.set("campaign_id", campaignId);
+  const queryString = query.toString() ? `?${query.toString()}` : "";
+  return fetchJson(`/api/v1/media/brand-analytics${queryString}`);
 }
 
 
