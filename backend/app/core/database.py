@@ -125,5 +125,16 @@ async def init_db():
                 logger.warning(f"Extensions could not be created directly (might already exist): {e}")
 
         await conn.run_sync(Base.metadata.create_all)
+
+        # Ensure new columns exist on ledger_accounts if table was already created
+        try:
+            await conn.execute(text("ALTER TABLE ledger_accounts ADD COLUMN current_balance NUMERIC(18, 4) DEFAULT 0;"))
+        except Exception:
+            pass
+        try:
+            await conn.execute(text("ALTER TABLE ledger_accounts ADD COLUMN version INTEGER DEFAULT 1;"))
+        except Exception:
+            pass
+
         logger.info("Database schema initialized successfully.")
 
