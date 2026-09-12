@@ -154,5 +154,11 @@ async def init_db():
             except Exception:
                 pass
 
+        # Ensure category column exists on chains if table was already created
+        try:
+            await conn.execute(text("ALTER TABLE chains ADD COLUMN category VARCHAR(100) DEFAULT 'Grocery';"))
+        except Exception:
+            pass
+
         logger.info("Database schema initialized successfully.")
 
