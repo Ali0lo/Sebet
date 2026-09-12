@@ -16,6 +16,12 @@ import {
   ReceiptSubmitPayload,
   ReceiptSubmitResult,
   LedgerBalanceResponse,
+  CreateVoucherPayload,
+  VoucherResponse,
+  VoucherStatusResponse,
+  ClaimVoucherPayload,
+  ClaimVoucherResult,
+  VoucherPreviewResult,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -218,6 +224,41 @@ export async function getLedgerBalance(
 ): Promise<LedgerBalanceResponse> {
   const url = userId ? `/api/v1/ledger/balance/${userId}` : "/api/v1/ledger/balance";
   return fetchJson(url);
+}
+
+export async function createRedemptionVoucher(
+  payload: CreateVoucherPayload
+): Promise<VoucherResponse> {
+  return fetchJson("/api/v1/redemption/create-voucher", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getVoucherStatus(
+  voucherCode: string
+): Promise<VoucherStatusResponse> {
+  return fetchJson(`/api/v1/redemption/voucher/${encodeURIComponent(voucherCode)}/status`);
+}
+
+export async function previewVoucher(
+  voucherCode: string,
+  merchantId: string
+): Promise<VoucherPreviewResult> {
+  return fetchJson(`/api/v1/redemption/voucher/${encodeURIComponent(voucherCode)}/preview`, {
+    headers: { "X-Merchant-Id": merchantId },
+  });
+}
+
+export async function claimVoucher(
+  payload: ClaimVoucherPayload,
+  merchantId: string
+): Promise<ClaimVoucherResult> {
+  return fetchJson("/api/v1/redemption/claim-voucher", {
+    method: "POST",
+    headers: { "X-Merchant-Id": merchantId },
+    body: JSON.stringify(payload),
+  });
 }
 
 

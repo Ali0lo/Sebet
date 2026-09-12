@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = "development"
+    SECRET_KEY: str = "sebet-clearinghouse-redemption-secret-key-2026"
 
     # Database: defaults to bundled SQLite database for zero-config plug-and-play
     DATABASE_URL: str = f"sqlite+aiosqlite:///{_DEFAULT_DB_FILE}"

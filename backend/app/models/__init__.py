@@ -17,6 +17,8 @@ from app.models.ledger import (
     EntryDirection,
 )
 
+from app.models.voucher import RedemptionVoucher, RedemptionVoucherStatus
+
 __all__ = [
     "Base",
     "Chain",
@@ -37,5 +39,7 @@ __all__ = [
     "TransactionType",
     "TransactionStatus",
     "EntryDirection",
+    "RedemptionVoucher",
+    "RedemptionVoucherStatus",
 ]
 

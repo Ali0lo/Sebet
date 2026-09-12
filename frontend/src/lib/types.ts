@@ -312,4 +312,71 @@ export interface LedgerBalanceResponse {
   points_balance: number;
 }
 
+export interface CreateVoucherPayload {
+  user_id?: string;
+  merchant_id: string;
+  points_amount: number;
+}
+
+export interface VoucherResponse {
+  voucher_code: string;
+  user_id: string;
+  merchant_id: string;
+  merchant_name: string;
+  points_amount: number;
+  usd_value: number | string;
+  expires_at: string;
+  signature: string;
+  message: string;
+}
+
+export interface VoucherStatusResponse {
+  voucher_code: string;
+  status: "ACTIVE" | "CLAIMED" | "EXPIRED" | "CANCELLED";
+  points_amount: number;
+  usd_value: number | string;
+  merchant_id: string;
+  merchant_name: string;
+  expires_at: string;
+  claimed_at?: string | null;
+  is_expired: boolean;
+  ledger_transaction_id?: string | null;
+  message: string;
+}
+
+export interface ClaimVoucherPayload {
+  voucher_code: string;
+  cashier_notes?: string;
+}
+
+export interface ClaimVoucherResult {
+  success: boolean;
+  voucher_code: string;
+  merchant_id: string;
+  merchant_name: string;
+  points_redeemed: number;
+  gross_discount_usd: number | string;
+  platform_servicing_fee_usd: number | string;
+  merchant_net_reimbursement_usd: number | string;
+  ledger_transaction_id: string;
+  user_remaining_points: number;
+  claimed_at: string;
+  message: string;
+}
+
+export interface VoucherPreviewResult {
+  voucher_code: string;
+  points_amount: number;
+  gross_discount_usd: number | string;
+  platform_servicing_fee_usd: number | string;
+  merchant_net_reimbursement_usd: number | string;
+  status: string;
+  is_valid: boolean;
+  expires_at: string;
+  merchant_id: string;
+  merchant_name: string;
+  is_merchant_match: boolean;
+  user_name: string;
+}
+
 

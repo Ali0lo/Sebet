@@ -20,6 +20,8 @@ import {
   Info,
   ExternalLink,
   Globe,
+  QrCode,
+  ArrowRight,
 } from "lucide-react";
 import { getUserProfile, getAvailableRewards, redeemReward } from "@/lib/api";
 import { User, Reward } from "@/lib/types";
@@ -165,6 +167,28 @@ export default function ProfilePage() {
               1 xal = 0.01 ₼
             </span>
           </div>
+        </div>
+
+        {/* Instant Cashier Voucher Banner */}
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white flex items-center justify-between shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <QrCode className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h4 className="text-xs font-black">Kassa Endirim Kuponu Al (100 bal = $1)</h4>
+              <p className="text-[11px] text-emerald-100 mt-0.5">
+                Balınızı kassa ödənişində nağd endirimə çevirin
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/redeem"
+            className="px-3.5 py-2 rounded-xl bg-white text-emerald-800 hover:bg-emerald-50 text-xs font-black shrink-0 transition-all shadow-xs flex items-center gap-1 active:scale-95"
+          >
+            <span>Xərclə</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
       </div>
 

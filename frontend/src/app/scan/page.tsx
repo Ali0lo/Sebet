@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import Link from "next/link";
 import {
   Camera,
   UploadCloud,
@@ -20,6 +21,7 @@ import {
   AlertTriangle,
   RefreshCw,
   Info,
+  Tag,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import {
@@ -495,15 +497,26 @@ export default function ScanReceiptPage() {
             </p>
           </div>
 
-          <button
-            onClick={fetchLiveBalance}
-            disabled={isLoadingBalance}
-            className="self-start sm:self-center px-3.5 py-2 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 text-xs font-bold text-white flex items-center gap-2 backdrop-blur-md border border-white/10 transition-all cursor-pointer disabled:opacity-50"
-            title="Balansı yenilə"
-          >
-            <RotateCw className={`w-3.5 h-3.5 ${isLoadingBalance ? "animate-spin" : ""}`} />
-            <span>{isLoadingBalance ? "Yenilənir..." : "Yenilə"}</span>
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-center flex-wrap">
+            <Link
+              href="/redeem"
+              className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-amber-400 to-emerald-400 hover:from-amber-300 hover:to-emerald-300 active:scale-95 text-xs font-black text-slate-950 flex items-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
+              title="Balları kupona çevir"
+            >
+              <Tag className="w-3.5 h-3.5 text-slate-950" />
+              <span>Kupon Al / Xərclə</span>
+            </Link>
+
+            <button
+              onClick={fetchLiveBalance}
+              disabled={isLoadingBalance}
+              className="px-3.5 py-2 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 text-xs font-bold text-white flex items-center gap-2 backdrop-blur-md border border-white/10 transition-all cursor-pointer disabled:opacity-50"
+              title="Balansı yenilə"
+            >
+              <RotateCw className={`w-3.5 h-3.5 ${isLoadingBalance ? "animate-spin" : ""}`} />
+              <span>{isLoadingBalance ? "Yenilənir..." : "Yenilə"}</span>
+            </button>
+          </div>
         </div>
       </div>
 

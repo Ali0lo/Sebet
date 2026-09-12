@@ -9,6 +9,7 @@ from app.api.v1.users import router as users_router
 from app.api.v1.recommendations import router as recommendations_router
 from app.api.v1.ledger import router as ledger_router
 from app.api.v1.analytics import router as analytics_router
+from app.api.v1.redemption import router as redemption_router
 
 api_router = APIRouter()
 
@@ -22,5 +23,6 @@ api_router.include_router(categories_router)
 api_router.include_router(users_router)
 api_router.include_router(ledger_router)
 api_router.include_router(analytics_router)
+api_router.include_router(redemption_router)
 
 
