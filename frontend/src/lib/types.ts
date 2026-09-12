@@ -275,4 +275,41 @@ export interface RawTransaction {
   merchant_id?: string | null;
 }
 
+export interface ReceiptSubmitPayload {
+  user_id?: string;
+  merchant_id?: string;
+  merchant_name?: string;
+  receipt_number?: string;
+  total_amount: number | string;
+  purchased_at?: string;
+  image_hash?: string;
+  image_base64?: string;
+  terminal_id?: string;
+  image_url?: string;
+  raw_ocr_text?: string;
+}
+
+export interface ReceiptSubmitResult {
+  success: boolean;
+  receipt_id: string;
+  status: "APPROVED" | "FLAGGED_REVIEW" | "REJECTED";
+  is_flagged: boolean;
+  is_rejected: boolean;
+  rejection_reason?: string | null;
+  points_awarded: number;
+  ledger_transaction_id?: string | null;
+  total_amount: number | string;
+  message: string;
+}
+
+export interface LedgerBalanceResponse {
+  account_id: string;
+  account_code: string;
+  name: string;
+  category: string;
+  currency: string;
+  balance_amount: number | string;
+  points_balance: number;
+}
+
 

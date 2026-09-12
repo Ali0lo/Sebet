@@ -160,12 +160,15 @@ async def audit_clearinghouse(db: AsyncSession = Depends(get_db)):
     return LedgerAuditReport(**audit)
 
 
+@router.get("/balance", response_model=LedgerAccountBalanceOut)
 @router.get("/balance/{user_id}", response_model=LedgerAccountBalanceOut)
-async def get_user_balance(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def get_user_balance(user_id: Optional[uuid.UUID] = None, db: AsyncSession = Depends(get_db)):
     """
     Returns exact user point account balance from the double-entry ledger.
+    If user_id is omitted, defaults to the active demo user.
     """
-    account = await get_or_create_user_points_account(db, user_id)
+    user = await resolve_user(db, user_id)
+    account = await get_or_create_user_points_account(db, user.id)
     balance_amount = await get_account_balance(db, account.id)
     points_balance = int(balance_amount * POINTS_PER_DOLLAR)
 

@@ -13,6 +13,9 @@ import {
   MerchantSummaryMetrics,
   MerchantBenchmarkResponse,
   RawTransaction,
+  ReceiptSubmitPayload,
+  ReceiptSubmitResult,
+  LedgerBalanceResponse,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -199,6 +202,22 @@ export async function getMerchantTransactions(
   return fetchJson("/api/v1/analytics/merchant/transactions", {
     headers: { "X-Merchant-Id": merchantId },
   });
+}
+
+export async function submitReceipt(
+  payload: ReceiptSubmitPayload
+): Promise<ReceiptSubmitResult> {
+  return fetchJson("/api/v1/receipts/submit", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getLedgerBalance(
+  userId?: string
+): Promise<LedgerBalanceResponse> {
+  const url = userId ? `/api/v1/ledger/balance/${userId}` : "/api/v1/ledger/balance";
+  return fetchJson(url);
 }
 
 

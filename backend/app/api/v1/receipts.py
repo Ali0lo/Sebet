@@ -50,7 +50,15 @@ async def resolve_user(db: AsyncSession, user_id: Optional[uuid.UUID]) -> User:
     if user_id:
         user = await db.get(User, user_id)
         if not user:
-            raise HTTPException(status_code=404, detail=f"User {user_id} not found")
+            phone_suffix = abs(hash(str(user_id))) % 10000000
+            user = User(
+                id=user_id,
+                phone_number=f"+99450{phone_suffix:07d}",
+                full_name=f"User {str(user_id)[:6]}",
+                sebet_points=0,
+            )
+            db.add(user)
+            await db.commit()
         return user
 
     stmt = select(User)
