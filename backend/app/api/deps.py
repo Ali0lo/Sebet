@@ -79,3 +79,4 @@ async def verify_merchant_access(
         return merchant_id
 
     return current_merchant.merchant_id
+

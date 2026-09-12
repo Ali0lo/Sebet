@@ -211,4 +211,68 @@ export interface SearchRecommendationsResponse {
   categories: SearchRecommendationCategory[];
 }
 
+export interface MerchantChain {
+  id: string;
+  name: string;
+  slug: string;
+  category: string;
+  color?: string | null;
+  logo_url?: string | null;
+}
+
+export interface MerchantSummaryMetrics {
+  merchant_id: string;
+  merchant_name: string;
+  category: string;
+  total_revenue: string | number;
+  total_points_issued: number;
+  unique_customer_count: number;
+  total_transactions: number;
+  average_basket_size: string | number;
+  average_points_earned_per_transaction: number;
+  repeat_customer_rate: number;
+}
+
+export interface MerchantCoreMetrics {
+  average_basket_size: string | number;
+  average_points_earned_per_transaction: number;
+  repeat_customer_rate: number;
+}
+
+export interface CategoryBenchmarkMetrics {
+  category: string;
+  k_anonymity_threshold: number;
+  participating_merchants_count: number;
+  average_basket_size: string | number;
+  average_points_earned_per_transaction: number;
+  repeat_customer_rate: number;
+}
+
+export interface CrossShoppingAffinity {
+  category: string;
+  affinity_percentage: number;
+  description: string;
+}
+
+export interface MerchantBenchmarkResponse {
+  merchant_id: string;
+  merchant_name: string;
+  category: string;
+  benchmark_available: boolean;
+  message: string;
+  merchant_metrics: MerchantCoreMetrics;
+  category_benchmark?: CategoryBenchmarkMetrics | null;
+  cross_shopping_affinities: CrossShoppingAffinity[];
+}
+
+export interface RawTransaction {
+  id: string;
+  receipt_number?: string | null;
+  total_amount: string | number;
+  purchased_at: string;
+  sebet_points_awarded: number;
+  status: string;
+  merchant_id?: string | null;
+}
+
 

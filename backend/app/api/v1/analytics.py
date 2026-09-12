@@ -1,9 +1,11 @@
 import uuid
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.models.chain import Chain
 from app.api.deps import get_current_merchant, verify_merchant_access, MerchantContext
 from app.schemas.analytics import (
     MerchantSummaryMetricsOut,
@@ -19,6 +21,26 @@ from app.services.analytics_service import (
 )
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
+
+
+@router.get("/merchants")
+async def list_available_merchants(db: AsyncSession = Depends(get_db)):
+    """
+    Returns list of active merchant chains for the merchant portal switcher.
+    """
+    stmt = select(Chain).where(Chain.is_active == True).order_by(Chain.name)
+    chains = (await db.execute(stmt)).scalars().all()
+    return [
+        {
+            "id": str(c.id),
+            "name": c.name,
+            "slug": c.slug,
+            "category": getattr(c, "category", "Grocery") or "Grocery",
+            "color": c.color,
+            "logo_url": c.logo_url,
+        }
+        for c in chains
+    ]
 
 
 @router.get("/merchant/me/summary", response_model=MerchantSummaryMetricsOut)
@@ -108,3 +130,4 @@ async def get_merchant_transactions_path(
     """
     target_id = await verify_merchant_access(merchant_id=merchant_id, current_merchant=current_merchant)
     return await get_merchant_raw_transactions(db, target_id)
+

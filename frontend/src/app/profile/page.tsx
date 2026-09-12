@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   User as UserIcon,
   Coins,
@@ -288,6 +289,30 @@ export default function ProfilePage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* SECTION 3.5: Merchant Portal Access */}
+      <section className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-emerald-600/5 to-transparent border border-emerald-500/20 flex items-center justify-between shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+            <Store className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="text-xs font-black text-zinc-900 dark:text-zinc-100">
+              Tərəfdaş Portalı (Merchant Portal)
+            </h4>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+              Bazar göstəriciləri, gəlir və k-anonymity analitikası
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/merchant/dashboard"
+          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shrink-0 transition-colors shadow-xs flex items-center gap-1"
+        >
+          <span>Daxil Ol</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+        </Link>
       </section>
 
       {/* SECTION 4: Application Settings & Preferences */}

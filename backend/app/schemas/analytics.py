@@ -70,3 +70,4 @@ class RawTransactionOut(BaseModel):
     merchant_id: Optional[UUID] = None
 
     model_config = ConfigDict(from_attributes=True)
+

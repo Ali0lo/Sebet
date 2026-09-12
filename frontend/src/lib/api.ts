@@ -9,6 +9,10 @@ import {
   Reward,
   NearbyStore,
   SearchRecommendationsResponse,
+  MerchantChain,
+  MerchantSummaryMetrics,
+  MerchantBenchmarkResponse,
+  RawTransaction,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -167,6 +171,34 @@ export async function getSearchRecommendations(
   const params = new URLSearchParams();
   if (query) params.append("q", query);
   return fetchJson(`/api/v1/search/recommendations?${params.toString()}`);
+}
+
+export async function getAvailableMerchants(): Promise<MerchantChain[]> {
+  return fetchJson("/api/v1/analytics/merchants");
+}
+
+export async function getMerchantSummary(
+  merchantId: string
+): Promise<MerchantSummaryMetrics> {
+  return fetchJson("/api/v1/analytics/merchant/me/summary", {
+    headers: { "X-Merchant-Id": merchantId },
+  });
+}
+
+export async function getMerchantBenchmark(
+  merchantId: string
+): Promise<MerchantBenchmarkResponse> {
+  return fetchJson("/api/v1/analytics/merchant/me/benchmark", {
+    headers: { "X-Merchant-Id": merchantId },
+  });
+}
+
+export async function getMerchantTransactions(
+  merchantId: string
+): Promise<RawTransaction[]> {
+  return fetchJson("/api/v1/analytics/merchant/transactions", {
+    headers: { "X-Merchant-Id": merchantId },
+  });
 }
 
 
