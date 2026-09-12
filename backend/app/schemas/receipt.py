@@ -1,7 +1,8 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import List, Optional
 from uuid import UUID
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ParsedLineItemOut(BaseModel):
@@ -43,3 +44,45 @@ class SampleReceiptOut(BaseModel):
     total_amount: float
     raw_text: str
 
+
+class ReceiptSubmitRequest(BaseModel):
+    user_id: Optional[UUID] = None
+    merchant_id: Optional[UUID] = None
+    merchant_name: Optional[str] = None
+    receipt_number: Optional[str] = None
+    total_amount: Decimal = Field(..., gt=0)
+    purchased_at: Optional[datetime] = None
+    image_hash: Optional[str] = None
+    image_base64: Optional[str] = None
+    terminal_id: Optional[str] = None
+    image_url: Optional[str] = None
+    raw_ocr_text: Optional[str] = None
+    earn_rate: Optional[Decimal] = Decimal("0.03")
+
+
+class ReceiptSubmitResponse(BaseModel):
+    success: bool
+    receipt_id: UUID
+    status: str
+    is_flagged: bool = False
+    is_rejected: bool = False
+    rejection_reason: Optional[str] = None
+    points_awarded: int = 0
+    ledger_transaction_id: Optional[UUID] = None
+    total_amount: Decimal
+    message: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ReceiptApproveResponse(BaseModel):
+    success: bool
+    receipt_id: UUID
+    status: str
+    points_awarded: int
+    ledger_transaction_id: UUID
+    user_id: UUID
+    user_new_balance: int
+    message: str
+
+    model_config = ConfigDict(from_attributes=True)

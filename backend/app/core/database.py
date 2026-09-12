@@ -136,5 +136,23 @@ async def init_db():
         except Exception:
             pass
 
+        # Ensure new columns exist on receipts if table was already created
+        receipt_columns = [
+            ("merchant_id", "VARCHAR(36)"),
+            ("receipt_number", "VARCHAR(100)"),
+            ("purchased_at", "TIMESTAMP"),
+            ("image_hash", "VARCHAR(64)"),
+            ("composite_fingerprint", "VARCHAR(64)"),
+            ("status", "VARCHAR(20) DEFAULT 'PENDING'"),
+            ("rejection_reason", "VARCHAR(500)"),
+            ("ledger_transaction_id", "VARCHAR(36)"),
+            ("terminal_id", "VARCHAR(100)"),
+        ]
+        for col_name, col_type in receipt_columns:
+            try:
+                await conn.execute(text(f"ALTER TABLE receipts ADD COLUMN {col_name} {col_type};"))
+            except Exception:
+                pass
+
         logger.info("Database schema initialized successfully.")
 

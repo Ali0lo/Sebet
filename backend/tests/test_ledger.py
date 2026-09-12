@@ -315,11 +315,23 @@ async def test_ledger_api_endpoints():
     """
     Test the FastAPI endpoints for earn, redeem, and audit.
     """
+    # Create dedicated user for API tests
+    async with async_session_factory() as db:
+        api_user = User(
+            id=uuid.uuid4(),
+            phone_number=f"+99450{uuid.uuid4().hex[:7]}",
+            full_name="API Test User",
+            sebet_points=0,
+        )
+        db.add(api_user)
+        await db.commit()
+
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         # 1. Earn endpoint
         earn_res = await ac.post(
             "/api/v1/ledger/earn",
             json={
+                "user_id": str(api_user.id),
                 "purchase_amount": "50.00",
                 "earn_rate": "0.03",
                 "platform_fee": "0.30",
@@ -337,6 +349,7 @@ async def test_ledger_api_endpoints():
         redeem_res = await ac.post(
             "/api/v1/ledger/redeem",
             json={
+                "user_id": str(api_user.id),
                 "points_to_redeem": 150,
                 "merchant_name": "Merchant B",
                 "servicing_fee_rate": "0.05",

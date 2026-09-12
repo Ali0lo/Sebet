@@ -99,3 +99,4 @@ class LedgerAuditReport(BaseModel):
     total_platform_redemption_revenue_usd: Decimal
     total_platform_revenue_usd: Decimal
     unbalanced_transactions: List[uuid.UUID]
+
