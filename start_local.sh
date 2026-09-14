@@ -3,13 +3,16 @@ set -e
 
 echo "🚀 Starting SebEt MVP Local Environment..."
 
+# Clean up stale processes on ports 8000 & 3000 if any
+lsof -ti :8000 -ti :3000 | xargs kill -9 2>/dev/null || true
+
 # 1. Seed database if needed
 echo "🌱 Ensuring local database is seeded..."
 DATABASE_URL="sqlite+aiosqlite:///./sebet.db" .venv/bin/python backend/scripts/seed_baku_data.py
 
 # 2. Start backend in background
 echo "⚡ Starting FastAPI Backend on http://localhost:8000..."
-DATABASE_URL="sqlite+aiosqlite:///./sebet.db" .venv/bin/uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000 &
+DATABASE_URL="sqlite+aiosqlite:///./sebet.db" .venv/bin/uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000 --reload &
 BACKEND_PID=$!
 
 # 3. Start frontend in background
