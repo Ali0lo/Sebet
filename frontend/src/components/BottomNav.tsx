@@ -7,6 +7,7 @@ import {
   Home,
   ShoppingBag,
   BookOpen,
+  Camera,
   User,
 } from "lucide-react";
 import { useSebEtStore } from "@/lib/store";
@@ -29,6 +30,7 @@ export const BottomNav: React.FC = () => {
   const navItems = [
     { label: t.nav.home, href: "/", icon: Home },
     { label: t.nav.catalog, href: "/flyers", icon: BookOpen },
+    { label: t.nav.scan, href: "/scan", icon: Camera },
     {
       label: t.nav.basket,
       href: "/basket",

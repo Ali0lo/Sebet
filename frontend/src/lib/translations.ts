@@ -38,7 +38,7 @@ export const translations = {
       catalog: "Kataloq & Məhsullar",
       basket: "Ağıllı Səbət",
       offers: "Təkliflər",
-      scan: "Qəbz Skaneri",
+      scan: "Çek Skanı",
       profile: "Profil",
       myBasket: "Səbətim",
       changeLang: "Dili dəyiş",

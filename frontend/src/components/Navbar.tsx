@@ -13,6 +13,7 @@ import {
   Home,
   BookOpen,
   ShoppingBag,
+  Camera,
   Sparkles,
   User,
 } from "lucide-react";
@@ -70,6 +71,7 @@ export const Navbar: React.FC = () => {
       icon: ShoppingBag,
       badge: totalBasketItems > 0 ? totalBasketItems : null,
     },
+    { label: t.nav.scan, href: "/scan", icon: Camera },
     { label: t.nav.offers, href: "/offers", icon: Sparkles },
   ];
 
