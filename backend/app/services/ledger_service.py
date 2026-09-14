@@ -308,16 +308,20 @@ async def record_earn_transaction(
             points_amount=total_points_awarded,
             description=f"Points earned by user ({total_points_awarded} pts = ${total_user_points_usd:.4f})",
         ),
-        # Platform retains $0.30 clearing fee revenue (Revenue)
-        LedgerEntry(
-            transaction_id=tx.id,
-            account_id=clearing_revenue_account.id,
-            direction=EntryDirection.CREDIT,
-            amount=fee_usd,
-            points_amount=None,
-            description=f"Platform clearing fee on ${purchase_amount:.2f} purchase",
-        ),
     ]
+
+    # Platform retains clearing fee revenue if fee > 0
+    if fee_usd > Decimal("0.0000"):
+        entries.append(
+            LedgerEntry(
+                transaction_id=tx.id,
+                account_id=clearing_revenue_account.id,
+                direction=EntryDirection.CREDIT,
+                amount=fee_usd,
+                points_amount=None,
+                description=f"Platform clearing fee on ${purchase_amount:.2f} purchase",
+            )
+        )
 
     # If brand bonus exists, Brand Ad Pool is debited (Asset / Receivable from Brand)
     if brand_account and brand_bonus_usd > Decimal("0.0000"):
@@ -339,7 +343,8 @@ async def record_earn_transaction(
     # 6. Update current balances
     user_account.current_balance = (user_account.current_balance or Decimal("0.0000")) + total_user_points_usd
     merchant_account.current_balance = (merchant_account.current_balance or Decimal("0.0000")) + merchant_total_debit
-    clearing_revenue_account.current_balance = (clearing_revenue_account.current_balance or Decimal("0.0000")) + fee_usd
+    if fee_usd > Decimal("0.0000"):
+        clearing_revenue_account.current_balance = (clearing_revenue_account.current_balance or Decimal("0.0000")) + fee_usd
     if brand_account and brand_bonus_usd > Decimal("0.0000"):
         brand_account.current_balance = (brand_account.current_balance or Decimal("0.0000")) + brand_bonus_usd
 

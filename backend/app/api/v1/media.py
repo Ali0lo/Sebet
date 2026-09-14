@@ -91,3 +91,4 @@ async def get_advertiser_analytics(
     """
     analytics = await get_brand_analytics(db=db, brand_name=brand_name, campaign_id=campaign_id)
     return analytics
+

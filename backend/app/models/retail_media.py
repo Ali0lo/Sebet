@@ -90,3 +90,4 @@ class CampaignImpressionLog(Base):
         Index("idx_ad_event_campaign_type", "campaign_id", "event_type"),
         Index("idx_ad_event_created", "created_at"),
     )
+

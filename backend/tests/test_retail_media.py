@@ -43,7 +43,7 @@ async def test_campaign_retrieval_and_cpc_click_deduction():
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         # 1. Fetch active campaigns
-        res = await ac.get("/api/v1/media/campaigns")
+        res = await ac.get("/api/v1/media/campaigns?limit=50")
         assert res.status_code == 200
         campaigns = res.json()
         assert len(campaigns) >= 4
