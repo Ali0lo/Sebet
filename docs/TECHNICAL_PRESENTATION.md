@@ -22,8 +22,8 @@
 ```mermaid
 flowchart TB
     subgraph ClientLayer ["Client Application Layer (Next.js 15 App Router)"]
-        ConsumerApp["Consumer Web/Mobile App\n• Catalog & Flyers\n• Smart Basket Optimizer\n• Sponsored Offers & QR Scanner\n• Live Points Wallet"]
-        MerchantPortal["Merchant / Cashier Terminal\n• In-Store POS Burn Validator\n• $k$-Anonymity Analytics Dashboard\n• Settlement Reconciler"]
+        ConsumerApp["Consumer Web/Mobile App\n• Catalog & Flyers (/flyers)\n• Smart Basket Optimizer (/basket)\n• Çek Skanı — Receipt Scanner (/scan)\n• Sponsored Offers & Brand Boosts (/offers)\n• Live Points Wallet & Voucher Redemptions (/redeem)"]
+        MerchantPortal["Merchant / Cashier Terminal\n• In-Store POS Burn Validator (/merchant/cashier)\n• $k$-Anonymity Analytics Dashboard (/merchant/dashboard)\n• Settlement Reconciler"]
     end
 
     subgraph GatewayAPI ["FastAPI High-Performance Async Gateway"]
@@ -145,7 +145,7 @@ If the financial savings exceed the transit friction, Sebet provides a split sho
 ---
 
 ### 4.4. Receipt Ingestion & Anti-Fraud Engine
-To prevent loyalty fraud and double-spending:
+To prevent loyalty fraud and double-spending across paper and electronic receipts:
 
 ```mermaid
 flowchart TD
@@ -158,6 +158,17 @@ flowchart TD
     FraudCheck3 -- No --> RejectMismatch["REJECT: Validation Mismatch (Code: INVALID_FISCAL)"]
     FraudCheck3 -- Yes --> LedgerExecution["Approve Receipt & Execute Balanced Ledger Entry"]
 ```
+
+#### Dual Scanning Architecture
+Sebet provides two complementary scanning touchpoints for consumers:
+1. **Universal Receipt Scanner (`/scan`)**:
+   - Designed for end-of-trip consumer cashback.
+   - Features animated laser viewfinder, photo upload, and instant OCR parsing of any Azerbaijani supermarket fiscal receipt.
+   - Includes **1-Click Test Simulation Presets** (Bravo, Araz, OBA, duplicate fraud test, cashier velocity anomalies, and brand boost 5x).
+   - Compatible with state VAT refunds (*ƏDV Geri Al*).
+2. **Campaign-Specific Offer Scanner (`OfferReceiptScannerModal.tsx` on `/offers`)**:
+   - Modal trigger embedded directly in brand offer cards.
+   - Filters receipt line items specifically against campaign `target_sku_keywords` (e.g. `#coca-cola`, `#fanta`, `#sprite`), dynamically awarding the advertiser-subsidized multiplier.
 
 ---
 
