@@ -38,8 +38,10 @@ import {
   MerchantBenchmarkResponse,
   RawTransaction,
 } from "@/lib/types";
+import { useTranslation, getTranslatedCategoryName } from "@/lib/translations";
 
 export default function MerchantDashboardPage() {
+  const { t } = useTranslation();
   const [merchants, setMerchants] = useState<MerchantChain[]>([]);
   const [selectedMerchantId, setSelectedMerchantId] = useState<string>("");
   const [selectedMerchant, setSelectedMerchant] = useState<MerchantChain | null>(null);
@@ -131,11 +133,11 @@ export default function MerchantDashboardPage() {
           benchRes.status === "rejected" &&
           txsRes.status === "rejected"
         ) {
-          setError("Mağaza məlumatlarını yükləmək mümkün olmadı. Zəhmət olmasa ID-ni yoxlayın.");
+          setError(t.merchantDashboard.loadStoreDataError);
         }
       } catch (err: any) {
         if (isMounted) {
-          setError(err?.message || "Gözlənilməz xəta baş verdi.");
+          setError(err?.message || t.merchantDashboard.unexpectedError);
         }
       } finally {
         if (isMounted) {
@@ -165,7 +167,7 @@ export default function MerchantDashboardPage() {
     setSelectedMerchantId(cleanId);
     setSelectedMerchant({
       id: cleanId,
-      name: `Tərəfdaş (${cleanId.slice(0, 8)})`,
+      name: `${t.merchantDashboard.partnerCustom} (${cleanId.slice(0, 8)})`,
       slug: "custom",
       category: "Grocery",
       color: "#10B981",
@@ -195,15 +197,16 @@ export default function MerchantDashboardPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-                  {summary?.merchant_name || selectedMerchant?.name || "Tərəfdaş Mağaza"}
+                  {summary?.merchant_name || selectedMerchant?.name || t.merchantDashboard.partnerStore}
                 </h1>
                 <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">
                   {currentCategory}
+                  {getTranslatedCategoryName(currentCategory, t)}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
                 <Store className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>Tərəfdaş Portalı • ID: {selectedMerchantId.slice(0, 8)}...</span>
+                <span>{t.merchantDashboard.partnerPortal} • ID: {selectedMerchantId.slice(0, 8)}...</span>
               </p>
             </div>
           </div>
@@ -214,16 +217,16 @@ export default function MerchantDashboardPage() {
             <Link
               href="/merchant/cashier"
               className="flex items-center gap-1.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm transition-colors border border-slate-700/50"
-              title="Kassa Skaneri və Kupon Tətbiqi"
+              title={t.merchantDashboard.posScannerTooltip}
             >
               <QrCode className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Kassa Skaneri (POS)</span>
+              <span>{t.merchantDashboard.posScanner}</span>
             </Link>
 
             {/* Date Range Pill */}
             <div className="flex items-center bg-slate-100 dark:bg-slate-700/60 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 gap-1.5 border border-slate-200 dark:border-slate-600">
               <Calendar className="w-3.5 h-3.5 text-slate-500" />
-              <span>Son 30 Gün</span>
+              <span>{t.merchantDashboard.last30Days}</span>
             </div>
 
             {/* Switch Store Button */}
@@ -232,7 +235,7 @@ export default function MerchantDashboardPage() {
               className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm transition-colors cursor-pointer"
             >
               <Sliders className="w-3.5 h-3.5" />
-              <span>Mağazanı Dəyiş</span>
+              <span>{t.merchantDashboard.switchStore}</span>
               <ChevronDown className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -242,13 +245,13 @@ export default function MerchantDashboardPage() {
         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
             <Lock className="w-3.5 h-3.5" />
-            <span>Məlumatlar ciddi şəkildə təcrid olunub (Tenant Scoped: X-Merchant-Id)</span>
+            <span>{t.merchantDashboard.dataStrictlyIsolated}</span>
           </div>
           <Link
             href="/"
             className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center gap-0.5 transition-colors"
           >
-            <span>İstehlakçı görünüşünə qayıt</span>
+            <span>{t.merchantDashboard.returnToConsumer}</span>
             <ChevronRight className="w-3 h-3" />
           </Link>
         </div>
@@ -259,7 +262,7 @@ export default function MerchantDashboardPage() {
         <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4 flex items-start gap-3 text-rose-800 dark:text-rose-300">
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
           <div className="text-xs">
-            <p className="font-bold">Məlumatları yeniləmək mümkün olmadı</p>
+            <p className="font-bold">{t.merchantDashboard.errorUpdatingData}</p>
             <p className="mt-0.5 text-rose-700/80 dark:text-rose-400/80">{error}</p>
           </div>
         </div>
@@ -270,9 +273,9 @@ export default function MerchantDashboardPage() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Əsas Nəticələr (KPI)</span>
+            <span>{t.merchantDashboard.keyKpis}</span>
           </h2>
-          <span className="text-[11px] font-semibold text-slate-500">Məxfi Tərəfdaş Göstəriciləri</span>
+          <span className="text-[11px] font-semibold text-slate-500">{t.merchantDashboard.confidentialKpis}</span>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -280,7 +283,7 @@ export default function MerchantDashboardPage() {
           <div className="bg-white dark:bg-slate-800/90 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Platforma Dövriyyəsi
+                {t.merchantDashboard.totalPlatformRevenue}
               </span>
               <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                 <DollarSign className="w-4 h-4" />
@@ -297,7 +300,7 @@ export default function MerchantDashboardPage() {
               )}
             </div>
             <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-              Səbət qəbzləri ilə təsdiqlənmiş
+              {t.merchantDashboard.verifiedReceipts}
             </p>
           </div>
 
@@ -305,7 +308,7 @@ export default function MerchantDashboardPage() {
           <div className="bg-white dark:bg-slate-800/90 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Verilmiş Ballar
+                {t.merchantDashboard.issuedPoints}
               </span>
               <div className="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                 <Coins className="w-4 h-4" />
@@ -315,11 +318,11 @@ export default function MerchantDashboardPage() {
               {isLoading ? (
                 <div className="h-7 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
               ) : (
-                `${(summary?.total_points_issued || 0).toLocaleString()} bal`
+                `${(summary?.total_points_issued || 0).toLocaleString()} ${t.merchantDashboard.ptsBadge.replace("{count} ", "")}`
               )}
             </div>
             <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold mt-1">
-              ≈ ${(Number(summary?.total_points_issued || 0) / 100).toFixed(2)} ekvivalent
+              ≈ ${(Number(summary?.total_points_issued || 0) / 100).toFixed(2)} {t.merchantDashboard.equivalent}
             </p>
           </div>
 
@@ -327,7 +330,7 @@ export default function MerchantDashboardPage() {
           <div className="bg-white dark:bg-slate-800/90 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Aktiv Müştərilər
+                {t.merchantDashboard.activeCustomers}
               </span>
               <div className="w-7 h-7 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                 <Users className="w-4 h-4" />
@@ -337,11 +340,11 @@ export default function MerchantDashboardPage() {
               {isLoading ? (
                 <div className="h-7 w-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
               ) : (
-                `${summary?.unique_customer_count || 0} nəfər`
+                `${summary?.unique_customer_count || 0} ${t.merchantDashboard.people}`
               )}
             </div>
             <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-              {summary?.total_transactions || 0} ümumi tranzaksiya
+              {summary?.total_transactions || 0} {t.merchantDashboard.totalTransactions}
             </p>
           </div>
 
@@ -349,7 +352,7 @@ export default function MerchantDashboardPage() {
           <div className="bg-white dark:bg-slate-800/90 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                30 Günlük Qayıdış
+                {t.merchantDashboard.repeatCustomerRate}
               </span>
               <div className="w-7 h-7 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
                 <RotateCcw className="w-4 h-4" />
@@ -363,7 +366,7 @@ export default function MerchantDashboardPage() {
               )}
             </div>
             <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-              ≥2 dəfə gələn təkrar alıcılar
+              {t.merchantDashboard.repeatCustomersDesc}
             </p>
           </div>
         </div>
@@ -375,10 +378,10 @@ export default function MerchantDashboardPage() {
           <div>
             <h2 className="text-base font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              <span>Bazar & Kateqoriya Göstəriciləri (Benchmark)</span>
+              <span>{t.merchantDashboard.marketBenchmarks}</span>
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {currentCategory} kateqoriyası üzrə k-anonymity ilə qorunan bazar ortalaması
+              {t.merchantDashboard.categoryBenchmarkSubtitle.replace("{category}", getTranslatedCategoryName(currentCategory, t))}
             </p>
           </div>
 
@@ -395,17 +398,17 @@ export default function MerchantDashboardPage() {
               {/* Metric 1: Average Basket Size */}
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-700/70">
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  Orta Səbət Məbləği
+                  {t.merchantDashboard.avgBasketSize}
                 </span>
                 <div className="mt-2 flex items-baseline justify-between">
                   <div>
-                    <span className="text-xs text-slate-400">Sizin Mağaza</span>
+                    <span className="text-xs text-slate-400">{t.merchantDashboard.yourStore}</span>
                     <p className="text-lg font-black text-slate-900 dark:text-slate-100">
                       ${Number(benchmark.merchant_metrics.average_basket_size).toFixed(2)}
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs text-slate-400">Bazar Medianı</span>
+                    <span className="text-xs text-slate-400">{t.merchantDashboard.marketMedian}</span>
                     <p className="text-lg font-black text-slate-600 dark:text-slate-400">
                       ${Number(benchmark.category_benchmark.average_basket_size).toFixed(2)}
                     </p>
@@ -433,7 +436,8 @@ export default function MerchantDashboardPage() {
                   </div>
                   <div className="flex justify-between text-[10px] text-slate-400 mt-1 font-semibold">
                     <span className="text-emerald-600 dark:text-emerald-400 font-bold">Siz</span>
-                    <span>Bazar</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">{t.merchantDashboard.you}</span>
+                    <span>{t.merchantDashboard.market}</span>
                   </div>
                 </div>
               </div>
@@ -441,17 +445,17 @@ export default function MerchantDashboardPage() {
               {/* Metric 2: Points per Transaction */}
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-700/70">
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  Qəbz Başına Bal
+                  {t.merchantDashboard.pointsPerReceipt}
                 </span>
                 <div className="mt-2 flex items-baseline justify-between">
                   <div>
-                    <span className="text-xs text-slate-400">Sizin Mağaza</span>
+                    <span className="text-xs text-slate-400">{t.merchantDashboard.yourStore}</span>
                     <p className="text-lg font-black text-slate-900 dark:text-slate-100">
                       {benchmark.merchant_metrics.average_points_earned_per_transaction.toFixed(1)}
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs text-slate-400">Bazar Medianı</span>
+                    <span className="text-xs text-slate-400">{t.merchantDashboard.marketMedian}</span>
                     <p className="text-lg font-black text-slate-600 dark:text-slate-400">
                       {benchmark.category_benchmark.average_points_earned_per_transaction.toFixed(1)}
                     </p>
@@ -479,7 +483,8 @@ export default function MerchantDashboardPage() {
                   </div>
                   <div className="flex justify-between text-[10px] text-slate-400 mt-1 font-semibold">
                     <span className="text-amber-600 dark:text-amber-400 font-bold">Siz</span>
-                    <span>Bazar</span>
+                    <span className="text-amber-600 dark:text-amber-400 font-bold">{t.merchantDashboard.you}</span>
+                    <span>{t.merchantDashboard.market}</span>
                   </div>
                 </div>
               </div>
@@ -487,17 +492,17 @@ export default function MerchantDashboardPage() {
               {/* Metric 3: Repeat Customer Rate */}
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-700/70">
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  30 Günlük Qayıdış Faizi
+                  {t.merchantDashboard.repeatRate30d}
                 </span>
                 <div className="mt-2 flex items-baseline justify-between">
                   <div>
-                    <span className="text-xs text-slate-400">Sizin Mağaza</span>
+                    <span className="text-xs text-slate-400">{t.merchantDashboard.yourStore}</span>
                     <p className="text-lg font-black text-slate-900 dark:text-slate-100">
                       {benchmark.merchant_metrics.repeat_customer_rate.toFixed(1)}%
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs text-slate-400">Bazar Medianı</span>
+                    <span className="text-xs text-slate-400">{t.merchantDashboard.marketMedian}</span>
                     <p className="text-lg font-black text-slate-600 dark:text-slate-400">
                       {benchmark.category_benchmark.repeat_customer_rate.toFixed(1)}%
                     </p>
@@ -525,7 +530,8 @@ export default function MerchantDashboardPage() {
                   </div>
                   <div className="flex justify-between text-[10px] text-slate-400 mt-1 font-semibold">
                     <span className="text-purple-600 dark:text-purple-400 font-bold">Siz</span>
-                    <span>Bazar</span>
+                    <span className="text-purple-600 dark:text-purple-400 font-bold">{t.merchantDashboard.you}</span>
+                    <span>{t.merchantDashboard.market}</span>
                   </div>
                 </div>
               </div>
@@ -533,7 +539,7 @@ export default function MerchantDashboardPage() {
 
             <p className="text-[11px] text-slate-400 text-right">
               {benchmark.category_benchmark.participating_merchants_count} aktiv regional tərəfdaşın
-              anonim məlumatları əsasında hesablanmışdır.
+              {t.merchantDashboard.benchmarkCalculatedFrom.replace("{count}", String(benchmark.category_benchmark.participating_merchants_count))}
             </p>
           </div>
         ) : (
@@ -544,21 +550,21 @@ export default function MerchantDashboardPage() {
             </div>
 
             <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 tracking-tight">
-              Kateqoriya Göstəriciləri Məxfilik Səbəbilə Gizlədilib ($k &lt; 5$)
+              {t.merchantDashboard.privacyHiddenTitle}
             </h3>
 
             <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 max-w-md mx-auto leading-relaxed">
               Kateqoriya göstəriciləri region üzrə ən azı <strong>5 aktiv tərəfdaş mağaza</strong>{" "}
               iştirak etdikdə aktivləşir. Mağazanızın fərdi kommersiya göstəricilərinin heç bir rəqib
-              tərəfindən təxmin edilməməsi üçün k-anonymity məxfilik standartı tətbiq olunur.
+              {t.merchantDashboard.privacyHiddenDesc}
             </p>
 
             {/* Density Progress Indicator */}
             <div className="mt-4 max-w-xs mx-auto">
               <div className="flex justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                <span>Məxfilik Ehtiyatı</span>
+                <span>{t.merchantDashboard.privacyReserve}</span>
                 <span className="text-amber-600 dark:text-amber-400">
-                  {merchants.filter((m) => m.category === currentCategory).length} / 5 Mağaza
+                  {merchants.filter((m) => m.category === currentCategory).length} / 5 {t.merchantDashboard.storePlural}
                 </span>
               </div>
               <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -576,7 +582,7 @@ export default function MerchantDashboardPage() {
 
             <div className="mt-4 inline-flex items-center gap-2 text-[11px] text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full font-bold">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Mağazanızın fərdi dövriyyəsi tam qorunur</span>
+              <span>{t.merchantDashboard.revenueProtected}</span>
             </div>
           </div>
         )}
@@ -588,10 +594,10 @@ export default function MerchantDashboardPage() {
           <div>
             <h2 className="text-base font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              <span>Müştərilərin Digər Kateqoriyalara Marağı (Cross-Shopping)</span>
+              <span>{t.merchantDashboard.crossShoppingTitle}</span>
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Sizin alıcıların digər hansı xidmət və mağazalardan istifadə etdiyini göstərən anonim təhlil
+              {t.merchantDashboard.crossShoppingSubtitle}
             </p>
           </div>
         </div>
@@ -610,6 +616,7 @@ export default function MerchantDashboardPage() {
                       #{idx + 1}
                     </span>
                     <span>{aff.category}</span>
+                    <span>{getTranslatedCategoryName(aff.category, t)}</span>
                   </span>
                   <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-sm">
                     {aff.affinity_percentage.toFixed(1)}%
@@ -628,7 +635,7 @@ export default function MerchantDashboardPage() {
           </div>
         ) : (
           <div className="p-6 text-center text-xs text-slate-500 bg-slate-50 dark:bg-slate-900/40 rounded-xl">
-            Hazırda cross-shopping məlumatı kifayət qədər tranzaksiya olmadığından formalaşmayıb.
+            {t.merchantDashboard.noCrossShoppingData}
           </div>
         )}
 
@@ -638,7 +645,7 @@ export default function MerchantDashboardPage() {
           <p className="text-xs leading-relaxed">
             <strong>Məxfilik Zəmanəti:</strong> Təhlillər ümumiləşdirilmiş müştəri davranış
             kohortlarından formalaşır. Birbaşa rəqib mağazaların adları, dövriyyəsi və ya qalıqları
-            heç bir halda izlənilmir və ya göstərilmir.
+            <strong>{t.merchantDashboard.privacyGuaranteeTitle}</strong> {t.merchantDashboard.privacyGuaranteeDesc}
           </p>
         </div>
       </div>
@@ -649,14 +656,14 @@ export default function MerchantDashboardPage() {
           <div>
             <h2 className="text-base font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              <span>Son Təsdiqlənmiş Tranzaksiyalar (Loyalty Ledger)</span>
+              <span>{t.merchantDashboard.recentVerifiedTxs}</span>
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Yalnız sizin mağazanıza aid qəbzlər (Tenant Scoped: X-Merchant-Id)
+              {t.merchantDashboard.scopedToYourStore}
             </p>
           </div>
           <span className="text-xs font-bold text-slate-500 px-2.5 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg">
-            {transactions.length} qəbz
+            {t.merchantDashboard.receiptsCount.replace("{count}", String(transactions.length))}
           </span>
         </div>
 
@@ -669,7 +676,11 @@ export default function MerchantDashboardPage() {
                   <th className="py-2.5 px-3">Qəbz No</th>
                   <th className="py-2.5 px-3 text-right">Səbət Məbləği</th>
                   <th className="py-2.5 px-3 text-right">Qazanılan Bal</th>
-                  <th className="py-2.5 px-3 text-center">Status</th>
+                  <th className="py-2.5 px-3">{t.merchantDashboard.dateTimeCol}</th>
+                  <th className="py-2.5 px-3">{t.merchantDashboard.receiptNoCol}</th>
+                  <th className="py-2.5 px-3 text-right">{t.merchantDashboard.basketAmountCol}</th>
+                  <th className="py-2.5 px-3 text-right">{t.merchantDashboard.pointsEarnedCol}</th>
+                  <th className="py-2.5 px-3 text-center">{t.merchantDashboard.statusCol}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -691,12 +702,12 @@ export default function MerchantDashboardPage() {
                       ${Number(tx.total_amount).toFixed(2)}
                     </td>
                     <td className="py-3 px-3 text-right font-extrabold text-emerald-600 dark:text-emerald-400">
-                      +{tx.sebet_points_awarded} bal
+                      +{tx.sebet_points_awarded} {t.merchantDashboard.ptsBadge.replace("{count} ", "")}
                     </td>
                     <td className="py-3 px-3 text-center">
                       <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
                         <CheckCircle2 className="w-3 h-3" />
-                        <span>Təsdiqləndi</span>
+                        <span>{t.merchantDashboard.approvedBadge}</span>
                       </span>
                     </td>
                   </tr>
@@ -708,10 +719,10 @@ export default function MerchantDashboardPage() {
           <div className="py-8 text-center bg-slate-50 dark:bg-slate-900/40 rounded-xl p-4">
             <Store className="w-8 h-8 mx-auto text-slate-400 mb-2" />
             <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              Bu mağaza üçün hələ tranzaksiya qeydə alınmayıb.
+              {t.merchantDashboard.noTransactionsYet}
             </p>
             <p className="text-[11px] text-slate-400 mt-1">
-              İstehlakçılar qəbz skan etdikcə əməliyyatlar real vaxtda burada əks olunacaq.
+              {t.merchantDashboard.noTransactionsHint}
             </p>
           </div>
         )}
@@ -725,7 +736,7 @@ export default function MerchantDashboardPage() {
               <div className="flex items-center gap-2">
                 <Store className="w-5 h-5 text-emerald-600" />
                 <h3 className="text-base font-black text-slate-900 dark:text-slate-100">
-                  Tərəfdaş Mağaza Seçimi
+                  {t.merchantDashboard.partnerStoreSelect}
                 </h3>
               </div>
               <button
@@ -737,7 +748,7 @@ export default function MerchantDashboardPage() {
             </div>
 
             <p className="text-xs text-slate-500">
-              Məlumatların izolasiyası və k-anonymity məxfiliyini yoxlamaq üçün fərqli mağaza seçin:
+              {t.merchantDashboard.partnerStoreSelectDesc}
             </p>
 
             {/* List of active chains */}
@@ -765,6 +776,7 @@ export default function MerchantDashboardPage() {
                         <p>{m.name}</p>
                         <span className="text-[10px] text-slate-400 font-normal">
                           {m.category || "Grocery"} • {m.id.slice(0, 8)}...
+                          {getTranslatedCategoryName(m.category || "Grocery", t)} • {m.id.slice(0, 8)}...
                         </span>
                       </div>
                     </div>
@@ -780,7 +792,7 @@ export default function MerchantDashboardPage() {
               className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2"
             >
               <label className="text-[11px] font-bold text-slate-500 block">
-                Fərdi Merchant UUID daxil edin:
+                {t.merchantDashboard.customUuidLabel}
               </label>
               <div className="flex gap-2">
                 <input
@@ -794,7 +806,7 @@ export default function MerchantDashboardPage() {
                   type="submit"
                   className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl"
                 >
-                  Tətbiq et
+                  {t.merchantDashboard.applyBtn}
                 </button>
               </div>
             </form>

@@ -30,7 +30,7 @@ import {
 import { getActiveFlyers, searchProducts, getCategories, getProductById } from "@/lib/api";
 import { Flyer, Product, Category } from "@/lib/types";
 import { useSebetStore } from "@/lib/store";
-import { useTranslation } from "@/lib/translations";
+import { useTranslation, getTranslatedCategoryName } from "@/lib/translations";
 import { ChainLogo } from "@/components/ChainLogo";
 import { ProductCard } from "@/components/ProductCard";
 
@@ -50,39 +50,25 @@ interface FlyerCategoryMeta {
   shortName: string;
 }
 
-const CATEGORY_MAP: Record<string, FlyerCategoryMeta> = {
-  "dairy-eggs": { icon: Milk, shortName: "Süd Məhsulları" },
-  "meat-poultry": { icon: Beef, shortName: "Ət & Toyuq" },
-  "bakery": { icon: Croissant, shortName: "Çörək & Un" },
-  "fruit-veg": { icon: Apple, shortName: "Meyvə-Tərəvəz" },
-  "pantry-cooking": { icon: Package, shortName: "Əsas Ərzaq" },
-  "tea-coffee": { icon: Coffee, shortName: "Çay & Qəhvə" },
-  "beverages-tea": { icon: Coffee, shortName: "Çay & Qəhvə" },
-  "snacks-sweets": { icon: Cookie, shortName: "Şirniyyat" },
-  "drinks-water": { icon: GlassWater, shortName: "İçkilər" },
-  "cleaning-household": { icon: Sparkles, shortName: "Təmizlik" },
-  "personal-care-baby": { icon: Smile, shortName: "Qulluq" },
+const CATEGORY_MAP: Record<string, { icon: React.ComponentType<{ className?: string; strokeWidth?: number }> }> = {
+  "dairy-eggs": { icon: Milk },
+  "meat-poultry": { icon: Beef },
+  "bakery": { icon: Croissant },
+  "fruit-veg": { icon: Apple },
+  "pantry-cooking": { icon: Package },
+  "tea-coffee": { icon: Coffee },
+  "beverages-tea": { icon: Coffee },
+  "snacks-sweets": { icon: Cookie },
+  "drinks-water": { icon: GlassWater },
+  "cleaning-household": { icon: Sparkles },
+  "personal-care-baby": { icon: Smile },
 };
 
-function getCategoryPillInfo(cat: Category): FlyerCategoryMeta {
-  const bySlug = CATEGORY_MAP[cat.slug];
-  if (bySlug) return bySlug;
-
-  const name = (cat.name_az || "").toLowerCase();
-  if (name.includes("süd") || name.includes("ağartı")) return CATEGORY_MAP["dairy-eggs"];
-  if (name.includes("ət") || name.includes("toyuq")) return CATEGORY_MAP["meat-poultry"];
-  if (name.includes("çörək") || name.includes("un")) return CATEGORY_MAP["bakery"];
-  if (name.includes("meyvə") || name.includes("tərəvəz")) return CATEGORY_MAP["fruit-veg"];
-  if (name.includes("ərzaq") || name.includes("yağ")) return CATEGORY_MAP["pantry-cooking"];
-  if (name.includes("çay") || name.includes("qəhvə")) return CATEGORY_MAP["tea-coffee"];
-  if (name.includes("şirniyyat") || name.includes("qəlyanaltı")) return CATEGORY_MAP["snacks-sweets"];
-  if (name.includes("içki") || name.includes("su")) return CATEGORY_MAP["drinks-water"];
-  if (name.includes("təmizlik") || name.includes("yuyucu")) return CATEGORY_MAP["cleaning-household"];
-  if (name.includes("qulluq") || name.includes("gigiyena")) return CATEGORY_MAP["personal-care-baby"];
-
+function getCategoryPillInfo(cat: Category, t: any): FlyerCategoryMeta {
+  const icon = CATEGORY_MAP[cat.slug]?.icon || Tag;
   return {
-    icon: Tag,
-    shortName: cat.name_az.split("&")[0].split("(")[0].trim(),
+    icon,
+    shortName: getTranslatedCategoryName(cat.slug || cat.name_az, t),
   };
 }
 
@@ -274,9 +260,9 @@ function CatalogContent() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
-            <span>Kataloq & Məhsullar</span>
+            <span>{t.flyers.title}</span>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800/50">
-              {totalProducts > 0 ? `${totalProducts} məhsul` : "Rəf & Jurnallar"}
+              {totalProducts > 0 ? `${totalProducts} ${t.basket.itemsCount}` : t.flyers.title}
             </span>
           </h1>
         </div>
@@ -293,7 +279,7 @@ function CatalogContent() {
           }`}
         >
           <Layers className="w-4 h-4" />
-          <span>Bütün Məhsullar</span>
+          <span>{t.flyers.allProductsTab}</span>
         </button>
 
         <button
@@ -305,9 +291,9 @@ function CatalogContent() {
           }`}
         >
           <BookOpen className="w-4 h-4" />
-          <span>Həftəlik Jurnallar</span>
+          <span>{t.flyers.flyersTab}</span>
           <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-rose-600 text-white font-bold">
-            Aksiya
+            {t.flyers.promoBadge}
           </span>
         </button>
       </div>
@@ -320,7 +306,7 @@ function CatalogContent() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
             <input
               type="text"
-              placeholder="Kataloqda məhsul axtarın..."
+              placeholder={t.flyers.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200/60 dark:hover:bg-slate-850 focus:bg-white dark:focus:bg-slate-900 border border-slate-200/80 dark:border-slate-800 focus:border-emerald-500 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-xs"
@@ -336,7 +322,7 @@ function CatalogContent() {
           </div>
 
           {/* Category Filter Pills */}
-          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 no-scrollbar">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap no-scrollbar">
             <button
               onClick={() => setSelectedCategory("")}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 ${
@@ -346,10 +332,10 @@ function CatalogContent() {
               }`}
             >
               <Store className="w-3.5 h-3.5" strokeWidth={1.75} />
-              <span>Hamısı</span>
+              <span>{t.flyers.allCategories}</span>
             </button>
             {categories.map((cat) => {
-              const pillInfo = getCategoryPillInfo(cat);
+              const pillInfo = getCategoryPillInfo(cat, t);
               const IconComp = pillInfo.icon;
               const isSelected = selectedCategory === cat.slug || selectedCategory === cat.id;
               return (
@@ -370,7 +356,7 @@ function CatalogContent() {
           </div>
 
           {/* Chain Filter Pills (Unique Bravo, authentic logos) */}
-          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 no-scrollbar">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap no-scrollbar">
             {CHAINS_FILTER.map((cf) => (
               <button
                 key={cf.slug}
@@ -386,54 +372,85 @@ function CatalogContent() {
                 ) : (
                   <span className="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-500" />
                 )}
-                <span>{cf.name}</span>
+                <span>{cf.slug === "" ? t.flyers.allMarkets : cf.name}</span>
               </button>
             ))}
           </div>
 
-          {/* Filter Trigger Button directly beneath markets slider */}
-          <div className="flex items-center justify-between pt-0.5">
+          {/* Active filter counter & Filter button bar */}
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-xs font-black text-slate-500 dark:text-slate-400">
+              {displayedProducts.length} {t.basketDrawer.itemsSuffix}
+            </span>
             <button
-              onClick={() => {
-                setPendingBrands(appliedBrands);
-                setPendingMinPrice(appliedMinPrice);
-                setPendingMaxPrice(appliedMaxPrice);
-                setIsFilterModalOpen(true);
-              }}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs ${
+              onClick={() => setIsFilterModalOpen(true)}
+              className={`text-xs font-bold px-3 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all ${
                 hasActiveFilters
-                  ? "bg-emerald-600 text-white shadow-emerald-500/20"
-                  : "bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850"
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
               <span>{t.filterModal.buttonLabel}</span>
               {hasActiveFilters && (
-                <span className="w-4.5 h-4.5 rounded-full bg-white text-emerald-700 text-[10px] font-black flex items-center justify-center">
-                  {appliedBrands.length > 0 ? appliedBrands.length : "•"}
-                </span>
+                <span className="w-2 h-2 rounded-full bg-white" />
               )}
             </button>
+          </div>
 
-            {hasActiveFilters && (
+          {/* Active Applied Filters Pills */}
+          {hasActiveFilters && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+              <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                {t.filterModal.title}:
+              </span>
+              {appliedBrands.map((b) => (
+                <span
+                  key={b}
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                >
+                  <span>{b}</span>
+                  <button
+                    onClick={() => setAppliedBrands(appliedBrands.filter((x) => x !== b))}
+                    className="hover:text-rose-600 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+              {(appliedMinPrice !== "" || appliedMaxPrice !== "") && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  <span>
+                    {appliedMinPrice || "0"} - {appliedMaxPrice || "∞"} ₼
+                  </span>
+                  <button
+                    onClick={() => {
+                      setAppliedMinPrice("");
+                      setAppliedMaxPrice("");
+                    }}
+                    className="hover:text-rose-600 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
               <button
                 onClick={() => {
                   setAppliedBrands([]);
                   setAppliedMinPrice("");
                   setAppliedMaxPrice("");
                 }}
-                className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline px-1 flex items-center gap-1"
+                className="text-[11px] font-bold text-rose-600 dark:text-rose-400 hover:underline px-1"
               >
-                <X className="w-3 h-3" />
-                <span>{t.filterModal.reset}</span>
+                {t.filterModal.reset}
               </button>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Products Grid */}
           {isProductsLoading ? (
-            <div className="grid grid-cols-2 gap-3">
-              {[1, 2, 3, 4].map((n) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                 <div
                   key={n}
                   className="h-64 rounded-2xl bg-slate-100 dark:bg-slate-900 animate-pulse border border-slate-200 dark:border-slate-800"
@@ -444,12 +461,12 @@ function CatalogContent() {
             <div className="text-center py-12 p-6 bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 space-y-2">
               <div className="text-3xl">🔍</div>
               <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                {hasActiveFilters ? t.filterModal.noResults : "Məhsul tapılmadı"}
+                {hasActiveFilters ? t.filterModal.noResults : t.flyers.noProducts}
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {hasActiveFilters
-                  ? "Seçilmiş filtrlərə uyğun məhsul tapılmadı. Filtrləri tənzimləyin və ya sıfırlayın."
-                  : "Axtarış sorğusunu dəyişin və ya digər marketləri seçin."}
+                  ? t.filterModal.noResults
+                  : t.flyers.noProductsDesc}
               </p>
               {hasActiveFilters && (
                 <button
@@ -465,7 +482,7 @@ function CatalogContent() {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-4">
               {displayedProducts.map((prod) => (
                 <ProductCard key={prod.id} product={prod} />
               ))}
@@ -531,7 +548,7 @@ function CatalogContent() {
                           className="text-emerald-400 font-bold hover:underline flex items-center gap-1"
                         >
                           <ExternalLink className="w-3 h-3" />
-                          <span>PDF Aç</span>
+                          <span>{t.flyers.openPdf}</span>
                         </a>
                       )}
                     </div>
@@ -543,14 +560,14 @@ function CatalogContent() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-                    Jurnaldakı Xüsusi Qiymətlər ({currentFlyer.items.length})
+                    {t.flyers.flyerSpecialPrices.replace("{count}", String(currentFlyer.items.length))}
                   </h3>
                   <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/40">
-                    1 kliklə səbətə at
+                    {t.flyers.oneClickAdd}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-4">
                   {currentFlyer.items.map((item) => {
                     const isAdded = addedFlyerIds[item.id];
 
@@ -602,7 +619,7 @@ function CatalogContent() {
                               ? "bg-emerald-600 text-white scale-105"
                               : "bg-slate-900 dark:bg-emerald-600 hover:bg-emerald-600 text-white active:scale-95 shadow-xs"
                           }`}
-                          title="Səbətə at"
+                          title={t.flyers.addToBasket}
                         >
                           {isAdded ? (
                             <Check className="w-4 h-4" />
@@ -620,7 +637,7 @@ function CatalogContent() {
             <div className="text-center py-12 p-6 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
               <BookOpen className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Bu şəbəkə üzrə aktiv jurnal tapılmadı.
+                {t.flyers.noActiveFlyers}
               </p>
             </div>
           )}
@@ -684,7 +701,7 @@ function CatalogContent() {
 
                 {availableBrands.length === 0 ? (
                   <div className="text-xs text-slate-400 italic py-2">
-                    Aktiv axtarış nəticələrində brend tapılmadı
+                    {t.flyers.noBrandsFound}
                   </div>
                 ) : (
                   <div className="max-h-48 overflow-y-auto space-y-1 pr-1 no-scrollbar border border-slate-100 dark:border-slate-800 rounded-2xl p-2.5 bg-slate-50/50 dark:bg-slate-950/40">

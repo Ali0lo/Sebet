@@ -33,7 +33,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { BarcodeScannerModal } from "@/components/BarcodeScannerModal";
 import { NearbyMarketsModal } from "@/components/NearbyMarketsModal";
 import { useSebetStore } from "@/lib/store";
-import { useTranslation, TranslationDictionary } from "@/lib/translations";
+import { useTranslation, TranslationDictionary, getTranslatedCategoryName } from "@/lib/translations";
 
 const CATEGORY_ICONS: Record<
   string,
@@ -87,6 +87,7 @@ function getCategoryName(cat: Category, t: TranslationDictionary): string {
   if (name.includes("qulluq") || name.includes("gigiyena")) return t.categoriesList.care;
 
   return cat.name_az.split("&")[0].split("(")[0].trim();
+  return getTranslatedCategoryName(cat.slug || cat.name_az || "", t);
 }
 
 function getCategoryIcon(cat: Category) {
@@ -250,7 +251,7 @@ export default function HomePage() {
                   setSearchResults([]);
                 }}
                 className="text-slate-400 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full bg-slate-200/70 dark:bg-zinc-800 transition-colors"
-                title="Təmizlə"
+                title={t.home.clearSearch}
               >
                 ✕
               </button>
@@ -259,7 +260,7 @@ export default function HomePage() {
               type="button"
               onClick={() => setIsScannerOpen(true)}
               className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 hover:bg-slate-200/50 dark:hover:bg-zinc-800 active:scale-95 transition-colors"
-              title="Barkod skaneri aç"
+              title={t.home.openBarcodeScanner}
             >
               <Barcode className="w-4 h-4" />
             </button>
@@ -275,7 +276,7 @@ export default function HomePage() {
                 <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
                   <span className="flex items-center gap-1">
                     <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Ağıllı Təkliflər (AI)</span>
+                    <span>{t.home.aiSuggestions}</span>
                   </span>
                   {recommendations.source === "openai" && (
                     <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 font-mono">
@@ -302,7 +303,7 @@ export default function HomePage() {
             <div className="space-y-1.5">
               <div className="flex items-center gap-1 text-[11px] font-extrabold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
                 <Flame className="w-3.5 h-3.5 text-rose-500" />
-                <span>Populyar Axtarışlar</span>
+                <span>{t.home.popularSearches}</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {recommendations.trending.slice(0, 6).map((trend, idx) => (
@@ -321,14 +322,14 @@ export default function HomePage() {
             {/* Direct Jump to Category */}
             <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between">
               <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium">
-                Daha çox axtarış seçimləri
+                {t.home.moreSearchOptions}
               </span>
               <Link
                 href="/flyers"
                 onClick={() => setIsSearchFocused(false)}
                 className="text-[11px] font-black text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
               >
-                <span>Bütün Kataloqa Keç</span>
+                <span>{t.home.goToFullCatalog}</span>
                 <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
@@ -351,7 +352,7 @@ export default function HomePage() {
           </Link>
         </div>
 
-        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 pt-1 -mx-4 px-4 scrollbar-none no-scrollbar">
+        <div className="flex gap-3 overflow-x-auto pb-2 pt-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:gap-3.5 scrollbar-none no-scrollbar">
           {categories.map((cat) => {
             const IconComponent = getCategoryIcon(cat);
             const categoryName = getCategoryName(cat, t);
@@ -360,12 +361,12 @@ export default function HomePage() {
               <Link
                 key={cat.id}
                 href={`/flyers?cat=${encodeURIComponent(cat.slug)}`}
-                className="flex flex-col items-center shrink-0 snap-start group focus:outline-hidden"
+                className="flex flex-col items-center shrink-0 group focus:outline-hidden"
               >
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-700/60 text-zinc-700 dark:text-zinc-200 group-hover:border-emerald-500 group-hover:text-emerald-500 transition-all shadow-xs">
-                  <IconComponent className="w-6 h-6" strokeWidth={1.75} />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center bg-white dark:bg-zinc-850 border border-slate-200/80 dark:border-zinc-700/60 text-zinc-700 dark:text-zinc-200 group-hover:border-emerald-500 group-hover:text-emerald-500 transition-all shadow-xs">
+                  <IconComponent className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={1.75} />
                 </div>
-                <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 whitespace-nowrap text-center mt-1.5">
+                <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 whitespace-nowrap text-center mt-1.5 max-w-[72px] truncate">
                   {categoryName}
                 </span>
               </Link>
@@ -379,38 +380,38 @@ export default function HomePage() {
         <section className="space-y-3 pt-1">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-              Axtarış nəticələri: &ldquo;{searchQuery}&rdquo; ({searchResults.length})
+              {t.home.searchResultsFor}: &ldquo;{searchQuery}&rdquo; ({searchResults.length})
             </h3>
             <Link
               href={`/flyers?q=${encodeURIComponent(searchQuery)}`}
               className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
             >
-              <span>Kataloqda tam bax</span>
+              <span>{t.home.viewFullInCatalog}</span>
               <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
 
           {isSearching ? (
-            <div className="grid grid-cols-2 gap-3">
-              {[1, 2].map((n) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-4">
+              {[1, 2, 3, 4, 5].map((n) => (
                 <div
                   key={n}
-                  className="h-60 rounded-2xl bg-slate-100 dark:bg-slate-900 animate-pulse border border-slate-200 dark:border-slate-800"
+                  className="h-64 rounded-2xl bg-slate-100 dark:bg-slate-900 animate-pulse border border-slate-200 dark:border-slate-800"
                 />
               ))}
             </div>
           ) : searchResults.length === 0 ? (
-            <div className="text-center py-10 p-6 bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 space-y-2">
-              <div className="text-3xl">🔍</div>
+            <div className="text-center py-12 p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 space-y-2">
+              <div className="text-4xl">🔍</div>
               <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                Məhsul tapılmadı
+                {t.home.noProductsFound}
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Digər açar sözlər və ya kateqoriyalar üzrə axtarın.
+                {t.home.noProductsDesc}
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-4">
               {searchResults.map((prod) => (
                 <ProductCard
                   key={prod.id}
@@ -434,18 +435,18 @@ export default function HomePage() {
                 className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/40 flex items-center gap-1 active:scale-95"
               >
                 <Compass className="w-3 h-3" />
-                <span>Yaxın Filiallar</span>
+                <span>{t.home.nearbyStores}</span>
               </button>
             </div>
 
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none no-scrollbar">
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 md:grid md:grid-cols-3 md:gap-4 scrollbar-none no-scrollbar">
               {HERO_PROMOS.map((promo) => (
                 <Link
                   key={promo.id}
                   href={`/flyers?chain=${promo.chainSlug}`}
-                  className="w-64 shrink-0 rounded-2xl border border-slate-200/80 dark:border-zinc-800 overflow-hidden relative shadow-xs group active:scale-98 transition-all bg-zinc-900"
+                  className="w-64 md:w-auto shrink-0 md:shrink rounded-2xl border border-slate-200/80 dark:border-zinc-800 overflow-hidden relative shadow-xs group active:scale-98 transition-all bg-zinc-900"
                 >
-                  <div className="h-32 w-full relative">
+                  <div className="h-32 md:h-36 w-full relative">
                     <img
                       src={promo.image}
                       alt={promo.chain}
@@ -478,11 +479,11 @@ export default function HomePage() {
                 </div>
                 <div>
                   <div className="text-xs font-black text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                    <span>Sponsorlu Brendlərdən 5x Bal Qazan!</span>
-                    <span className="text-[9px] bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded">YENİ</span>
+                    <span>{t.home.brandBoostBannerTitle}</span>
+                    <span className="text-[9px] bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded">{t.common.newBadge}</span>
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    Coca-Cola, Milla, Ariel və Red Bull üçün xüsusi SKU multiplikatorlarına baxın →
+                    {t.home.brandBoostBannerDesc}
                   </p>
                 </div>
               </div>
@@ -504,7 +505,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="flex gap-3 overflow-x-auto pb-2 pt-1 -mx-4 px-4 scrollbar-none no-scrollbar">
+              <div className="flex gap-3 overflow-x-auto pb-2 pt-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 sm:gap-4 scrollbar-none no-scrollbar">
                 {topDeals.map((prod) => {
                   const promoPrice = prod.min_price || 0;
                   const origPrice = prod.max_price || promoPrice * 1.25;
@@ -517,7 +518,7 @@ export default function HomePage() {
                   return (
                     <div
                       key={`deal-${prod.id}`}
-                      className="w-44 shrink-0 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-xs hover:shadow-md transition-all p-3 flex flex-col justify-between"
+                      className="w-44 sm:w-auto shrink-0 sm:shrink bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-xs hover:shadow-md transition-all p-3 flex flex-col justify-between"
                     >
                       <div>
                         <div className="relative w-full h-28 rounded-xl bg-slate-50/50 dark:bg-zinc-800/40 overflow-hidden mb-2.5 flex items-center justify-center border border-slate-100/80 dark:border-zinc-800/80">
@@ -582,7 +583,7 @@ export default function HomePage() {
 
           {/* Reklam Sahəsi / Ad Placement */}
           <div className="w-full my-4 h-24 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/40 flex items-center justify-center text-xs text-zinc-400">
-            Reklam Yeri (Ad Slot)
+            {t.home.adSlot}
           </div>
         </>
       )}

@@ -5,6 +5,7 @@ import { Plus, Minus, Sparkles, Tag, ShoppingBasket } from "lucide-react";
 import { Product, StorePrice } from "@/lib/types";
 import { useSebEtStore } from "@/lib/store";
 import { ChainLogo } from "@/components/ChainLogo";
+import { useTranslation } from "@/lib/translations";
 
 interface ProductCardProps {
   product: Product;
@@ -16,6 +17,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onOpenDetails,
 }) => {
   const { basket, addToBasket, updateQuantity } = useSebEtStore();
+  const { t } = useTranslation();
   const [isMounted, setIsMounted] = useState(false);
   const [imgSrc, setImgSrc] = useState<string | null>(product.image_url || null);
 
@@ -74,7 +76,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
             {hasPromo && (
               <span className="px-1.5 py-0.5 rounded-md bg-rose-500 text-white text-[9px] font-black flex items-center gap-0.5 shadow-xs">
-                <Sparkles className="w-2.5 h-2.5" /> Endirim
+                <Sparkles className="w-2.5 h-2.5" /> {t.productCard.promoBadge}
               </span>
             )}
             {product.pack_size && (
@@ -149,7 +151,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               <Minus className="w-3.5 h-3.5" />
             </button>
             <span className="text-xs font-black text-emerald-900 dark:text-emerald-200 px-2">
-              {inCartQty} ədəd
+              {inCartQty} {t.productCard.pcsSuffix}
             </span>
             <button
               onClick={() => updateQuantity(product.id, 1)}
@@ -164,7 +166,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             className="w-full py-1.5 px-3 rounded-xl bg-slate-900 dark:bg-emerald-600 hover:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-xs"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Səbətə at</span>
+            <span>{t.productCard.addToCart}</span>
           </button>
         )}
       </div>

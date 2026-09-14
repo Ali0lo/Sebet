@@ -35,6 +35,7 @@ import {
   ClaimVoucherResult,
 } from "@/lib/types";
 import { ChainLogo } from "@/components/ChainLogo";
+import { useTranslation } from "@/lib/translations";
 
 function getChainSlug(name?: string | null): string {
   const n = (name || "").toLowerCase();
@@ -48,6 +49,7 @@ function getChainSlug(name?: string | null): string {
 }
 
 export default function CashierBurnPage() {
+  const { t } = useTranslation();
   const [isMounted, setIsMounted] = useState(false);
 
   // Active Cashier Merchant Session
@@ -112,7 +114,7 @@ export default function CashierBurnPage() {
     const code = (codeToLookup || voucherCodeInput).trim().toUpperCase();
     if (!code) return;
     if (!selectedMerchant) {
-      setLookupError("Zəhmət olmasa aktiv kassa mağazasını seçin.");
+      setLookupError(t.cashier.selectActiveStoreError);
       return;
     }
 
@@ -126,7 +128,7 @@ export default function CashierBurnPage() {
       setPreviewResult(data);
       setVoucherCodeInput(code);
     } catch (err: any) {
-      setLookupError(err.message || "Kupon tapılmadı və ya etibarsızdır.");
+      setLookupError(err.message || t.cashier.invalidVoucherError);
       setPreviewResult(null);
     } finally {
       setIsPreviewLoading(false);
@@ -144,7 +146,7 @@ export default function CashierBurnPage() {
       const receipt = await claimVoucher(
         {
           voucher_code: previewResult.voucher_code,
-          cashier_notes: `Kassa Terminalı #${Math.floor(10 + Math.random() * 90)} checkout`,
+          cashier_notes: `POS #${Math.floor(10 + Math.random() * 90)} checkout`,
         },
         selectedMerchant.id
       );
@@ -164,7 +166,7 @@ export default function CashierBurnPage() {
         // ignore
       }
     } catch (err: any) {
-      setClaimError(err.message || "Kupon təsdiqlənərkən xəta baş verdi.");
+      setClaimError(err.message || t.cashier.claimError);
     } finally {
       setIsClaiming(false);
     }
@@ -188,7 +190,7 @@ export default function CashierBurnPage() {
       // Immediately preview it
       await handlePreviewVoucher(newVoucher.voucher_code);
     } catch (err: any) {
-      setLookupError(err.message || "Test kuponu yaradıla bilmədi.");
+      setLookupError(err.message || t.cashier.testVoucherError);
     } finally {
       setIsGeneratingTestVoucher(false);
     }
@@ -212,10 +214,10 @@ export default function CashierBurnPage() {
           className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Dashboard-a Qayıt</span>
+          <span>{t.cashier.backToDashboard}</span>
         </Link>
         <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-500/20">
-          Kassir Portalı (In-Store POS)
+          {t.cashier.cashierPortalBadge}
         </span>
       </div>
 
@@ -228,14 +230,14 @@ export default function CashierBurnPage() {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-black text-slate-900 dark:text-slate-100">
-                {selectedMerchant?.name || "Kassa Mağazası"}
+                {selectedMerchant?.name || t.cashier.title}
               </h2>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
-                Kassa Terminalı #04
+                {t.cashier.cashierTerminalNumber}
               </span>
             </div>
             <p className="text-[11px] text-slate-400 mt-0.5">
-              Tenant ID: {selectedMerchant?.id.slice(0, 8)}... • Avtorizasiyalı
+              Tenant ID: {selectedMerchant?.id.slice(0, 8)}... • {t.cashier.authorized}
             </p>
           </div>
         </div>
@@ -245,7 +247,7 @@ export default function CashierBurnPage() {
           className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1 transition-colors cursor-pointer"
         >
           <Sliders className="w-3.5 h-3.5" />
-          <span>Dəyiş</span>
+          <span>{t.cashier.changeStore}</span>
         </button>
       </div>
 
@@ -258,9 +260,9 @@ export default function CashierBurnPage() {
                 <CheckCircle2 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-sm font-black">Kupon Uğurla Silindi & Ödənildi!</h3>
+                <h3 className="text-sm font-black">{t.cashier.voucherClaimedSuccess}</h3>
                 <p className="text-xs text-emerald-100 font-medium">
-                  {claimedReceipt.merchant_name} • Kassa çeki hazırlandı
+                  {t.cashier.receiptReady.replace("{store}", claimedReceipt.merchant_name)}
                 </p>
               </div>
             </div>
@@ -272,28 +274,28 @@ export default function CashierBurnPage() {
           {/* Breakdown receipt card */}
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 space-y-3 text-xs">
             <div className="flex justify-between items-center text-slate-700 dark:text-slate-300 pb-2 border-b border-slate-200/60 dark:border-slate-800">
-              <span className="font-bold text-slate-400 uppercase text-[10px]">Kupon Kodu:</span>
+              <span className="font-bold text-slate-400 uppercase text-[10px]">{t.redeem.voucherCode}:</span>
               <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">
                 {claimedReceipt.voucher_code}
               </span>
             </div>
 
             <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
-              <span>Müştəriyə Tətbiq Edilən Endirim (Ümumi):</span>
+              <span>{t.cashier.customerDiscountTotal}</span>
               <span className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">
                 ${Number(claimedReceipt.gross_discount_usd).toFixed(2)} USD
               </span>
             </div>
 
             <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
-              <span>Platforma Xidmət Komissiyası (5%):</span>
+              <span>{t.cashier.platformFee}</span>
               <span className="font-semibold text-slate-500">
                 -${Number(claimedReceipt.platform_servicing_fee_usd).toFixed(3)} USD
               </span>
             </div>
 
             <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/20 text-emerald-900 dark:text-emerald-200 font-bold">
-              <span>Mağazaya Ödəniləcək Xalis Məbləğ:</span>
+              <span>{t.cashier.netReimbursement}</span>
               <span className="text-base font-black text-emerald-700 dark:text-emerald-400">
                 ${Number(claimedReceipt.merchant_net_reimbursement_usd).toFixed(3)} USD
               </span>
@@ -313,7 +315,7 @@ export default function CashierBurnPage() {
             onClick={handleReset}
             className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
           >
-            Növbəti Müştərinin Kuponunu Skan Et
+            {t.cashier.processNext}
           </button>
         </div>
       )}
@@ -325,7 +327,7 @@ export default function CashierBurnPage() {
             <div className="flex items-center gap-2">
               <Receipt className="w-5 h-5 text-emerald-600" />
               <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
-                Kupon Məlumatları (Təsdiqdən Əvvəl)
+                {t.cashier.voucherDetailsBeforeBurn}
               </h3>
             </div>
 
@@ -333,12 +335,12 @@ export default function CashierBurnPage() {
             {previewResult.is_merchant_match ? (
               <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Mağaza Uyğundur
+                {t.cashier.storeMatches}
               </span>
             ) : (
               <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20 flex items-center gap-1">
                 <ShieldAlert className="w-3.5 h-3.5" />
-                Fərqli Mağaza
+                {t.cashier.storeMismatch}
               </span>
             )}
           </div>
@@ -346,42 +348,42 @@ export default function CashierBurnPage() {
           {/* Value Display */}
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 space-y-2.5 text-xs">
             <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
-              <span className="text-slate-400 font-bold uppercase text-[10px]">Kupon Kodu:</span>
+              <span className="text-slate-400 font-bold uppercase text-[10px]">{t.redeem.voucherCode}:</span>
               <span className="font-mono font-black text-slate-900 dark:text-slate-100">
                 {previewResult.voucher_code}
               </span>
             </div>
 
             <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
-              <span className="text-slate-400 font-bold uppercase text-[10px]">Müştəri:</span>
+              <span className="text-slate-400 font-bold uppercase text-[10px]">{t.cashier.customerLabel}</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">
                 {previewResult.user_name}
               </span>
             </div>
 
             <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
-              <span className="text-slate-400 font-bold uppercase text-[10px]">Təyinat Mağazası:</span>
+              <span className="text-slate-400 font-bold uppercase text-[10px]">{t.cashier.targetStoreLabel}</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">
                 {previewResult.merchant_name}
               </span>
             </div>
 
             <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800 flex justify-between items-center text-slate-700 dark:text-slate-300">
-              <span className="font-bold">Müştəriyə Endirim:</span>
+              <span className="font-bold">{t.common.discount}:</span>
               <span className="font-black text-emerald-600 dark:text-emerald-400 text-sm">
                 ${Number(previewResult.gross_discount_usd).toFixed(2)} USD
               </span>
             </div>
 
             <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
-              <span>Platforma Xidmət Komissiyası (5%):</span>
+              <span>{t.cashier.platformFee}</span>
               <span className="font-semibold text-slate-500">
                 -${Number(previewResult.platform_servicing_fee_usd).toFixed(3)} USD
               </span>
             </div>
 
             <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/20 text-emerald-900 dark:text-emerald-200 flex justify-between items-center font-bold">
-              <span>Kassaya Ödəniləcək Xalis:</span>
+              <span>{t.cashier.netToPayAtCashier}</span>
               <span className="text-base font-black text-emerald-700 dark:text-emerald-400">
                 ${Number(previewResult.merchant_net_reimbursement_usd).toFixed(3)} USD
               </span>
@@ -394,7 +396,7 @@ export default function CashierBurnPage() {
               <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
               <p>
                 <strong>Diqqət:</strong> Bu kupon <strong>{previewResult.merchant_name}</strong> şəbəkəsi
-                üçün buraxılmışdır. Sizin mağazanız tərəfindən təsdiqlənə bilməz (HTTP 403 Forbidden).
+                <strong>{t.cashier.mismatchWarningTitle}</strong> {t.cashier.mismatchWarningText.replace("{store}", previewResult.merchant_name)}
               </p>
             </div>
           )}
@@ -414,7 +416,7 @@ export default function CashierBurnPage() {
               disabled={isClaiming}
               className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
             >
-              Ləğv et
+              {t.common.cancel}
             </button>
             <button
               onClick={handleClaimVoucher}
@@ -426,7 +428,7 @@ export default function CashierBurnPage() {
               ) : (
                 <>
                   <Check className="w-4 h-4" />
-                  <span>Təsdiqlə və Tətbiq Et</span>
+                  <span>{t.cashier.confirmAndApply}</span>
                 </>
               )}
             </button>
@@ -440,20 +442,20 @@ export default function CashierBurnPage() {
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
             <h2 className="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
               <Barcode className="w-4 h-4 text-emerald-600" />
-              <span>Müştəri Kuponunun Skanı</span>
+              <span>{t.cashier.customerVoucherScan}</span>
             </h2>
-            <span className="text-[10px] text-slate-400 font-semibold">QR / Barkod Daxil Et</span>
+            <span className="text-[10px] text-slate-400 font-semibold">{t.cashier.enterQrOrBarcode}</span>
           </div>
 
           {/* Code Input Field */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              Kupon Kodunu Daxil Edin və ya Skanerlə Oxudun:
+              {t.cashier.inputPrompt}
             </label>
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Məs: SEBET-VCH-A1B2C3D4"
+                placeholder={t.cashier.inputPlaceholder}
                 value={voucherCodeInput}
                 onChange={(e) => setVoucherCodeInput(e.target.value.toUpperCase())}
                 onKeyDown={(e) => {
@@ -471,7 +473,7 @@ export default function CashierBurnPage() {
                 ) : (
                   <>
                     <Search className="w-4 h-4" />
-                    <span>Yoxla</span>
+                    <span>{t.cashier.checkBtn}</span>
                   </>
                 )}
               </button>
@@ -489,7 +491,7 @@ export default function CashierBurnPage() {
           {/* 1-Click Interactive Test Button */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-700 space-y-2">
             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-              Dərhal Test Edin (1-Kliklə Simulyasiya):
+              {t.cashier.instantTestLabel}
             </label>
             <button
               disabled={isGeneratingTestVoucher}
@@ -500,10 +502,10 @@ export default function CashierBurnPage() {
                 <Sparkles className="w-4 h-4 text-emerald-600 group-hover:rotate-12 transition-transform" />
                 <div>
                   <div className="text-xs font-black text-slate-900 dark:text-slate-100">
-                    Test: 300 Ballıq ($3.00) Kupon Yarat & Yoxla
+                    {t.cashier.instantTestTitle}
                   </div>
                   <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                    Avtomatik olaraq {selectedMerchant?.name} üçün kupon generasiya edir
+                    {t.cashier.instantTestDesc.replace("{store}", selectedMerchant?.name || "Supermarket")}
                   </div>
                 </div>
               </div>
@@ -522,7 +524,7 @@ export default function CashierBurnPage() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <h3 className="text-base font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <Store className="w-5 h-5 text-emerald-600" />
-                <span>Kassa Mağazası Seçimi</span>
+                <span>{t.cashier.storeSelectModalTitle}</span>
               </h3>
               <button
                 onClick={() => setIsStoreSwitcherOpen(false)}
@@ -533,7 +535,7 @@ export default function CashierBurnPage() {
             </div>
 
             <p className="text-xs text-slate-500">
-              Tenant Scoping (X-Merchant-Id) tələbini yoxlamaq üçün kassir mağazasını dəyişin:
+              {t.cashier.storeSelectModalDesc}
             </p>
 
             <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1">

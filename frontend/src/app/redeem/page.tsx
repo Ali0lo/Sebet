@@ -37,6 +37,7 @@ import {
 } from "@/lib/types";
 import { useSebEtStore } from "@/lib/store";
 import { ChainLogo } from "@/components/ChainLogo";
+import { useTranslation } from "@/lib/translations";
 
 function getChainSlug(name?: string | null): string {
   const n = (name || "").toLowerCase();
@@ -166,6 +167,7 @@ function QrCodeSvg({ data }: { data: string }) {
 }
 
 export default function RedeemPage() {
+  const { t } = useTranslation();
   const [isMounted, setIsMounted] = useState(false);
   const { userPoints, setPoints } = useSebEtStore();
 
@@ -284,7 +286,7 @@ export default function RedeemPage() {
           fetchBalance();
         } else if (statusData.status === "EXPIRED" || statusData.is_expired) {
           clearInterval(pollInterval);
-          setErrorMessage("Kuponun 10 dəqiqəlik istifadə müddəti bitdi. Zəhmət olmasa yeni kupon yaradın.");
+          setErrorMessage(t.redeem.expiredError);
           setActiveVoucher(null);
         }
       } catch (err) {
@@ -293,16 +295,16 @@ export default function RedeemPage() {
     }, 2500);
 
     return () => clearInterval(pollInterval);
-  }, [activeVoucher, settledResult, fetchBalance]);
+  }, [activeVoucher, settledResult, fetchBalance, t]);
 
   // Create Voucher Action
   const handleGenerateVoucher = async () => {
     if (!selectedMerchant) {
-      setErrorMessage("Zəhmət olmasa tərəfdaş mağaza seçin.");
+      setErrorMessage(t.redeem.selectStoreError);
       return;
     }
     if (burnPoints > activePoints) {
-      setErrorMessage(`Kifayət qədər bal yoxdur. Mövcud balans: ${activePoints} bal.`);
+      setErrorMessage(t.redeem.insufficientPointsError.replace("{points}", String(activePoints)));
       return;
     }
 
@@ -317,7 +319,7 @@ export default function RedeemPage() {
       });
       setActiveVoucher(voucher);
     } catch (err: any) {
-      setErrorMessage(err.message || "Kupon yaradılarkən xəta baş verdi.");
+      setErrorMessage(err.message || t.redeem.creationError);
     } finally {
       setIsGenerating(false);
     }
@@ -336,7 +338,7 @@ export default function RedeemPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-xl mx-auto pb-12">
+    <div className="space-y-6 max-w-2xl mx-auto pb-12">
       {/* 1. Header & Navigation Back */}
       <div className="flex items-center justify-between">
         <Link
@@ -344,10 +346,10 @@ export default function RedeemPage() {
           className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Profilə Qayıt</span>
+          <span>{t.redeem.backToProfile}</span>
         </Link>
         <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-500/20">
-          Kassa Endirimi (Clearinghouse)
+          {t.redeem.cashierDiscountBadge}
         </span>
       </div>
 
@@ -358,19 +360,19 @@ export default function RedeemPage() {
           <div>
             <div className="flex items-center gap-1.5 text-xs font-black uppercase text-emerald-400">
               <Coins className="w-4 h-4 text-amber-400 fill-amber-400" />
-              <span>Mövcud Balansınız</span>
+              <span>{t.redeem.currentBalance}</span>
             </div>
             <div className="mt-1.5 flex items-baseline gap-2.5">
               <span className="text-3xl sm:text-4xl font-black text-white">
                 {isMounted ? activePoints.toLocaleString() : "250"}
-                <span className="text-sm font-bold text-amber-400 ml-1">bal</span>
+                <span className="text-sm font-bold text-amber-400 ml-1">{t.common.pointsAbbr}</span>
               </span>
               <span className="text-sm font-bold text-emerald-300">
                 ≈ ${isMounted ? activeCash : "2.50"} USD
               </span>
             </div>
             <p className="text-[11px] text-slate-300 mt-1">
-              100 bal = $1.00 USD • Bütün tərəfdaş supermarketlərdə nağd endirim kimi keçərlidir
+              {t.redeem.exchangeRateDesc}
             </p>
           </div>
 
@@ -378,7 +380,7 @@ export default function RedeemPage() {
             onClick={fetchBalance}
             disabled={isLoadingBalance}
             className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center backdrop-blur-md border border-white/10 transition-all cursor-pointer disabled:opacity-50"
-            title="Balansı yenilə"
+            title={t.scan.refreshBtn}
           >
             <RotateCw className={`w-4 h-4 ${isLoadingBalance ? "animate-spin" : ""}`} />
           </button>
@@ -390,7 +392,7 @@ export default function RedeemPage() {
         <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-800 dark:text-rose-200 text-xs flex items-start gap-2.5">
           <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
           <div>
-            <p className="font-bold">Xəta baş verdi</p>
+            <p className="font-bold">{t.common.error}</p>
             <p className="mt-0.5 text-[11px] text-rose-700/90 dark:text-rose-300/90">{errorMessage}</p>
           </div>
         </div>
@@ -405,39 +407,39 @@ export default function RedeemPage() {
                 <CheckCircle2 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-sm font-black">Kupon Kassada Təsdiqləndi!</h3>
+                <h3 className="text-sm font-black">{t.redeem.voucherClaimedTitle}</h3>
                 <p className="text-xs text-emerald-100 font-medium">
-                  {settledResult.merchant_name} • ${Number(settledResult.usd_value).toFixed(2)} endirim tətbiq edildi
+                  {t.redeem.voucherClaimedDesc.replace("{store}", settledResult.merchant_name).replace("{amount}", Number(settledResult.usd_value).toFixed(2))}
                 </p>
               </div>
             </div>
             <div className="px-3 py-1 rounded-xl bg-white/20 text-xs font-black">
-              -{settledResult.points_amount} Bal
+              -{settledResult.points_amount} {t.common.pointsAbbr}
             </div>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 text-xs space-y-2.5">
             <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
-              <span className="text-slate-400 font-bold uppercase text-[10px]">Kupon Kodu:</span>
+              <span className="text-slate-400 font-bold uppercase text-[10px]">{t.redeem.voucherCode}:</span>
               <span className="font-mono font-black text-emerald-700 dark:text-emerald-400">
                 {settledResult.voucher_code}
               </span>
             </div>
             <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
-              <span className="text-slate-400 font-bold uppercase text-[10px]">Tətbiq Edilən Endirim:</span>
+              <span className="text-slate-400 font-bold uppercase text-[10px]">{t.redeem.appliedDiscount}</span>
               <span className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">
                 ${Number(settledResult.usd_value).toFixed(2)} USD
               </span>
             </div>
             <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
-              <span className="text-slate-400 font-bold uppercase text-[10px]">Mağaza:</span>
+              <span className="text-slate-400 font-bold uppercase text-[10px]">{t.redeem.storeLabel}</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">
                 {settledResult.merchant_name}
               </span>
             </div>
             <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800 text-[11px] text-slate-500">
               <span className="block text-[10px] text-slate-400 font-bold uppercase">
-                Clearinghouse Journal ID:
+                {t.redeem.clearinghouseJournalId}
               </span>
               <span className="font-mono text-slate-600 dark:text-slate-300 block truncate mt-0.5">
                 {settledResult.ledger_transaction_id}
@@ -449,7 +451,7 @@ export default function RedeemPage() {
             onClick={() => setSettledResult(null)}
             className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
           >
-            Yeni Kupon Al
+            {t.redeem.getNewVoucher}
           </button>
         </div>
       )}
@@ -467,7 +469,7 @@ export default function RedeemPage() {
                 </h3>
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
                   <Lock className="w-3 h-3" />
-                  Kriptoqrafik İmzalı Kupon
+                  {t.redeem.cryptoSignedVoucher}
                 </span>
               </div>
             </div>
@@ -488,13 +490,13 @@ export default function RedeemPage() {
           {/* Discount Value Highlight */}
           <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white text-center shadow-md">
             <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-100 block">
-              Kassada Endirim Məbləği:
+              {t.redeem.cashierDiscountAmount}
             </span>
             <div className="text-3xl font-black mt-0.5 tracking-tight">
               ${Number(activeVoucher.usd_value).toFixed(2)} USD
             </div>
             <span className="text-xs font-semibold text-emerald-200 mt-0.5 block">
-              ({activeVoucher.points_amount} bal silinəcək)
+              {t.redeem.pointsDeductedNotice.replace("{points}", String(activeVoucher.points_amount))}
             </span>
           </div>
 
@@ -512,7 +514,7 @@ export default function RedeemPage() {
                 className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedCode ? "Kopyalandı!" : "Kodu Kopyala"}</span>
+                <span>{copiedCode ? t.redeem.copied : t.redeem.copyCode}</span>
               </button>
             </div>
           </div>
@@ -521,10 +523,10 @@ export default function RedeemPage() {
           <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 flex items-start gap-3 text-xs text-emerald-900 dark:text-emerald-200">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping mt-1.5 shrink-0" />
             <div>
-              <p className="font-bold">Ödənişdən əvvəl kassirə təqdim edin:</p>
+              <p className="font-bold">{t.redeem.presentBeforePayment}</p>
               <p className="text-[11px] text-emerald-800/90 dark:text-emerald-300/90 mt-0.5 leading-relaxed">
                 Kassir bu QR və ya barkodu skan etdikdə sistem real vaxtda təsdiqləyəcək və endirim dərhal
-                tətbiq olunacaq.
+                {t.redeem.presentBeforePaymentDesc}
               </p>
             </div>
           </div>
@@ -535,7 +537,7 @@ export default function RedeemPage() {
               onClick={() => setActiveVoucher(null)}
               className="text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
             >
-              Ləğv et və geri qayıt
+              {t.redeem.cancelAndReturn}
             </button>
           </div>
         </div>
@@ -547,16 +549,16 @@ export default function RedeemPage() {
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
             <h2 className="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-emerald-600" />
-              <span>Xal Xərcləmə & Kupon Seçimi</span>
+              <span>{t.redeem.voucherSelectionTitle}</span>
             </h2>
-            <span className="text-[11px] font-semibold text-slate-400">Addım 1 / 2</span>
+            <span className="text-[11px] font-semibold text-slate-400">{t.redeem.stepIndicator}</span>
           </div>
 
           {/* Target Supermarket Selector */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
               <Store className="w-4 h-4 text-emerald-600" />
-              <span>Harada istifadə edəcəksiniz?</span>
+              <span>{t.redeem.whereToUse}</span>
             </label>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -588,10 +590,10 @@ export default function RedeemPage() {
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                 <Coins className="w-4 h-4 text-amber-500 fill-amber-500" />
-                <span>Nə qədər bal xərcləmək istəyirsiniz?</span>
+                <span>{t.redeem.howManyPoints}</span>
               </label>
               <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
-                =${burnDiscountUsd} USD endirim
+                =${burnDiscountUsd} USD {t.common.discount.toLowerCase()}
               </span>
             </div>
 
@@ -601,7 +603,10 @@ export default function RedeemPage() {
                 { pts: 100, label: "100 bal", usd: "$1.00" },
                 { pts: 250, label: "250 bal", usd: "$2.50" },
                 { pts: 500, label: "500 bal", usd: "$5.00" },
-                { pts: activePoints, label: "Maksimum", usd: `$${activeCash}` },
+                { pts: 100, label: `100 ${t.common.pointsAbbr}`, usd: "$1.00" },
+                { pts: 250, label: `250 ${t.common.pointsAbbr}`, usd: "$2.50" },
+                { pts: 500, label: `500 ${t.common.pointsAbbr}`, usd: "$5.00" },
+                { pts: activePoints, label: t.redeem.maxLabel, usd: `$${activeCash}` },
               ].map((item, idx) => {
                 const isSelected = burnPoints === item.pts;
                 const canAfford = activePoints >= item.pts;
@@ -639,7 +644,9 @@ export default function RedeemPage() {
               <div className="flex justify-between text-[10px] text-slate-400 font-semibold mt-1">
                 <span>50 bal ($0.50)</span>
                 <span className="font-bold text-slate-700 dark:text-slate-200">{burnPoints} bal</span>
-                <span>{activePoints} bal (Maks)</span>
+                <span>50 {t.common.pointsAbbr} ($0.50)</span>
+                <span className="font-bold text-slate-700 dark:text-slate-200">{burnPoints} {t.common.pointsAbbr}</span>
+                <span>{activePoints} {t.common.pointsAbbr} ({t.redeem.maxLabel})</span>
               </div>
             </div>
           </div>
@@ -655,7 +662,7 @@ export default function RedeemPage() {
             ) : (
               <>
                 <QrCode className="w-4 h-4" />
-                <span>Kupon Yarat (${burnDiscountUsd} Endirim)</span>
+                <span>{t.redeem.generateVoucherBtn.replace("${amount}", burnDiscountUsd)}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -667,13 +674,13 @@ export default function RedeemPage() {
       <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
         <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
           <Store className="w-4 h-4 text-emerald-600" />
-          <span>Kassir Terminalı Simulyasiyası:</span>
+          <span>{t.redeem.simulatedPosShortcut}</span>
         </div>
         <Link
           href="/merchant/cashier"
           className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
         >
-          <span>Kassa Skanerinə Keç</span>
+          <span>{t.redeem.goToPosScanner}</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>

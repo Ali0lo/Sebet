@@ -53,6 +53,8 @@ export const SebetLogo: React.FC<SebetLogoProps> = ({
     );
   }
 
+  const pixelHeight = size === "sm" ? 24 : size === "lg" ? 44 : 32;
+
   // Default: variant === "full"
   return (
     <div className={`relative inline-flex items-center shrink-0 ${className}`}>
@@ -60,12 +62,14 @@ export const SebetLogo: React.FC<SebetLogoProps> = ({
       <img
         src="/logo-dark.png"
         alt="Sebet"
+        style={{ height: pixelHeight, width: "auto" }}
         className={`${heightMap[size]} w-auto object-contain dark:hidden select-none`}
       />
       {/* Dark mode: crisp white wordmark */}
       <img
         src="/logo-light.png"
         alt="Sebet"
+        style={{ height: pixelHeight, width: "auto" }}
         className={`${heightMap[size]} w-auto object-contain hidden dark:block select-none`}
       />
     </div>

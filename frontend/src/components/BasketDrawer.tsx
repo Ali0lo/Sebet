@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag, Sparkles } from "lucide-react";
 import { useSebEtStore } from "@/lib/store";
+import { useTranslation } from "@/lib/translations";
 
 export const BasketDrawer: React.FC = () => {
   const {
@@ -15,6 +16,7 @@ export const BasketDrawer: React.FC = () => {
     clearBasket,
     getBasketTotalEstimated,
   } = useSebEtStore();
+  const { t } = useTranslation();
 
   const [isMounted, setIsMounted] = useState(false);
 
@@ -38,10 +40,10 @@ export const BasketDrawer: React.FC = () => {
             </div>
             <div>
               <h2 className="font-extrabold text-sm text-slate-900 dark:text-slate-100">
-                Səbətim ({itemCount} məhsul)
+                {t.basketDrawer.title} ({itemCount} {t.basketDrawer.itemsSuffix})
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Bakı marketləri üzrə canlı optimizasiya
+                {t.basketDrawer.subtitle}
               </p>
             </div>
           </div>
@@ -61,10 +63,10 @@ export const BasketDrawer: React.FC = () => {
                 <ShoppingBag className="w-8 h-8" />
               </div>
               <h3 className="font-bold text-sm text-slate-700 dark:text-slate-200">
-                Səbətim hələlik boşdur
+                {t.basketDrawer.emptyTitle}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs">
-                Məhsulların qiymətlərini müqayisə etmək üçün kataloqdan məhsullar əlavə edin.
+                {t.basketDrawer.emptyDesc}
               </p>
             </div>
           ) : (
@@ -124,7 +126,7 @@ export const BasketDrawer: React.FC = () => {
                   <button
                     onClick={() => removeFromBasket(item.product.id)}
                     className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                    title="Sil"
+                    title={t.basketDrawer.deleteItem}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -139,7 +141,7 @@ export const BasketDrawer: React.FC = () => {
           <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/95 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                Təxmini ən ucuz cəm:
+                {t.basketDrawer.estLowestTotal}
               </span>
               <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">
                 ~{totalCost.toFixed(2)} ₼
@@ -151,7 +153,7 @@ export const BasketDrawer: React.FC = () => {
                 onClick={clearBasket}
                 className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold transition-colors"
               >
-                Təmizlə
+                {t.basketDrawer.clear}
               </button>
 
               <Link
@@ -160,7 +162,7 @@ export const BasketDrawer: React.FC = () => {
                 className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-900 text-white text-xs font-black flex items-center justify-center gap-2 shadow-lg shadow-emerald-700/25 transition-all active:scale-95"
               >
                 <Sparkles className="w-4 h-4" />
-                <span>Ağıllı Səbətə Keç (Optimizasiya)</span>
+                <span>{t.basketDrawer.goToOptimizer}</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>

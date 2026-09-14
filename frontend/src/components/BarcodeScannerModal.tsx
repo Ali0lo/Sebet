@@ -6,6 +6,7 @@ import { getProductByBarcode } from "@/lib/api";
 import { Product } from "@/lib/types";
 import { useSebEtStore } from "@/lib/store";
 import { ChainLogo } from "@/components/ChainLogo";
+import { useTranslation } from "@/lib/translations";
 
 interface BarcodeScannerModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const [manualCode, setManualCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +49,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
       setScannedProduct(product);
     } catch (err: any) {
       setError(err.message || "Bu barkod üzrə məhsul tapılmadı.");
+      setError(err.message || t.barcodeScannerModal.notFound);
     } finally {
       setIsLoading(false);
     }
@@ -63,10 +66,10 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
             </div>
             <div>
               <h2 className="font-extrabold text-base text-slate-900 dark:text-slate-100">
-                Barkod Skaneri
+                {t.barcodeScannerModal.title}
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Kamera ilə oxudun və ya barkodu daxil edin
+                {t.barcodeScannerModal.subtitle}
               </p>
             </div>
           </div>
@@ -94,17 +97,17 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
             <Camera className="w-8 h-8 text-emerald-400/80 mb-2 animate-pulse" />
             <span className="text-xs font-semibold text-emerald-100 tracking-wide">
-              Barkodu çərçivəyə yönəldin
+              {t.barcodeScannerModal.alignBarcode}
             </span>
             <span className="text-[10px] text-emerald-300/70 mt-0.5">
-              EAN-13 avtomatik tanınır
+              {t.barcodeScannerModal.autoRecognized}
             </span>
           </div>
 
           {/* Quick 1-Click Test Barcodes */}
           <div>
             <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
-              Sürətli Test Üçün Seçin (1 Kliklə):
+              {t.barcodeScannerModal.quickTestLabel}
             </label>
             <div className="grid grid-cols-2 gap-1.5">
               {PRESET_BARCODES.map((item) => (
@@ -130,12 +133,12 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
           {/* Manual Barcode Input */}
           <div className="space-y-1.5">
             <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-              Və ya əllə daxil edin:
+              {t.barcodeScannerModal.orEnterManually}
             </label>
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Məsələn: 4760083300124"
+                placeholder={t.barcodeScannerModal.examplePlaceholder}
                 value={manualCode}
                 onChange={(e) => setManualCode(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleLookup(manualCode)}
@@ -151,7 +154,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                 ) : (
                   <Search className="w-3.5 h-3.5" />
                 )}
-                <span>Axtar</span>
+                <span>{t.barcodeScannerModal.search}</span>
               </button>
             </div>
           </div>
@@ -183,7 +186,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                   </h4>
                   <div className="mt-1 flex items-baseline gap-2">
                     <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">
-                      Ən ucuz: {scannedProduct.min_price?.toFixed(2)} ₼
+                      {t.barcodeScannerModal.cheapest} {scannedProduct.min_price?.toFixed(2)} ₼
                     </span>
                     {scannedProduct.max_price && scannedProduct.max_price > (scannedProduct.min_price || 0) && (
                       <span className="text-[10px] text-slate-400 dark:text-slate-500 line-through">
@@ -197,7 +200,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
               {/* Price comparison matrix */}
               <div className="space-y-1.5">
                 <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
-                  Marketlər üzrə qiymət müqayisəsi:
+                  {t.barcodeScannerModal.marketPriceComparison}
                 </div>
                 <div className="grid grid-cols-2 gap-1.5">
                   {scannedProduct.prices.map((sp) => {
@@ -233,7 +236,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                           </div>
                           {sp.is_promo && (
                             <span className="text-[8px] text-rose-600 dark:text-rose-400 font-bold">
-                              Aksiya
+                              {t.barcodeScannerModal.promoTag}
                             </span>
                           )}
                         </div>
@@ -254,6 +257,12 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
               >
                 <ShoppingCart className="w-4 h-4" />
                 <span>Səbətə əlavə et ({scannedProduct.min_price?.toFixed(2)} ₼)</span>
+                <span>
+                  {t.barcodeScannerModal.addToBasketPrice.replace(
+                    "{price}",
+                    (scannedProduct.min_price || 0).toFixed(2)
+                  )}
+                </span>
               </button>
             </div>
           )}

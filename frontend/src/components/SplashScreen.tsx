@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "@/lib/translations";
 
 export const SplashScreen: React.FC = () => {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
   const [isFading, setIsFading] = useState(false);
 
@@ -53,7 +55,7 @@ export const SplashScreen: React.FC = () => {
             sebet
           </h1>
           <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
-            Ağıllı Market & Qənaət
+            {t.splash.tagline}
           </p>
         </div>
       </div>

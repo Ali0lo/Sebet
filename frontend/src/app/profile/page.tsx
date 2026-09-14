@@ -91,7 +91,7 @@ export default function ProfilePage() {
       setPoints(res.remaining_points);
       setRedeemedCode({ title: r.title, code: res.voucher_code });
     } catch (err: any) {
-      setRedeemError(err.message || "Kupon alına bilmədi.");
+      setRedeemError(err.message || t.profile.redeemErrorFallback);
     } finally {
       setRedeemingId(null);
     }
@@ -112,7 +112,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="space-y-5 pb-8">
+    <div className="max-w-2xl mx-auto space-y-6 pb-12">
       {/* SECTION 1: Clean Profile Header & User Info Card */}
       <div className="flex items-center justify-between px-0.5">
         <div>
@@ -120,7 +120,7 @@ export default function ProfilePage() {
             {t.profile.title}
           </h1>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Şəxsi məlumatlar və loyallıq seçimləri
+            {t.profile.subtitle}
           </p>
         </div>
       </div>
@@ -136,7 +136,7 @@ export default function ProfilePage() {
                 {user?.full_name || "Ali Iskandarli"}
               </h2>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                Ağıllı Alıcı
+                {t.profile.smartBuyerBadge}
               </span>
             </div>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
@@ -157,14 +157,14 @@ export default function ProfilePage() {
                 {isMounted ? userPoints : 250}
               </span>
               <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                xal (~{((isMounted ? userPoints : 250) * 0.01).toFixed(2)} ₼)
+                {t.common.points} (~{((isMounted ? userPoints : 250) * 0.01).toFixed(2)} ₼)
               </span>
             </div>
           </div>
 
           <div className="text-right">
             <span className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-2xs">
-              1 xal = 0.01 ₼
+              {t.common.pointsRate}
             </span>
           </div>
         </div>
@@ -176,9 +176,9 @@ export default function ProfilePage() {
               <QrCode className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h4 className="text-xs font-black">Kassa Endirim Kuponu Al (100 bal = $1)</h4>
+              <h4 className="text-xs font-black">{t.profile.instantVoucherTitle}</h4>
               <p className="text-[11px] text-emerald-100 mt-0.5">
-                Balınızı kassa ödənişində nağd endirimə çevirin
+                {t.profile.instantVoucherDesc}
               </p>
             </div>
           </div>
@@ -186,7 +186,7 @@ export default function ProfilePage() {
             href="/redeem"
             className="px-3.5 py-2 rounded-xl bg-white text-emerald-800 hover:bg-emerald-50 text-xs font-black shrink-0 transition-all shadow-xs flex items-center gap-1 active:scale-95"
           >
-            <span>Xərclə</span>
+            <span>{t.profile.spendAction}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -198,7 +198,7 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between">
             <span className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              Kupon Uğurla Əldə Edildi!
+              {t.profile.voucherSuccess}
             </span>
             <button
               onClick={() => setRedeemedCode(null)}
@@ -216,7 +216,7 @@ export default function ProfilePage() {
             {redeemedCode.code}
           </div>
           <p className="text-[10px] text-zinc-500 dark:text-zinc-400 text-center">
-            Bu promokodu tərəfdaş kassa və ya mobil tətbiqində təqdim edin.
+            {t.profile.voucherHint}
           </p>
         </div>
       )}
@@ -236,7 +236,7 @@ export default function ProfilePage() {
             <span>{t.profile.rewards}</span>
           </h3>
           <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500">
-            Dərhal aktivləşir
+            {t.profile.instantActivation}
           </span>
         </div>
 
@@ -262,7 +262,7 @@ export default function ProfilePage() {
                     </h4>
                     <span className="text-xs font-black text-amber-600 dark:text-amber-400 mt-0.5 inline-flex items-center gap-1">
                       <Coins className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                      {r.points_cost} xal
+                      {r.points_cost} {t.common.points}
                     </span>
                   </div>
                 </div>
@@ -276,7 +276,7 @@ export default function ProfilePage() {
                       : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed"
                   }`}
                 >
-                  {redeemingId === r.id ? "..." : canAfford ? "Əldə Et" : "Çatmır"}
+                  {redeemingId === r.id ? "..." : canAfford ? t.profile.claimReward : t.profile.notEnoughPoints}
                 </button>
               </div>
             );
@@ -295,7 +295,7 @@ export default function ProfilePage() {
             onClick={() => setIsNearbyModalOpen(true)}
             className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
           >
-            <span>Xəritədə bax</span>
+            <span>{t.profile.viewOnMap}</span>
             <ChevronRight className="w-3 h-3" />
           </button>
         </div>
@@ -323,10 +323,10 @@ export default function ProfilePage() {
           </div>
           <div>
             <h4 className="text-xs font-black text-zinc-900 dark:text-zinc-100">
-              Tərəfdaş Portalı (Merchant Portal)
+              {t.profile.merchantPortalTitle}
             </h4>
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-              Bazar göstəriciləri, gəlir və k-anonymity analitikası
+              {t.profile.merchantPortalDesc}
             </p>
           </div>
         </div>
@@ -334,7 +334,7 @@ export default function ProfilePage() {
           href="/merchant/dashboard"
           className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shrink-0 transition-colors shadow-xs flex items-center gap-1"
         >
-          <span>Daxil Ol</span>
+          <span>{t.profile.enterAction}</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </Link>
       </section>
@@ -397,7 +397,7 @@ export default function ProfilePage() {
           <div className="pt-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2.5 text-zinc-700 dark:text-zinc-300 font-semibold">
               <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>Ərazi / Məkan</span>
+              <span>{t.profile.location}</span>
             </div>
             <button
               onClick={() => setIsNearbyModalOpen(true)}
@@ -412,7 +412,7 @@ export default function ProfilePage() {
           <div className="pt-2.5 flex items-center justify-between text-zinc-500 dark:text-zinc-400 text-[11px]">
             <div className="flex items-center gap-2">
               <Info className="w-4 h-4" />
-              <span>Sebet Versiya</span>
+              <span>Sebet {t.profile.version}</span>
             </div>
             <span className="font-mono font-bold">1.0.0 (Baku)</span>
           </div>

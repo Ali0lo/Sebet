@@ -66,7 +66,7 @@ export default function BasketPage() {
     checkAllItems,
     uncheckAllItems,
   } = useSebEtStore();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const [isMounted, setIsMounted] = useState(false);
   const [isShoppingMode, setIsShoppingMode] = useState(false);
@@ -114,7 +114,7 @@ export default function BasketPage() {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setLocation({
-            name: "Cari Məkanım (GPS)",
+            name: t.basket.liveGpsLocation,
             lat: pos.coords.latitude,
             lon: pos.coords.longitude,
           });
@@ -122,7 +122,7 @@ export default function BasketPage() {
         },
         () => {
           setIsLocating(false);
-          alert("GPS koordinatları alına bilmədi. Zəhmət olmasa siyahıdan ərazi seçin.");
+          alert(t.basket.gpsFailedAlert);
         },
         { enableHighAccuracy: true, timeout: 8000 }
       );
@@ -191,6 +191,7 @@ export default function BasketPage() {
       });
     } catch (err: any) {
       setError(err.message || "Optimizasiya zamanı xəta baş verdi.");
+      setError(err.message || (language === "ru" ? "Ошибка при оптимизации." : language === "en" ? "Optimization failed." : "Optimizasiya zamanı xəta baş verdi."));
     } finally {
       setIsOptimizing(false);
     }
@@ -252,7 +253,7 @@ export default function BasketPage() {
       : 0;
 
   return (
-    <div className="space-y-5 pb-10">
+    <div className="max-w-4xl mx-auto space-y-6 pb-12">
       {/* ========================================================================= */}
       {/* 1. VIEW MODE A: STANDARD BASKET LIST & CONFIGURATION                     */}
       {/* ========================================================================= */}
@@ -273,7 +274,7 @@ export default function BasketPage() {
                 className="text-xs text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold flex items-center gap-1 transition-colors cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Təmizlə</span>
+                <span>{t.basketDrawer.clear}</span>
               </button>
             )}
           </div>
@@ -338,7 +339,7 @@ export default function BasketPage() {
                   <ChevronDown className="w-4 h-4 text-slate-400 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" />
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Seçilmiş ərazi daxilindəki bütün tərəfdaş supermarketlər avtomatik müqayisə edilir.
+                  {language === "ru" ? "Все супермаркеты-партнеры в выбранном районе сравниваются автоматически." : language === "en" ? "All partner supermarkets in the selected area are automatically compared." : "Seçilmiş ərazi daxilindəki bütün tərəfdaş supermarketlər avtomatik müqayisə edilir."}
                 </p>
               </div>
             )}
@@ -353,11 +354,11 @@ export default function BasketPage() {
                   className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs active:scale-98 transition-all cursor-pointer"
                 >
                   <Navigation className={`w-4 h-4 ${isLocating ? "animate-spin" : ""}`} />
-                  <span>{isLocating ? "Məkan təyin edilir..." : t.basket.detectGps}</span>
+                  <span>{isLocating ? t.basket.locating : t.basket.detectGps}</span>
                 </button>
 
                 <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 px-1">
-                  <span>Cari koordinatlar:</span>
+                  <span>{t.basket.currentLocation}:</span>
                   <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                     {selectedLocation.lat.toFixed(4)}, {selectedLocation.lon.toFixed(4)}
                   </span>
@@ -371,6 +372,7 @@ export default function BasketPage() {
                     </span>
                     <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
                       {walkingRadius} metr
+                      {walkingRadius} m
                     </span>
                   </div>
 
@@ -416,7 +418,7 @@ export default function BasketPage() {
                   {t.basket.emptyBasket}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
-                  Məhsullarınızı əlavə edin və ya dərhal test etmək üçün hazır Bakı ailə səbətini yükləyin.
+                  {t.basket.emptyBasketDesc}
                 </p>
               </div>
 
@@ -427,14 +429,14 @@ export default function BasketPage() {
                   className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span>Hazır Bakı Həftəlik Səbətini Yüklə (7 Məhsul)</span>
+                  <span>{language === "ru" ? "Загрузить готовую корзину Баку (7 товаров)" : language === "en" ? "Load Baku Family Basket (7 items)" : "Hazır Bakı Həftəlik Səbətini Yüklə (7 Məhsul)"}</span>
                 </button>
 
                 <Link
                   href="/flyers"
                   className="w-full py-2.5 px-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors"
                 >
-                  Məhsul kataloquna keç
+                  {t.basket.startShopping}
                 </Link>
               </div>
             </div>
@@ -451,7 +453,7 @@ export default function BasketPage() {
                   className="text-xs text-emerald-600 dark:text-emerald-400 font-bold hover:underline flex items-center gap-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Məhsul əlavə et</span>
+                  <span>{language === "ru" ? "Добавить товар" : language === "en" ? "Add product" : "Məhsul əlavə et"}</span>
                 </Link>
               </div>
 
@@ -490,7 +492,7 @@ export default function BasketPage() {
                             </span>
                           )}
                           <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
-                            {unitPrice.toFixed(2)} ₼ / ədəd
+                            {unitPrice.toFixed(2)} ₼ / {t.productCard.pcsSuffix}
                           </div>
                         </div>
                       </div>
@@ -524,7 +526,7 @@ export default function BasketPage() {
                         <button
                           onClick={() => removeFromBasket(item.product.id)}
                           className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
-                          title="Sil"
+                          title={t.basketDrawer.deleteItem}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -538,7 +540,7 @@ export default function BasketPage() {
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block">
-                    Təxmini İlkin Cəmi:
+                    {t.basketDrawer.estLowestTotal}
                   </span>
                   <span className="text-xs text-slate-400">
                     {totalItemsCount} {t.basket.itemsCount}
@@ -602,7 +604,7 @@ export default function BasketPage() {
             <div className="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center space-y-3 shadow-xs">
               <div className="w-10 h-10 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
               <div className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Bakı marketlərinin qiymətləri müqayisə edilir...
+                {language === "ru" ? "Идет сравнение цен в маркетах Баку..." : language === "en" ? "Comparing Baku supermarket prices..." : "Bakı marketlərinin qiymətləri müqayisə edilir..."}
               </div>
             </div>
           ) : optimizationResult ? (
@@ -641,12 +643,13 @@ export default function BasketPage() {
                           </h4>
                           <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
                             {singleStoreQty} {t.basket.itemsCount} ({bestSingle.coverage_pct}% stokda)
+                            {singleStoreQty} {t.basket.itemsCount} ({bestSingle.coverage_pct}% {t.common.inStock})
                           </span>
                         </div>
                       </div>
 
                       <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
-                        Bütün məhsulları bir yerdən alın, vaxta qənaət edin.
+                        {t.basket.singleStoreCheapest}
                       </p>
                     </div>
 
@@ -712,6 +715,7 @@ export default function BasketPage() {
                       <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                         <Footprints className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                         <span>Aralarındakı məsafə: ~{bestSplit.walking_distance_meters || bestSplit.distance_between_stores_m}m</span>
+                        <span>~{bestSplit.walking_distance_meters || bestSplit.distance_between_stores_m}m</span>
                       </div>
                     </div>
 
@@ -731,10 +735,10 @@ export default function BasketPage() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-200/70 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-                          2 Marketə Böl
+                          {t.basket.splitStoreTab}
                         </span>
                         <span className="text-[10px] font-bold text-slate-400">
-                          Cütlük tapılmadı
+                          {t.basket.singleStoreCheapest}
                         </span>
                       </div>
 
@@ -742,6 +746,7 @@ export default function BasketPage() {
                         <Info className="w-4 h-4 shrink-0 mt-0.5 text-slate-500" />
                         <span>
                           {walkingRadius}m daxilində səbəti 100% təmin edən 2-li market cütü tapılmadı.
+                          {walkingRadius}m
                         </span>
                       </div>
                     </div>
@@ -786,14 +791,14 @@ export default function BasketPage() {
                       onClick={checkAllItems}
                       className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
                     >
-                      Hamısını seç
+                      {t.filterModal.selectAll}
                     </button>
                     <span className="text-slate-300 dark:text-slate-700">•</span>
                     <button
                       onClick={uncheckAllItems}
                       className="text-[11px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                     >
-                      Sıfırla
+                      {t.common.reset}
                     </button>
                   </div>
                 </div>
@@ -845,7 +850,7 @@ export default function BasketPage() {
                         className="py-1.5 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1 shrink-0 transition-colors"
                       >
                         <Navigation className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                        <span>Xəritə</span>
+                        <span>{language === "ru" ? "Карта" : language === "en" ? "Map" : "Xəritə"}</span>
                       </a>
                     </div>
 
@@ -862,7 +867,7 @@ export default function BasketPage() {
                             className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 select-none ${
                               isChecked
                                 ? "bg-emerald-50/60 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 opacity-80"
-                                : "bg-slate-50/70 dark:bg-slate-850 border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700"
+                                : "bg-slate-50/70 dark:bg-slate-855 border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700"
                             }`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
@@ -895,7 +900,7 @@ export default function BasketPage() {
                                   {item.product_name}
                                 </h4>
                                 <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                  {item.quantity} ədəd × {item.unit_price.toFixed(2)} ₼
+                                  {item.quantity} {t.productCard.pcsSuffix} × {item.unit_price.toFixed(2)} ₼
                                 </div>
                               </div>
                             </div>
@@ -922,7 +927,7 @@ export default function BasketPage() {
                     <div className="flex items-center gap-2 text-xs font-bold text-emerald-900 dark:text-emerald-200">
                       <Footprints className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       <span>
-                        Marketlər arası piyada: ~{bestSplit.walking_distance_meters || bestSplit.distance_between_stores_m}m
+                        {language === "ru" ? "Пешком между маркетами: ~" : language === "en" ? "Walking between stores: ~" : "Marketlər arası piyada: ~"}{bestSplit.walking_distance_meters || bestSplit.distance_between_stores_m}m
                       </span>
                     </div>
 
@@ -937,7 +942,7 @@ export default function BasketPage() {
                       className="py-1.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs shrink-0 active:scale-95"
                     >
                       <Navigation className="w-3.5 h-3.5 text-amber-300" />
-                      <span>Marşrutu Aç</span>
+                      <span>{t.nearbyModal.routeInGoogleMaps}</span>
                       <ExternalLink className="w-3 h-3 opacity-80" />
                     </a>
                   </div>
@@ -975,7 +980,7 @@ export default function BasketPage() {
                         className="py-1.5 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1 shrink-0 transition-colors"
                       >
                         <Navigation className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                        <span>Xəritə</span>
+                        <span>{language === "ru" ? "Карта" : language === "en" ? "Map" : "Xəritə"}</span>
                       </a>
                     </div>
 
@@ -992,7 +997,7 @@ export default function BasketPage() {
                             className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 select-none ${
                               isChecked
                                 ? "bg-emerald-50/60 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 opacity-80"
-                                : "bg-slate-50/70 dark:bg-slate-850 border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700"
+                                : "bg-slate-50/70 dark:bg-slate-855 border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700"
                             }`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
@@ -1025,7 +1030,7 @@ export default function BasketPage() {
                                   {item.product_name}
                                 </h4>
                                 <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                  {item.quantity} ədəd × {item.unit_price.toFixed(2)} ₼
+                                  {item.quantity} {t.productCard.pcsSuffix} × {item.unit_price.toFixed(2)} ₼
                                 </div>
                               </div>
                             </div>
@@ -1051,7 +1056,7 @@ export default function BasketPage() {
                   <div className="p-4 rounded-3xl bg-slate-900 dark:bg-slate-950 text-white flex items-center justify-between shadow-lg">
                     <div>
                       <div className="text-[11px] text-emerald-300 font-bold uppercase tracking-wider">
-                        Ümumi 2-li Səfər Məbləği
+                        {language === "ru" ? "Итоговая сумма за 2 магазина" : language === "en" ? "Total 2-Store Trip Amount" : "Ümumi 2-li Səfər Məbləği"}
                       </div>
                       <div className="text-xl font-black">
                         {bestSplit.total_cost.toFixed(2)} ₼
@@ -1059,7 +1064,7 @@ export default function BasketPage() {
                     </div>
 
                     <div className="text-right">
-                      <span className="text-[11px] text-slate-400">Xalis Qənaət:</span>
+                      <span className="text-[11px] text-slate-400">{t.basket.savings}:</span>
                       <div className="text-base font-black text-emerald-400">
                         +{bestSplit.savings_azn.toFixed(2)} AZN (-{bestSplit.savings_percent}%)
                       </div>
@@ -1102,7 +1107,7 @@ export default function BasketPage() {
                         className="py-1.5 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1 shrink-0 transition-colors"
                       >
                         <Navigation className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                        <span>Xəritə</span>
+                        <span>{language === "ru" ? "Карта" : language === "en" ? "Map" : "Xəritə"}</span>
                       </a>
                     </div>
 
@@ -1119,7 +1124,7 @@ export default function BasketPage() {
                             className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 select-none ${
                               isChecked
                                 ? "bg-emerald-50/60 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 opacity-80"
-                                : "bg-slate-50/70 dark:bg-slate-850 border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700"
+                                : "bg-slate-50/70 dark:bg-slate-855 border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700"
                             }`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
@@ -1152,7 +1157,7 @@ export default function BasketPage() {
                                   {item.product_name}
                                 </h4>
                                 <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                  {item.quantity} ədəd × {item.unit_price.toFixed(2)} ₼
+                                  {item.quantity} {t.productCard.pcsSuffix} × {item.unit_price.toFixed(2)} ₼
                                 </div>
                               </div>
                             </div>
@@ -1178,7 +1183,7 @@ export default function BasketPage() {
                   {optimizationResult.all_single_stores.length > 1 && (
                     <div className="space-y-2 pt-2">
                       <h4 className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-                        Digər Yaxın Filiallar Üzrə Müqayisə
+                        {t.productCard.compareInMarkets}
                       </h4>
                       <div className="space-y-1.5">
                         {optimizationResult.all_single_stores.map((st, index) => {
@@ -1205,6 +1210,7 @@ export default function BasketPage() {
                                   </div>
                                   <div className="text-[10px] text-slate-400 dark:text-slate-500">
                                     {st.distance_km} km məsafə
+                                    {st.distance_km} km
                                   </div>
                                 </div>
                               </div>
@@ -1214,7 +1220,7 @@ export default function BasketPage() {
                                   {st.total_cost.toFixed(2)} ₼
                                 </div>
                                 <div className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">
-                                  {st.coverage_pct}% stokda
+                                  {st.coverage_pct}% {t.common.inStock}
                                 </div>
                               </div>
                             </div>

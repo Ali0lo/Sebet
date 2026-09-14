@@ -16,6 +16,7 @@ import { getNearbyStores } from "@/lib/api";
 import { NearbyStore } from "@/lib/types";
 import { useSebEtStore, BAKU_LOCATIONS } from "@/lib/store";
 import { ChainLogo } from "@/components/ChainLogo";
+import { useTranslation } from "@/lib/translations";
 
 interface NearbyMarketsModalProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const { selectedLocation, setLocation } = useSebEtStore();
   const [stores, setStores] = useState<NearbyStore[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -74,7 +76,7 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
   // Trigger HTML5 Real-time GPS
   const handleGetLiveLocation = () => {
     if (typeof window === "undefined" || !navigator.geolocation) {
-      setGpsError("Cihazınızda GPS geolokasiya dəstəklənmir.");
+      setGpsError(t.nearbyModal.gpsNotSupported);
       return;
     }
 
@@ -85,7 +87,7 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
       (pos) => {
         const { latitude, longitude } = pos.coords;
         setLocation({
-          name: "Cari Məkanım (Canlı GPS)",
+          name: t.nearbyModal.currentLiveGps,
           lat: latitude,
           lon: longitude,
         });
@@ -95,11 +97,9 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
       (err) => {
         setIsLocating(false);
         if (err.code === 1) {
-          setGpsError(
-            "Məkan icazəsi verilmədi. Brauzerinizdə məkan icazəsini aktiv edin və ya siyahıdan seçin."
-          );
+          setGpsError(t.nearbyModal.gpsPermissionDenied);
         } else {
-          setGpsError("Cari məkan təyin edilə bilmədi. Yenidən cəhd edin.");
+          setGpsError(t.nearbyModal.gpsFailed);
         }
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -140,14 +140,14 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
             </div>
             <div>
               <h2 className="font-extrabold text-base text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                <span>Yaxın Marketlər & Xəritə</span>
+                <span>{t.nearbyModal.nearbyAndMap}</span>
                 <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30">
-                  Canlı GPS
+                  {t.nearbyModal.liveGps}
                 </span>
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Bravo, Araz, OBA, Bazarstore, Al Market, Neptun və Spar
-                Bravo, Araz, OBA, Bazarstore, Al Market, Neptun, Spar və digərləri
+                {t.nearbyModal.partnerChainsDesc}
               </p>
             </div>
           </div>
@@ -155,10 +155,10 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
           <button
             onClick={onClose}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition-colors shadow-2xs"
-            title="Bağla (Esc)"
+            title={t.nearbyModal.close}
           >
             <X className="w-4 h-4" />
-            <span>Bağla</span>
+            <span>{t.nearbyModal.close}</span>
           </button>
         </div>
 
@@ -184,7 +184,7 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
               <RefreshCw
                 className={`w-3.5 h-3.5 ${isLocating ? "animate-spin" : ""}`}
               />
-              <span>{isLocating ? "Axtarılır..." : "Cari Məkanım (GPS)"}</span>
+              <span>{isLocating ? t.nearbyModal.searching : t.nearbyModal.searchLocationGPS}</span>
             </button>
           </div>
 
@@ -198,7 +198,7 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
           {/* Preset Location Quick Pills */}
           <div className="space-y-1.5">
             <label className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-              Və ya Ərazi Seçin (Bakı, Xırdalan, Biləcəri, Sumqayıt):
+              {t.nearbyModal.orSelectArea}
             </label>
             <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
               {BAKU_LOCATIONS.map((loc) => (
@@ -224,7 +224,7 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Xəritə Baxışı & Filiallar:
+                {t.nearbyModal.mapViewAndBranches}
               </label>
               <a
                 href={googleMapsSearchUrl}
@@ -233,7 +233,7 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
                 className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
               >
                 <ExternalLink className="w-3 h-3" />
-                <span>Google Maps-də Tam Aç</span>
+                <span>{t.nearbyModal.openFullInGoogleMaps}</span>
               </a>
             </div>
 
@@ -247,10 +247,10 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
               <div className="absolute bottom-2 left-2 right-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700 flex items-center justify-between text-[10px]">
                 <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                  Mərkəz: {selectedLocation.name}
+                  {t.nearbyModal.center} {selectedLocation.name}
                 </span>
                 <span className="text-slate-500 font-mono">
-                  {stores.length} yaxın filial
+                  {t.nearbyModal.nearbyBranchesCount.replace("{count}", String(stores.length))}
                 </span>
               </div>
             </div>
@@ -279,6 +279,7 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
             <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
               {[
                 { label: "Hamısı", slug: "all" },
+                { label: t.common.all, slug: "all" },
                 { label: "Bravo", slug: "bravo" },
                 { label: "Araz", slug: "araz" },
                 { label: "OBA", slug: "oba" },
@@ -317,10 +318,10 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
               <div className="text-center py-8 p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-800">
                 <Store className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-1.5" />
                 <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Bu radiusda filial tapılmadı
+                  {t.nearbyModal.noBranchesInRadius}
                 </h4>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Axtarış radiusunu 3 km və ya 5 km olaraq artırın.
+                  {t.nearbyModal.increaseRadiusHint}
                 </p>
               </div>
             ) : (
@@ -362,7 +363,12 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
                           </div>
                           <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-end gap-0.5 mt-0.5">
                             <Clock className="w-2.5 h-2.5" />
-                            <span>~{walkingMins} dəq piyada</span>
+                            <span>
+                              {t.nearbyModal.walkingMinutes.replace(
+                                "{mins}",
+                                String(walkingMins)
+                              )}
+                            </span>
                           </span>
                         </div>
                       </div>
@@ -376,7 +382,7 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
                           className="flex-1 py-1.5 px-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 text-[11px] font-extrabold flex items-center justify-center gap-1.5 transition-colors border border-emerald-200/80 dark:border-emerald-800/40 shadow-2xs"
                         >
                           <Navigation className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                          <span>Google Maps-də Marşrut</span>
+                          <span>{t.nearbyModal.routeInGoogleMaps}</span>
                           <ExternalLink className="w-2.5 h-2.5 opacity-70" />
                         </a>
 
@@ -391,7 +397,7 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
                           }}
                           className="py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold transition-colors"
                         >
-                          Məkan et
+                          {t.nearbyModal.makeLocation}
                         </button>
                       </div>
                     </div>
@@ -411,7 +417,7 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
             className="flex-1 py-2 px-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 text-xs font-extrabold flex items-center justify-center gap-1.5 border border-emerald-200/80 dark:border-emerald-800/40 shadow-2xs transition-all"
           >
             <Navigation className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span className="truncate">Google Maps-də Bütün Ətraf Marketlər</span>
+            <span className="truncate">{t.nearbyModal.allNearbyInGoogleMaps}</span>
             <ExternalLink className="w-3 h-3 opacity-70 shrink-0" />
           </a>
 
@@ -420,7 +426,7 @@ export const NearbyMarketsModal: React.FC<NearbyMarketsModalProps> = ({
             className="py-2 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-black shadow-xs transition-all active:scale-95 flex items-center gap-1.5 shrink-0"
           >
             <X className="w-4 h-4" />
-            <span>Çıxış / Bağla</span>
+            <span>{t.nearbyModal.exitClose}</span>
           </button>
         </div>
       </div>
