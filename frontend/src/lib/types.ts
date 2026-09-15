@@ -455,4 +455,47 @@ export interface VoucherPreviewResult {
   user_name: string;
 }
 
+export function isKgProduct(
+  product?: {
+    unit?: string | null;
+    pack_size?: string | null;
+    canonical_name?: string | null;
+  } | null
+): boolean {
+  if (!product) return false;
+  const unit = (product.unit || "").toLowerCase().trim();
+  if (unit === "kg" || unit === "kq" || unit === "kilogram" || unit === "kilo") {
+    return true;
+  }
+  const pack = (product.pack_size || "").toLowerCase().trim();
+  if (pack.includes("1 kg") || pack.includes("1 kq") || pack.includes("çəki")) {
+    return true;
+  }
+  const name = (product.canonical_name || "").toLowerCase().trim();
+  if (
+    name.includes("(kq)") ||
+    name.includes("(kg)") ||
+    name.includes(" 1 kq") ||
+    name.includes(" 1kq") ||
+    name.includes(" 1 kg") ||
+    name.includes(" 1kg") ||
+    name.includes("çəki ilə")
+  ) {
+    return true;
+  }
+  return false;
+}
 
+export function getProductUnitLabel(
+  product?: {
+    unit?: string | null;
+    pack_size?: string | null;
+    canonical_name?: string | null;
+  } | null,
+  translations?: any
+): string {
+  if (isKgProduct(product)) {
+    return translations?.productCard?.kgSuffix || "kq";
+  }
+  return translations?.productCard?.pcsSuffix || "ədəd";
+}

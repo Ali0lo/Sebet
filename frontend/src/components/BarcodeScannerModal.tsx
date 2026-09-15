@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { X, Camera, Search, Barcode, CheckCircle2, ShoppingCart, Sparkles, ExternalLink } from "lucide-react";
 import { getProductByBarcode } from "@/lib/api";
-import { Product } from "@/lib/types";
+import { Product, isKgProduct } from "@/lib/types";
 import { useSebEtStore } from "@/lib/store";
 import { ChainLogo } from "@/components/ChainLogo";
 import { useTranslation } from "@/lib/translations";
@@ -33,6 +33,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scannedProduct, setScannedProduct] = useState<Product | null>(null);
+  const [scannedWeight, setScannedWeight] = useState<number>(1);
   const { addToBasket } = useSebEtStore();
 
   if (!isOpen) return null;
@@ -246,22 +247,55 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                 </div>
               </div>
 
+              {/* Weight Selector for kg products */}
+              {isKgProduct(scannedProduct) && (
+                <div className="p-2.5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/40 space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                    <span>{t.productCard.selectWeight}</span>
+                    <span className="text-emerald-700 dark:text-emerald-400 font-black">
+                      {(scannedWeight * (scannedProduct.min_price || 0)).toFixed(2)} ₼
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-5 gap-1">
+                    {[0.5, 1, 1.5, 2, 3].map((w) => (
+                      <button
+                        key={w}
+                        type="button"
+                        onClick={() => setScannedWeight(w)}
+                        className={`py-1 rounded-xl text-[10px] font-extrabold border transition-all ${
+                          scannedWeight === w
+                            ? "bg-emerald-600 border-emerald-600 text-white shadow-xs"
+                            : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+                        }`}
+                      >
+                        {w} {t.productCard.kgSuffix}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Add to Basket Action */}
               <button
                 onClick={() => {
-                  addToBasket(scannedProduct, 1);
+                  const finalQty = isKgProduct(scannedProduct) ? scannedWeight : 1;
+                  addToBasket(scannedProduct, finalQty);
                   setScannedProduct(null);
+                  setScannedWeight(1);
                   onClose();
                 }}
-                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-600/20 active:scale-95"
+                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer"
               >
                 <ShoppingCart className="w-4 h-4" />
-                <span>Səbətə əlavə et ({scannedProduct.min_price?.toFixed(2)} ₼)</span>
                 <span>
                   {t.barcodeScannerModal.addToBasketPrice.replace(
                     "{price}",
-                    (scannedProduct.min_price || 0).toFixed(2)
+                    (
+                      (isKgProduct(scannedProduct) ? scannedWeight : 1) *
+                      (scannedProduct.min_price || 0)
+                    ).toFixed(2)
                   )}
+                  {isKgProduct(scannedProduct) ? ` (${scannedWeight} ${t.productCard.kgSuffix})` : ""}
                 </span>
               </button>
             </div>

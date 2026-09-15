@@ -50,6 +50,7 @@ interface SebEtState {
   addToBasket: (product: Product, quantity?: number) => void;
   removeFromBasket: (productId: string) => void;
   updateQuantity: (productId: string, delta: number) => void;
+  setQuantity: (productId: string, quantity: number) => void;
   clearBasket: () => void;
   setBasket: (items: BasketItem[]) => void;
   setLocation: (location: BakuLocation) => void;
@@ -79,15 +80,17 @@ export const useSebEtStore = create<SebEtState>()(
 
       addToBasket: (product, quantity = 1) => {
         set((state) => {
+          const safeQty = Math.round(quantity * 100) / 100;
           const existingIndex = state.basket.findIndex(
             (item) => item.product.id === product.id
           );
           if (existingIndex > -1) {
             const updated = [...state.basket];
-            updated[existingIndex].quantity += quantity;
+            updated[existingIndex].quantity =
+              Math.round((updated[existingIndex].quantity + safeQty) * 100) / 100;
             return { basket: updated };
           } else {
-            return { basket: [...state.basket, { product, quantity }] };
+            return { basket: [...state.basket, { product, quantity: safeQty }] };
           }
         });
       },
@@ -103,12 +106,27 @@ export const useSebEtStore = create<SebEtState>()(
           const updated = state.basket
             .map((item) => {
               if (item.product.id === productId) {
-                const newQty = item.quantity + delta;
+                const newQty = Math.round((item.quantity + delta) * 100) / 100;
                 return newQty > 0 ? { ...item, quantity: newQty } : null;
               }
               return item;
             })
             .filter((item): item is BasketItem => item !== null);
+          return { basket: updated };
+        });
+      },
+
+      setQuantity: (productId, quantity) => {
+        set((state) => {
+          const safeQty = Math.max(0, Math.round(quantity * 100) / 100);
+          if (safeQty <= 0) {
+            return {
+              basket: state.basket.filter((item) => item.product.id !== productId),
+            };
+          }
+          const updated = state.basket.map((item) =>
+            item.product.id === productId ? { ...item, quantity: safeQty } : item
+          );
           return { basket: updated };
         });
       },

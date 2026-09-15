@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Minus, Sparkles, Tag, ShoppingBasket } from "lucide-react";
-import { Product, StorePrice } from "@/lib/types";
+import { Plus, Minus, Sparkles, ShoppingBasket, Scale } from "lucide-react";
+import { Product, StorePrice, isKgProduct } from "@/lib/types";
 import { useSebEtStore } from "@/lib/store";
 import { ChainLogo } from "@/components/ChainLogo";
 import { useTranslation } from "@/lib/translations";
+import { KgSelectorModal } from "@/components/KgSelectorModal";
 
 interface ProductCardProps {
   product: Product;
@@ -16,10 +17,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onOpenDetails,
 }) => {
-  const { basket, addToBasket, updateQuantity } = useSebEtStore();
+  const { basket, addToBasket, updateQuantity, setQuantity, removeFromBasket } =
+    useSebEtStore();
   const { t } = useTranslation();
   const [isMounted, setIsMounted] = useState(false);
   const [imgSrc, setImgSrc] = useState<string | null>(product.image_url || null);
+  const [isKgModalOpen, setIsKgModalOpen] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -30,6 +33,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     ? basket.find((item) => item.product.id === product.id)
     : undefined;
   const inCartQty = basketItem?.quantity || 0;
+  const isKg = isKgProduct(product);
 
   // Group prices by chain to show one pill per chain
   const chainPrices: { [key: string]: StorePrice } = {};
@@ -72,14 +76,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </span>
           )}
 
-          {/* Promo or Pack size Badge */}
+          {/* Promo, Kg, or Pack size Badge */}
           <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
             {hasPromo && (
               <span className="px-1.5 py-0.5 rounded-md bg-rose-500 text-white text-[9px] font-black flex items-center gap-0.5 shadow-xs">
                 <Sparkles className="w-2.5 h-2.5" /> {t.productCard.promoBadge}
               </span>
             )}
-            {product.pack_size && (
+            {isKg && (
+              <span className="px-1.5 py-0.5 rounded-md bg-emerald-700/90 text-white text-[9px] font-black flex items-center gap-0.5 shadow-xs">
+                <Scale className="w-2.5 h-2.5" /> {t.productCard.kgSuffix}
+              </span>
+            )}
+            {product.pack_size && !isKg && (
               <span className="px-1.5 py-0.5 rounded-md bg-white/95 dark:bg-slate-800/95 backdrop-blur-xs text-slate-700 dark:text-slate-200 text-[9px] font-bold border border-slate-200 dark:border-slate-700">
                 {product.pack_size}
               </span>
@@ -101,14 +110,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <span className="text-base font-extrabold text-emerald-700 dark:text-emerald-400">
             {bestPrice.toFixed(2)} ₼
           </span>
+          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+            / {isKg ? t.productCard.kgSuffix : t.productCard.pcsSuffix}
+          </span>
           {maxPrice > bestPrice && (
-            <span className="text-[11px] text-slate-400 dark:text-slate-500 line-through">
+            <span className="text-[11px] text-slate-400 dark:text-slate-500 line-through ml-auto">
               {maxPrice.toFixed(2)} ₼
-            </span>
-          )}
-          {maxPrice > bestPrice && (
-            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1 rounded">
-              -{(maxPrice - bestPrice).toFixed(2)} ₼
             </span>
           )}
         </div>
@@ -140,36 +147,80 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
       </div>
 
-      {/* Action: Add to Basket */}
+      {/* Action: Add to Basket / Steppers */}
       <div className="mt-3 pt-2">
         {inCartQty > 0 ? (
           <div className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-xl p-1">
             <button
-              onClick={() => updateQuantity(product.id, -1)}
-              className="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 font-black flex items-center justify-center hover:bg-emerald-100 dark:hover:bg-slate-700 active:scale-90 transition-transform shadow-xs"
+              type="button"
+              onClick={() => updateQuantity(product.id, isKg ? -0.5 : -1)}
+              className="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 font-black flex items-center justify-center hover:bg-emerald-100 dark:hover:bg-slate-700 active:scale-90 transition-transform shadow-xs cursor-pointer"
+              title={isKg ? "-0.5 kq" : "-1"}
             >
               <Minus className="w-3.5 h-3.5" />
             </button>
-            <span className="text-xs font-black text-emerald-900 dark:text-emerald-200 px-2">
-              {inCartQty} {t.productCard.pcsSuffix}
-            </span>
+
+            {isKg ? (
+              <button
+                type="button"
+                onClick={() => setIsKgModalOpen(true)}
+                className="text-xs font-black text-emerald-900 dark:text-emerald-200 px-2 hover:underline cursor-pointer flex items-center gap-0.5"
+                title={t.productCard.updateWeight}
+              >
+                <span>{inCartQty}</span>
+                <span className="text-[10px] font-bold">{t.productCard.kgSuffix}</span>
+              </button>
+            ) : (
+              <span className="text-xs font-black text-emerald-900 dark:text-emerald-200 px-2">
+                {inCartQty} {t.productCard.pcsSuffix}
+              </span>
+            )}
+
             <button
-              onClick={() => updateQuantity(product.id, 1)}
-              className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-black flex items-center justify-center hover:bg-emerald-700 active:scale-90 transition-transform shadow-xs"
+              type="button"
+              onClick={() => updateQuantity(product.id, isKg ? 0.5 : 1)}
+              className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-black flex items-center justify-center hover:bg-emerald-700 active:scale-90 transition-transform shadow-xs cursor-pointer"
+              title={isKg ? "+0.5 kq" : "+1"}
             >
               <Plus className="w-3.5 h-3.5" />
             </button>
           </div>
+        ) : isKg ? (
+          <button
+            type="button"
+            onClick={() => setIsKgModalOpen(true)}
+            className="w-full py-1.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-xs cursor-pointer"
+          >
+            <Scale className="w-3.5 h-3.5" />
+            <span>{t.productCard.selectWeight}</span>
+          </button>
         ) : (
           <button
+            type="button"
             onClick={() => addToBasket(product, 1)}
-            className="w-full py-1.5 px-3 rounded-xl bg-slate-900 dark:bg-emerald-600 hover:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-xs"
+            className="w-full py-1.5 px-3 rounded-xl bg-slate-900 dark:bg-emerald-600 hover:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-xs cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>{t.productCard.addToCart}</span>
           </button>
         )}
       </div>
+
+      {/* Kg Selection Modal */}
+      {isKg && (
+        <KgSelectorModal
+          isOpen={isKgModalOpen}
+          product={product}
+          initialQuantity={inCartQty}
+          onClose={() => setIsKgModalOpen(false)}
+          onConfirm={(weight) => {
+            setQuantity(product.id, weight);
+          }}
+          onRemove={() => {
+            removeFromBasket(product.id);
+          }}
+        />
+      )}
     </div>
   );
 };

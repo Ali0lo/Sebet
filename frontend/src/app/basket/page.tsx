@@ -31,8 +31,10 @@ import {
   Product,
   SplitStoreInfo,
   SingleStoreResult,
+  isKgProduct,
 } from "@/lib/types";
 import { ChainLogo } from "@/components/ChainLogo";
+import { KgSelectorModal } from "@/components/KgSelectorModal";
 
 function getChainSlug(name?: string | null): string {
   const n = (name || "").toLowerCase();
@@ -58,6 +60,7 @@ export default function BasketPage() {
     selectedLocation,
     setLocation,
     updateQuantity,
+    setQuantity,
     removeFromBasket,
     clearBasket,
     setBasket,
@@ -69,6 +72,10 @@ export default function BasketPage() {
   const { t, language } = useTranslation();
 
   const [isMounted, setIsMounted] = useState(false);
+  const [editingKgItem, setEditingKgItem] = useState<{
+    product: Product;
+    quantity: number;
+  } | null>(null);
   const [isShoppingMode, setIsShoppingMode] = useState(false);
   const [locationMode, setLocationMode] = useState<"gps" | "area">("area");
   const [walkingRadius, setWalkingRadius] = useState<number>(1000);
@@ -460,6 +467,7 @@ export default function BasketPage() {
               {/* Product Cards List */}
               <div className="space-y-2.5">
                 {basket.map((item) => {
+                  const isKg = isKgProduct(item.product);
                   const unitPrice =
                     item.product.min_price ?? item.product.prices?.[0]?.price ?? 0;
                   const lineTotal = unitPrice * item.quantity;
@@ -494,7 +502,7 @@ export default function BasketPage() {
                             </span>
                           )}
                           <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
-                            {unitPrice.toFixed(2)} ₼ / {t.productCard.pcsSuffix}
+                            {unitPrice.toFixed(2)} ₼ / {isKg ? t.productCard.kgSuffix : t.productCard.pcsSuffix}
                           </div>
                         </div>
                       </div>
@@ -509,19 +517,40 @@ export default function BasketPage() {
 
                         <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700/80 border border-slate-200 dark:border-slate-600 rounded-xl p-0.5">
                           <button
-                            onClick={() => updateQuantity(item.product.id, -1)}
+                            onClick={() => updateQuantity(item.product.id, isKg ? -0.5 : -1)}
                             className="w-6 h-6 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer shadow-2xs"
+                            title={isKg ? "-0.5 kq" : "-1"}
                           >
                             <Minus className="w-3 h-3" />
                           </button>
-                          <span className="text-xs font-black px-1.5 text-slate-900 dark:text-slate-100">
-                            {item.quantity}
-                          </span>
+
+                          {isKg ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setEditingKgItem({
+                                  product: item.product,
+                                  quantity: item.quantity,
+                                })
+                              }
+                              className="text-xs font-black px-1.5 text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer flex items-center gap-0.5"
+                              title={t.productCard.updateWeight}
+                            >
+                              <span>{item.quantity}</span>
+                              <span className="text-[10px] font-bold">{t.productCard.kgSuffix}</span>
+                            </button>
+                          ) : (
+                            <span className="text-xs font-black px-1.5 text-slate-900 dark:text-slate-100">
+                              {item.quantity}
+                            </span>
+                          )}
+
                           <button
-                            onClick={() => updateQuantity(item.product.id, 1)}
+                            onClick={() => updateQuantity(item.product.id, isKg ? 0.5 : 1)}
                             className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs hover:bg-emerald-700 cursor-pointer shadow-2xs"
+                            title={isKg ? "+0.5 kq" : "+1"}
                           >
-                            <Plus className="w-3 h-3" />
+                            <Plus className="w-3.5 h-3.5" />
                           </button>
                         </div>
 
@@ -904,7 +933,7 @@ export default function BasketPage() {
                                   {item.product_name}
                                 </h4>
                                 <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                  {item.quantity} {t.productCard.pcsSuffix} × {item.unit_price.toFixed(2)} ₼
+                                  {item.quantity} {isKgProduct(product) ? t.productCard.kgSuffix : t.productCard.pcsSuffix} × {item.unit_price.toFixed(2)} ₼
                                 </div>
                               </div>
                             </div>
@@ -1036,7 +1065,7 @@ export default function BasketPage() {
                                   {item.product_name}
                                 </h4>
                                 <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                  {item.quantity} {t.productCard.pcsSuffix} × {item.unit_price.toFixed(2)} ₼
+                                  {item.quantity} {isKgProduct(product) ? t.productCard.kgSuffix : t.productCard.pcsSuffix} × {item.unit_price.toFixed(2)} ₼
                                 </div>
                               </div>
                             </div>
@@ -1165,7 +1194,7 @@ export default function BasketPage() {
                                   {item.product_name}
                                 </h4>
                                 <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                  {item.quantity} {t.productCard.pcsSuffix} × {item.unit_price.toFixed(2)} ₼
+                                  {item.quantity} {isKgProduct(product) ? t.productCard.kgSuffix : t.productCard.pcsSuffix} × {item.unit_price.toFixed(2)} ₼
                                 </div>
                               </div>
                             </div>
@@ -1217,7 +1246,6 @@ export default function BasketPage() {
                                     {st.branch_name}
                                   </div>
                                   <div className="text-[10px] text-slate-400 dark:text-slate-500">
-                                    {st.distance_km} km məsafə
                                     {st.distance_km} km
                                   </div>
                                 </div>
@@ -1242,6 +1270,23 @@ export default function BasketPage() {
             </>
           ) : null}
         </div>
+      )}
+
+      {editingKgItem && (
+        <KgSelectorModal
+          isOpen={!!editingKgItem}
+          product={editingKgItem.product}
+          initialQuantity={editingKgItem.quantity}
+          onClose={() => setEditingKgItem(null)}
+          onConfirm={(qty) => {
+            setQuantity(editingKgItem.product.id, qty);
+            setEditingKgItem(null);
+          }}
+          onRemove={() => {
+            removeFromBasket(editingKgItem.product.id);
+            setEditingKgItem(null);
+          }}
+        />
       )}
     </div>
   );

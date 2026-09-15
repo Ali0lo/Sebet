@@ -28,10 +28,11 @@ import {
   Smile,
 } from "lucide-react";
 import { searchProducts, getTopDeals, getCategories, getSearchRecommendations } from "@/lib/api";
-import { Product, Category, SearchRecommendationsResponse } from "@/lib/types";
+import { Product, Category, SearchRecommendationsResponse, isKgProduct } from "@/lib/types";
 import { ProductCard } from "@/components/ProductCard";
 import { BarcodeScannerModal } from "@/components/BarcodeScannerModal";
 import { NearbyMarketsModal } from "@/components/NearbyMarketsModal";
+import { KgSelectorModal } from "@/components/KgSelectorModal";
 import { useSebetStore } from "@/lib/store";
 import { useTranslation, TranslationDictionary, getTranslatedCategoryName } from "@/lib/translations";
 
@@ -129,8 +130,9 @@ export default function HomePage() {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [addedDealIds, setAddedDealIds] = useState<{ [key: string]: boolean }>({});
+  const [selectedKgDeal, setSelectedKgDeal] = useState<Product | null>(null);
 
-  const { addToBasket } = useSebetStore();
+  const { addToBasket, setQuantity, basket } = useSebetStore();
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   // Load initial deals, categories, and initial recommendations
@@ -221,6 +223,10 @@ export default function HomePage() {
   };
 
   const handleAddDealToBasket = (prod: Product) => {
+    if (isKgProduct(prod)) {
+      setSelectedKgDeal(prod);
+      return;
+    }
     addToBasket(prod, 1);
     setAddedDealIds((prev) => ({ ...prev, [prod.id]: true }));
     setTimeout(() => {
@@ -548,9 +554,14 @@ export default function HomePage() {
                           <span className="text-base font-extrabold text-slate-900 dark:text-white">
                             {promoPrice.toFixed(2)} ₼
                           </span>
-                          <span className="text-xs text-slate-400 dark:text-zinc-500 line-through">
-                            {origPrice.toFixed(2)} ₼
+                          <span className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400">
+                            / {isKgProduct(prod) ? t.productCard.kgSuffix : t.productCard.pcsSuffix}
                           </span>
+                          {origPrice > promoPrice && (
+                            <span className="text-xs text-slate-400 dark:text-zinc-500 line-through ml-auto">
+                              {origPrice.toFixed(2)} ₼
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -566,6 +577,11 @@ export default function HomePage() {
                           <>
                             <Check className="w-3.5 h-3.5" />
                             <span>{t.home.added}</span>
+                          </>
+                        ) : isKgProduct(prod) ? (
+                          <>
+                            <ShoppingBag className="w-3.5 h-3.5" />
+                            <span>{t.productCard.selectWeight}</span>
                           </>
                         ) : (
                           <>
@@ -598,6 +614,25 @@ export default function HomePage() {
         isOpen={isNearbyModalOpen}
         onClose={() => setIsNearbyModalOpen(false)}
       />
+
+      {selectedKgDeal && (
+        <KgSelectorModal
+          isOpen={!!selectedKgDeal}
+          product={selectedKgDeal}
+          initialQuantity={
+            basket.find((item) => item.product.id === selectedKgDeal.id)?.quantity || 1
+          }
+          onClose={() => setSelectedKgDeal(null)}
+          onConfirm={(qty) => {
+            setQuantity(selectedKgDeal.id, qty);
+            setAddedDealIds((prev) => ({ ...prev, [selectedKgDeal.id]: true }));
+            setTimeout(() => {
+              setAddedDealIds((prev) => ({ ...prev, [selectedKgDeal.id]: false }));
+            }, 1800);
+            setSelectedKgDeal(null);
+          }}
+        />
+      )}
     </div>
   );
 }
