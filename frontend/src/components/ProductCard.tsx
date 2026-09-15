@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Minus, Sparkles, ShoppingBasket, Scale } from "lucide-react";
+import { Plus, Minus, Sparkles, ShoppingBasket, Scale, ChevronRight } from "lucide-react";
 import { Product, StorePrice, isKgProduct } from "@/lib/types";
 import { useSebEtStore } from "@/lib/store";
 import { ChainLogo } from "@/components/ChainLogo";
 import { useTranslation } from "@/lib/translations";
 import { KgSelectorModal } from "@/components/KgSelectorModal";
+import { MarketComparisonModal } from "@/components/MarketComparisonModal";
 
 interface ProductCardProps {
   product: Product;
@@ -23,6 +24,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const [isMounted, setIsMounted] = useState(false);
   const [imgSrc, setImgSrc] = useState<string | null>(product.image_url || null);
   const [isKgModalOpen, setIsKgModalOpen] = useState(false);
+  const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -35,12 +37,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const inCartQty = basketItem?.quantity || 0;
   const isKg = isKgProduct(product);
 
-  // Group prices by chain to show one pill per chain
+  // Group prices by chain to show one entry per chain, sorted by lowest price first
   const chainPrices: { [key: string]: StorePrice } = {};
   product.prices.forEach((p) => {
     if (!chainPrices[p.chain_slug]) {
       chainPrices[p.chain_slug] = p;
     }
+  });
+
+  const sortedChains = Object.values(chainPrices).sort((a, b) => {
+    const priceA = a.is_promo && a.promo_price ? a.promo_price : a.price;
+    const priceB = b.is_promo && b.promo_price ? b.promo_price : b.price;
+    return priceA - priceB;
   });
 
   const bestPrice = product.min_price || 0;
@@ -120,31 +128,65 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
         </div>
 
-        {/* Chain Comparison Pills with Official Logos */}
-        <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-1.5">
-          {Object.values(chainPrices).map((cp) => {
-            const isLowest =
-              (cp.is_promo && cp.promo_price ? cp.promo_price : cp.price) ===
-              bestPrice;
-            const displayPrice =
-              cp.is_promo && cp.promo_price ? cp.promo_price : cp.price;
+        {/* Market Comparison Row: Compact single-row representation */}
+        {sortedChains.length > 0 && (
+          <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-1.5">
+            {/* Lowest price store pill */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsComparisonModalOpen(true);
+              }}
+              className="text-[10px] py-1 px-2 rounded-xl font-bold flex items-center gap-1.5 border bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300/80 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200 truncate cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors shadow-2xs"
+              title={t.productCard.compareInMarkets}
+            >
+              <ChainLogo slug={sortedChains[0].chain_slug} size="xs" />
+              <span className="font-extrabold">
+                {(sortedChains[0].is_promo && sortedChains[0].promo_price
+                  ? sortedChains[0].promo_price
+                  : sortedChains[0].price
+                ).toFixed(2)}{" "}
+                ₼
+              </span>
+            </button>
 
-            return (
-              <div
-                key={cp.chain_slug}
-                className={`text-[9px] p-1 rounded-lg font-medium flex items-center gap-1.5 border transition-all ${
-                  isLowest
-                    ? "bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200 font-bold"
-                    : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
-                }`}
+            {/* Other stores: either second store or count button */}
+            {sortedChains.length === 2 ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsComparisonModalOpen(true);
+                }}
+                className="text-[10px] py-1 px-1.5 rounded-xl font-medium flex items-center gap-1 border bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 truncate cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-750 transition-colors"
+                title={t.productCard.compareInMarkets}
               >
-                {/* Official Market Logo Badge */}
-                <ChainLogo slug={cp.chain_slug} size="xs" />
-                <span>{displayPrice.toFixed(2)} ₼</span>
-              </div>
-            );
-          })}
-        </div>
+                <ChainLogo slug={sortedChains[1].chain_slug} size="xs" />
+                <span>
+                  {(sortedChains[1].is_promo && sortedChains[1].promo_price
+                    ? sortedChains[1].promo_price
+                    : sortedChains[1].price
+                  ).toFixed(2)}{" "}
+                  ₼
+                </span>
+              </button>
+            ) : sortedChains.length > 2 ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsComparisonModalOpen(true);
+                }}
+                className="text-[10px] py-1 px-2 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-300 flex items-center gap-1 shrink-0 transition-colors cursor-pointer shadow-2xs"
+                title={t.productCard.compareInMarkets}
+              >
+                <span>+{sortedChains.length - 1} market</span>
+                <ChevronRight className="w-3 h-3 text-slate-400" />
+              </button>
+            ) : null}
+          </div>
+        )}
       </div>
 
       {/* Action: Add to Basket / Steppers */}
@@ -221,6 +263,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           }}
         />
       )}
+
+      {/* Supermarket Comparison Modal */}
+      <MarketComparisonModal
+        isOpen={isComparisonModalOpen}
+        product={product}
+        onClose={() => setIsComparisonModalOpen(false)}
+      />
     </div>
   );
 };
