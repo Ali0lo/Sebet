@@ -122,6 +122,54 @@ def get_effective_price(product: Dict[str, Any], chain_slug: str) -> float:
     return float(product.get("base_price", 0.0))
 
 
+def render_map(
+    df: pd.DataFrame,
+    lat: str = "lat",
+    lon: str = "lon",
+    hover_name: str = None,
+    color: str = None,
+    size: str = None,
+    hover_data: list = None,
+    zoom: float = 12.0,
+    height: int = 380,
+):
+    """Renders map using px.scatter_map (Plotly 7+) or px.scatter_mapbox (Plotly 5/6), with st.map fallback."""
+    try:
+        kwargs = dict(lat=lat, lon=lon, zoom=zoom, height=height)
+        if hover_name:
+            kwargs["hover_name"] = hover_name
+        if color:
+            kwargs["color"] = color
+        if size:
+            kwargs["size"] = size
+        if hover_data:
+            kwargs["hover_data"] = hover_data
+
+        if hasattr(px, "scatter_map"):
+            fig = px.scatter_map(df, **kwargs)
+            fig.update_layout(
+                map_style="open-street-map",
+                margin={"r": 0, "t": 0, "l": 0, "b": 0},
+                legend=dict(yanchor="top", y=0.98, xanchor="left", x=0.02, bgcolor="rgba(255,255,255,0.8)"),
+            )
+            st.plotly_chart(fig, use_container_width=True)
+            return
+        elif hasattr(px, "scatter_mapbox"):
+            fig = px.scatter_mapbox(df, **kwargs)
+            fig.update_layout(
+                mapbox_style="carto-positron",
+                margin={"r": 0, "t": 0, "l": 0, "b": 0},
+                legend=dict(yanchor="top", y=0.98, xanchor="left", x=0.02, bgcolor="rgba(255,255,255,0.8)"),
+            )
+            st.plotly_chart(fig, use_container_width=True)
+            return
+    except Exception:
+        pass
+
+    # Fallback to standard streamlit map
+    st.map(df[[lat, lon]], zoom=int(zoom))
+
+
 # -----------------------------------------------------------------------------
 # 3. Data Preparation & Caching
 # -----------------------------------------------------------------------------
@@ -647,22 +695,16 @@ with tab_optimizer:
                     map_points.append({"name": f"Ağıllı 2: {split['s2']['branch_name']}", "lat": split['s2']["lat"], "lon": split['s2']["lon"], "color": "#059669", "size": 14, "type": "Split Store 2"})
 
                 map_df = pd.DataFrame(map_points)
-                fig_map = px.scatter_mapbox(
+                render_map(
                     map_df,
                     lat="lat",
                     lon="lon",
                     hover_name="name",
                     color="type",
                     size="size",
-                    zoom=13,
+                    zoom=13.0,
                     height=380,
                 )
-                fig_map.update_layout(
-                    mapbox_style="carto-positron",
-                    margin={"r": 0, "t": 0, "l": 0, "b": 0},
-                    legend=dict(yanchor="top", y=0.98, xanchor="left", x=0.02, bgcolor="rgba(255,255,255,0.8)"),
-                )
-                st.plotly_chart(fig_map, use_container_width=True)
 
 
 # =============================================================================
@@ -836,7 +878,7 @@ with tab_analytics:
             }
             for s in STORES
         ])
-        fig_stores = px.scatter_mapbox(
+        render_map(
             store_map_df,
             lat="lat",
             lon="lon",
@@ -846,12 +888,6 @@ with tab_analytics:
             zoom=10.5,
             height=370,
         )
-        fig_stores.update_layout(
-            mapbox_style="carto-positron",
-            margin={"r": 0, "t": 0, "l": 0, "b": 0},
-            legend=dict(yanchor="top", y=0.98, xanchor="left", x=0.02, bgcolor="rgba(255,255,255,0.8)"),
-        )
-        st.plotly_chart(fig_stores, use_container_width=True)
 
     st.markdown("---")
     st.markdown("#### ⚡ Ən Böyük Qiymət Fərqi Olan Top 5 Məhsul")
@@ -962,3 +998,4 @@ st.markdown(
     "<div style='text-align: center; color: #94a3b8; font-size: 13px;'>© 2026 SebEt Baku Grocery Intelligence. Bütün hüquqlar qorunur.</div>",
     unsafe_allow_html=True,
 )
+
