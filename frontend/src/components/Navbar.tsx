@@ -68,7 +68,7 @@ export const Navbar: React.FC = () => {
           <div className="relative">
             <button
               onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200/70 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200/70 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors cursor-pointer"
               title={t.nav.changeLang}
             >
               <Globe className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
@@ -87,7 +87,7 @@ export const Navbar: React.FC = () => {
             {isLangMenuOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 py-1.5 z-50 animate-in fade-in zoom-in-95 space-y-0.5">
                 <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  {t.profile.language}
+                  Dil / Language
                 </div>
                 {SUPPORTED_LANGUAGES.map((lang) => {
                   const current = isMounted ? language : "az";
@@ -99,7 +99,7 @@ export const Navbar: React.FC = () => {
                         setLanguage(lang.code);
                         setIsLangMenuOpen(false);
                       }}
-                      className={`w-full px-3 py-2 text-left text-xs font-semibold flex items-center justify-between hover:bg-emerald-50 dark:hover:bg-slate-800 transition-colors ${
+                      className={`w-full px-3 py-2 text-left text-xs font-semibold flex items-center justify-between hover:bg-emerald-50 dark:hover:bg-slate-800 transition-colors cursor-pointer ${
                         isSelected
                           ? "text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50/60 dark:bg-slate-800/80"
                           : "text-slate-700 dark:text-slate-300"
@@ -119,7 +119,7 @@ export const Navbar: React.FC = () => {
           {/* Dark Mode Toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-amber-400 transition-colors"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-amber-400 transition-colors cursor-pointer"
             title={isMounted && theme === "dark" ? t.nav.lightMode : t.nav.darkMode}
           >
             {isMounted && theme === "dark" ? (
@@ -132,7 +132,7 @@ export const Navbar: React.FC = () => {
           {/* Sebet Points - Compact Coin Counter */}
           <Link
             href="/profile"
-            className="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition-colors shrink-0"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold transition-colors shrink-0"
             title={t.nav.pointsTitle}
           >
             <Coins className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
@@ -142,7 +142,7 @@ export const Navbar: React.FC = () => {
           {/* Floating Cart Button */}
           <button
             onClick={() => toggleBasketDrawer(true)}
-            className="relative p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors shrink-0"
+            className="relative p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors shrink-0 cursor-pointer"
             title={t.nav.myBasket}
           >
             <ShoppingBasket className="w-4 h-4" />
