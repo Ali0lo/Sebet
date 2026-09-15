@@ -117,3 +117,4 @@ When presenting Sebet live to an audience or jury, follow this simple 4-step scr
 - **Privacy Standard**: $k$-Anonymity ($k \ge 5$) threshold enforcement on all merchant reporting.
 - **Automated Verification**: **42 out of 42 Pytest integration tests passing**; 100% clean Next.js production build across all 12 application routes.
 - **Internationalization**: Full reactive tri-lingual support in **Azerbaijani (`az`)**, **Russian (`ru`)**, and **English (`en`)**.
+

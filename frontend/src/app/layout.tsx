@@ -23,14 +23,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="az" suppressHydrationWarning>
-      <body className="antialiased bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200 flex flex-col">
+      <body className="antialiased bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200">
         <SplashScreen />
-        <Navbar />
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 md:pb-12">
-          {children}
-        </main>
-        <BasketDrawer />
-        <BottomNav />
+        {/* Mobile Device Frame / Container */}
+        <div className="max-w-xl mx-auto min-h-screen bg-white dark:bg-slate-900 shadow-2xl relative pb-24 flex flex-col border-x border-slate-200/70 dark:border-slate-800 transition-colors duration-200">
+          <Navbar />
+          <main className="flex-1 px-3.5 sm:px-4 py-4">{children}</main>
+          <BasketDrawer />
+          <BottomNav />
+        </div>
       </body>
     </html>
   );

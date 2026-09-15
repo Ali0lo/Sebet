@@ -41,11 +41,40 @@ export const BottomNav: React.FC = () => {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] transition-colors duration-200 pb-safe">
-      <div className="max-w-md mx-auto px-4 py-2 flex items-center justify-around">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800 shadow-[0_-4px_20px_rgba(0,0,0,0.07)] transition-colors duration-200 pb-safe">
+      <div className="max-w-xl mx-auto px-2 sm:px-4 py-2 flex items-center justify-around">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
+
+          if (item.href === "/scan") {
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex flex-col items-center -mt-4 group"
+              >
+                <div
+                  className={`w-11 h-11 rounded-full flex items-center justify-center shadow-md transition-transform active:scale-95 border-2 ${
+                    isActive
+                      ? "bg-emerald-600 text-white border-emerald-400 shadow-emerald-500/40"
+                      : "bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white border-white dark:border-slate-900 shadow-emerald-500/25 group-hover:scale-105"
+                  }`}
+                >
+                  <Icon className="w-5 h-5 stroke-[2.2]" />
+                </div>
+                <span
+                  className={`text-[10px] mt-0.5 font-bold ${
+                    isActive
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200"
+                  }`}
+                >
+                  {item.label}
+                </span>
+              </Link>
+            );
+          }
 
           return (
             <Link
