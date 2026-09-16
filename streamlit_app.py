@@ -2536,6 +2536,45 @@ with tab_comparison:
     if matrix_rows:
         matrix_df = pd.DataFrame(matrix_rows)
         render_comparison_matrix_table(matrix_df, dark=dark_mode)
+
+        with st.expander("⚡ Matris Məhsullarını 1-Kliklə Ən Ucuz Qiymətlə Səbətə Əlavə Et", expanded=False):
+            st.caption("Aşağıdakı siyahıdan hər bir məhsulu avtomatik olaraq ən ucuz olduğu supermarket qiyməti ilə 1-kliklə səbətinizə ata bilərsiniz.")
+            quick_cols = st.columns(2)
+            for idx, prod in enumerate(filtered_products[:14]):
+                with quick_cols[idx % 2]:
+                    cheapest_k = min(chain_keys, key=lambda c: get_effective_price(prod, c))
+                    cheapest_name = chain_headers[cheapest_k]
+                    cheapest_price = get_effective_price(prod, cheapest_k)
+                    ch_color = CHAINS[cheapest_k].get("color", "#10b981")
+                    
+                    c_txt, c_btn = st.columns([1.8, 1.2])
+                    with c_txt:
+                        st.markdown(
+                            f"""
+                            <div style="font-size: 13px; font-weight: 700; color: {main_text}; line-height: 1.3; margin-bottom: 2px;">{prod['canonical_name']}</div>
+                            <div style="font-size: 11px; color: {sub_text};">
+                                Ən ucuz: <b style="color: {ch_color};">{cheapest_name}</b> &bull; <b style="color: #10b981;">{cheapest_price:.2f} ₼</b>
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+                    with c_btn:
+                        if st.button(f"➕ Səbətə At", key=f"quick_add_matrix_{prod['barcode']}_{idx}", use_container_width=True):
+                            existing = next((item for item in st.session_state.basket if item["barcode"] == prod["barcode"]), None)
+                            if existing:
+                                existing["quantity"] = round(existing["quantity"] + 1.0, 2)
+                            else:
+                                st.session_state.basket.append({
+                                    "barcode": prod["barcode"],
+                                    "canonical_name": prod["canonical_name"],
+                                    "brand": prod["brand"],
+                                    "quantity": 1.0,
+                                    "unit": prod.get("unit", "ədəd"),
+                                    "cat_slug": prod["cat_slug"],
+                                })
+                            clear_basket_keys()
+                            st.toast(f"✅ {prod['canonical_name']} səbətə əlavə edildi ({cheapest_name}-da {cheapest_price:.2f} ₼)!", icon="🛒")
+                            st.rerun()
     else:
         st.info("Axtarışa uyğun məhsul tapılmadı.")
 
@@ -2562,6 +2601,11 @@ with tab_comparison:
         max_val = chart_df["Qiymət (₼)"].max()
         spread_pct = round(((max_val - min_val) / min_val) * 100, 1)
 
+        best_chart_chain = min(chain_keys, key=lambda c: get_effective_price(chart_p, c))
+        best_chart_title = chain_headers[best_chart_chain]
+        best_chart_color = CHAINS[best_chart_chain].get("color", "#10b981")
+        best_chart_price = get_effective_price(chart_p, best_chart_chain)
+
         c_img, c_chart = st.columns([1, 2.5])
         with c_img:
             img_path = f"frontend/public{chart_p.get('image_url', '')}"
@@ -2577,6 +2621,29 @@ with tab_comparison:
                 delta=f"{spread_pct}% fərq",
                 delta_color="inverse",
             )
+
+            # 1-Click cheapest add to basket button
+            if st.button(
+                f"🛒 Ən Ucuz ({best_chart_title}: {best_chart_price:.2f} ₼) Səbətə At",
+                key=f"btn_matrix_add_{chart_p['barcode']}",
+                type="primary",
+                use_container_width=True,
+            ):
+                existing = next((item for item in st.session_state.basket if item["barcode"] == chart_p["barcode"]), None)
+                if existing:
+                    existing["quantity"] = round(existing["quantity"] + 1.0, 2)
+                else:
+                    st.session_state.basket.append({
+                        "barcode": chart_p["barcode"],
+                        "canonical_name": chart_p["canonical_name"],
+                        "brand": chart_p["brand"],
+                        "quantity": 1.0,
+                        "unit": chart_p.get("unit", "ədəd"),
+                        "cat_slug": chart_p["cat_slug"],
+                    })
+                clear_basket_keys()
+                st.toast(f"✅ {chart_p['canonical_name']} səbətə əlavə edildi ({best_chart_title}-da {best_chart_price:.2f} ₼)!", icon="🛒")
+                st.rerun()
 
         with c_chart:
             fig_bar = px.bar(
