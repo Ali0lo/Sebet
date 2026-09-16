@@ -5,6 +5,7 @@ Streamlit Cloud Interactive Web Application
 
 import math
 import os
+import time
 from typing import List, Dict, Any, Tuple
 import streamlit as st
 import pandas as pd
@@ -12,6 +13,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 import sebet_data
+
+if "points" not in st.session_state:
+    st.session_state.points = 250
 
 # -----------------------------------------------------------------------------
 # 1. Page Configuration & Theme
@@ -375,6 +379,8 @@ with st.sidebar:
         "frontend/public/sebet-logo-banner.png" if os.path.exists("frontend/public/sebet-logo-banner.png") else "https://raw.githubusercontent.com/Ali0lo/Sebet/main/frontend/public/logo-light.png",
         use_container_width=True,
     )
+    dark_mode = st.toggle("🌙 Qaranlıq Rejim (Dark Mode)", value=False, key="dark_mode_toggle")
+
     st.markdown("### 📍 Bakı Məkanı & Radius")
 
     LOCATION_PRESETS = {
@@ -411,12 +417,17 @@ with st.sidebar:
         help="2 market arasındakı maksimum gəzinti məsafəsi. Bakıda adətən 750 metr (7-9 dəqiqə) optimaldır.",
     )
 
+    pts = st.session_state.get("points", 250)
+    card_bg = "#1e293b" if dark_mode else "#f1f5f9"
+    card_text = "#f8fafc" if dark_mode else "#0f172a"
+    sub_text = "#94a3b8" if dark_mode else "#64748b"
+
     st.markdown("---")
     st.markdown(
-        """
-        <div style="background: #f1f5f9; padding: 12px; border-radius: 12px; font-size: 13px;">
-            <div style="font-weight: 700; color: #0f172a; margin-bottom: 4px;">👤 Əli İsgəndərli (Demo)</div>
-            <div style="color: #64748b;">Sebet Xalları: <b style="color: #10b981;">250 Xal</b> (= 2.50 ₼)</div>
+        f"""
+        <div style="background: {card_bg}; padding: 12px; border-radius: 12px; font-size: 13px; border: 1px solid rgba(148, 163, 184, 0.2);">
+            <div style="font-weight: 700; color: {card_text}; margin-bottom: 4px;">👤 Müştəri Profili (Demo)</div>
+            <div style="color: {sub_text};">Sebet Xalları: <b style="color: #10b981;">{pts} Xal</b> (= {pts / 100:.2f} ₼)</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -430,6 +441,53 @@ with st.sidebar:
             Real-time price dispersion engine for Baku supermarkets: Bravo, Araz, OBA, Bazarstore, Al Market, Neptun, Spar.<br/>
             <a href="https://github.com/Ali0lo/Sebet" target="_blank" style="color: #10b981; text-decoration: none; font-weight: 600;">GitHub Repository ↗</a>
         </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+if dark_mode:
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            background-color: #0b1120 !important;
+            color: #f1f5f9 !important;
+        }
+        section[data-testid="stSidebar"] {
+            background-color: #0f172a !important;
+            border-right: 1px solid #1e293b !important;
+        }
+        .store-card, .metric-card, div[data-testid="stExpander"] {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f1f5f9 !important;
+        }
+        div[data-testid="stMetricValue"] {
+            color: #34d399 !important;
+        }
+        div[data-testid="stMetricLabel"] {
+            color: #94a3b8 !important;
+        }
+        .stMarkdown p, .stMarkdown span, .stMarkdown div, h1, h2, h3, h4, h5, h6 {
+            color: #f8fafc !important;
+        }
+        .main-header {
+            background: linear-gradient(135deg, #064e3b 0%, #047857 100%) !important;
+            box-shadow: 0 10px 25px -5px rgba(4, 120, 87, 0.4) !important;
+        }
+        input, select, textarea, div[data-baseweb="select"] {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border-color: #475569 !important;
+        }
+        .stDataFrame {
+            background-color: #1e293b !important;
+        }
+        div[data-testid="stExpander"] summary {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+        }
+        </style>
         """,
         unsafe_allow_html=True,
     )
@@ -508,6 +566,9 @@ with tab_optimizer:
 
         # Add Product Selector
         with st.expander("➕ Yeni Məhsul Əlavə Et", expanded=False):
+            prod_names = [f"{p['canonical_name']} ({p.get('pack_size', '')})" for p in PRODUCTS]
+            selected_idx = st.selectbox("Məhsul seçin:", range(len(PRODUCTS)), format_func=lambda i: prod_names[i])
+            sel_prod = PRODUCTS[selected_idx]
             f_cat = st.selectbox(
                 "Kateqoriya:",
                 ["Bütün Kateqoriyalar"] + [c["name_az"] for c in CATEGORIES.values()],
@@ -515,12 +576,22 @@ with tab_optimizer:
             )
             f_search = st.text_input("Məhsul axtarışı:", key="basket_prod_search", placeholder="Məs: Süd, Yağ, Çay...")
 
+            is_kg = sel_prod.get("unit") == "kg"
+            if is_kg:
+                new_qty = st.number_input("Çəki (kq):", min_value=0.2, max_value=20.0, value=1.0, step=0.5)
+            else:
+                new_qty = st.number_input("Say (ədəd):", min_value=1.0, max_value=50.0, value=1.0, step=1.0)
             avail_prods = PRODUCTS
             if f_cat != "Bütün Kateqoriyalar":
                 cat_slug = next((c["slug"] for c in CATEGORIES.values() if c["name_az"] == f_cat), None)
                 if cat_slug:
                     avail_prods = [p for p in avail_prods if p["cat_slug"] == cat_slug]
 
+            if st.button("Səbətə Əlavə Et", type="primary", use_container_width=True):
+                # Check if exists
+                existing = next((item for item in st.session_state.basket if item["barcode"] == sel_prod["barcode"]), None)
+                if existing:
+                    existing["quantity"] += new_qty
             if f_search:
                 s_lower = f_search.lower()
                 avail_prods = [p for p in avail_prods if s_lower in p["canonical_name"].lower() or s_lower in p["brand"].lower()]
@@ -559,12 +630,14 @@ with tab_optimizer:
         else:
             st.markdown(f"**Səbətdəki Məhsullar ({len(st.session_state.basket)} növ):**")
             for idx, item in enumerate(st.session_state.basket):
+                c_name, c_qty, c_del = st.columns([3, 1.5, 0.8])
                 c_name, c_minus, c_qty, c_plus, c_del = st.columns([3, 0.6, 1.2, 0.6, 0.6])
                 unit_label = "kq" if item.get("unit") == "kg" else "əd"
                 step = 0.5 if item.get("unit") == "kg" else 1.0
                 min_val = 0.5 if item.get("unit") == "kg" else 1.0
 
                 with c_name:
+                    unit_label = "kq" if item.get("unit") == "kg" else "ədəd"
                     st.markdown(f"**{item['canonical_name']}**")
                 with c_minus:
                     if st.button("➖", key=f"minus_{idx}"):
@@ -572,6 +645,7 @@ with tab_optimizer:
                             item["quantity"] = round(item["quantity"] - step, 1)
                             st.rerun()
                 with c_qty:
+                    st.markdown(f"`{item['quantity']} {unit_label}`")
                     st.markdown(f"<div style='text-align: center; padding-top: 6px; font-weight: 700; color: #0f172a;'>{item['quantity']} {unit_label}</div>", unsafe_allow_html=True)
                 with c_plus:
                     if st.button("➕", key=f"plus_{idx}"):
@@ -717,28 +791,6 @@ with tab_optimizer:
                     else:
                         st.info("ℹ️ Seçilmiş piyada radiusunda qiymət fərqi 0.15 ₼-dən az olduğu üçün tək marketdən alış-veriş etmək ən optimal qərardır.")
 
-                # Interactive Map Visualization
-                st.markdown("#### 🗺️ Marşrut & Marketlər Xəritəsi")
-                map_points = [
-                    {"name": f"Sizin Məkanınız ({selected_loc_name})", "lat": user_coords[0], "lon": user_coords[1], "color": "#2563eb", "size": 15, "type": "İstifadəçi"},
-                    {"name": f"Tək Market: {single['branch_name']}", "lat": single["lat"], "lon": single["lon"], "color": single["chain_color"], "size": 13, "type": "Tək Market"},
-                ]
-                if is_split_viable and split:
-                    map_points.append({"name": f"Ağıllı 1: {split['s1']['branch_name']}", "lat": split['s1']["lat"], "lon": split['s1']["lon"], "color": "#10b981", "size": 14, "type": "Split Store 1"})
-                    map_points.append({"name": f"Ağıllı 2: {split['s2']['branch_name']}", "lat": split['s2']["lat"], "lon": split['s2']["lon"], "color": "#059669", "size": 14, "type": "Split Store 2"})
-
-                map_df = pd.DataFrame(map_points)
-                render_map(
-                    map_df,
-                    lat="lat",
-                    lon="lon",
-                    hover_name="name",
-                    color="type",
-                    size="size",
-                    zoom=13.0,
-                    height=380,
-                )
-
 
 # =============================================================================
 # TAB 2: QİYMƏT MÜQAYİSƏSİ (PRICE COMPARISON MATRIX)
@@ -865,6 +917,7 @@ with tab_comparison:
 
 
 # =============================================================================
+# TAB 3: BAZAR ANALİTİKASI (MARKET ANALYTICS)
 # TAB 3: HƏFTƏLİK BUKLETLƏR (WEEKLY FLYERS)
 # =============================================================================
 with tab_flyers:
@@ -931,12 +984,14 @@ with tab_scan:
     st.markdown("### 🧾 Elektron Kassa Qəbzlərinin Skanı & Keşbek")
     st.markdown("Supermarket qəbzlərini skan edərək xərclədiyiniz məbləğdən avtomatik **1% - 2% Sebet xalı (keşbek)** qazanın.")
 
-    c_sc1, c_sc2 = st.columns([1.2, 1], gap="large")
+    c_sc1, c_sc2 = st.columns([1.1, 1], gap="large")
 
     SAMPLE_RECEIPTS = [
         {
             "id": "rec_bravo",
             "store": "Bravo 28 Mall",
+            "chain": "Bravo",
+            "color": "#74b826",
             "voen": "1401564751",
             "fiscal_id": "AZ14015647510101-92810",
             "date": "2026-09-14 17:42",
@@ -951,6 +1006,8 @@ with tab_scan:
         {
             "id": "rec_araz",
             "store": "Araz Nərimanov",
+            "chain": "Araz",
+            "color": "#E30613",
             "voen": "1500843211",
             "fiscal_id": "AZ15008432110202-44129",
             "date": "2026-09-15 11:20",
@@ -965,6 +1022,8 @@ with tab_scan:
         {
             "id": "rec_oba",
             "store": "OBA Yasamal",
+            "chain": "OBA",
+            "color": "#009640",
             "voen": "1701928374",
             "fiscal_id": "AZ17019283740303-10294",
             "date": "2026-09-15 20:05",
@@ -978,47 +1037,82 @@ with tab_scan:
         },
     ]
 
+    if "active_rec_idx" not in st.session_state:
+        st.session_state.active_rec_idx = 0
+
     with c_sc1:
-        st.markdown("#### 📸 Qəbz Seçimi")
-        receipt_mode = st.radio("Mənbə:", ["Nümunə Bakı Qəbzləri", "Fayl Yüklə (Şəkil / PDF)"], horizontal=True)
+        st.markdown("#### 📸 Qəbz Seçimi və Skan")
 
-        if receipt_mode == "Nümunə Bakı Qəbzləri":
-            rec_options = [f"{r['store']} — {r['total']:.2f} ₼ ({r['date']})" for r in SAMPLE_RECEIPTS]
-            rec_sel_idx = st.selectbox("Qəbz seçin:", range(len(SAMPLE_RECEIPTS)), format_func=lambda i: rec_options[i])
-            active_rec = SAMPLE_RECEIPTS[rec_sel_idx]
-        else:
-            uploaded_file = st.file_uploader("Qəbzin fotosunu seçin:", type=["jpg", "jpeg", "png", "pdf"])
-            active_rec = SAMPLE_RECEIPTS[0]
-            if uploaded_file:
-                st.image(uploaded_file, caption="Yüklənmiş Qəbz", width=250)
+        # Fast 1-click sample selector pills
+        st.markdown("<div style='font-size: 13px; font-weight: 600; margin-bottom: 6px;'>Sürətli Nümunə Qəbzlər:</div>", unsafe_allow_html=True)
+        btn_cols = st.columns(3)
+        for b_idx, s_rec in enumerate(SAMPLE_RECEIPTS):
+            with btn_cols[b_idx]:
+                if st.button(f"{s_rec['chain']}\n{s_rec['total']:.2f} ₼", key=f"quick_rec_{b_idx}", use_container_width=True):
+                    st.session_state.active_rec_idx = b_idx
+                    st.session_state["scanned_receipt"] = s_rec
 
-        if st.button("🚀 Qəbzi OCR Analiz Et & Keşbek Qazan", type="primary", use_container_width=True):
+        active_rec = SAMPLE_RECEIPTS[st.session_state.active_rec_idx]
+
+        st.markdown("---")
+        upload_tab1, upload_tab2 = st.tabs(["📁 Şəkil Yüklə", "📷 Kamera ilə Çək"])
+        with upload_tab1:
+            up_file = st.file_uploader("Qəbzin fotosunu seçin (JPG/PNG):", type=["jpg", "jpeg", "png"], key="rec_uploader")
+            if up_file:
+                st.image(up_file, caption="Yüklənmiş Qəbz", width=220)
+        with upload_tab2:
+            cam_pic = st.camera_input("Kamera ilə qəbzin fotosunu çəkin:", key="rec_cam")
+            if cam_pic:
+                st.image(cam_pic, caption="Çəkilmiş Qəbz", width=220)
+
+        if st.button("🚀 Qəbzi OCR Skan Et & Keşbek Qazan", type="primary", use_container_width=True):
+            with st.spinner("🔍 Qəbz OCR mühərriki işə salınır, fiskal şifrə və VÖEN oxunur..."):
+                time.sleep(0.4)
             st.session_state["scanned_receipt"] = active_rec
-            st.success(f"Qəbz uğurla təsdiqləndi! +{active_rec['cashback']} Sebet xalı qazandınız.")
+            st.session_state.points = st.session_state.get("points", 250) + active_rec["cashback"]
+            st.success(f"🎉 Qəbz təsdiqləndi! +{active_rec['cashback']} Sebet xalı balansınıza əlavə edildi.")
+            st.toast(f"+{active_rec['cashback']} Sebet Xalı qazanıldı!")
 
     with c_sc2:
-        st.markdown("#### 📑 OCR Nəticəsi & Fiskal Çıxarış")
-        rec_data = st.session_state.get("scanned_receipt", SAMPLE_RECEIPTS[0])
+        st.markdown("#### 📑 Tanınmış E-Kassa Qəbzi")
+        rec_data = st.session_state.get("scanned_receipt", active_rec)
 
-        items_html = "".join([f"<div style='display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;'><span>{it['name']} x{it['qty']}</span><span>{(it['price']*it['qty']):.2f} ₼</span></div>" for it in rec_data['items']])
+        rec_bg = "#1e293b" if dark_mode else "#ffffff"
+        rec_border = "#475569" if dark_mode else "#cbd5e1"
+        rec_text = "#f8fafc" if dark_mode else "#0f172a"
+        rec_sub = "#94a3b8" if dark_mode else "#64748b"
+
+        items_html = "".join([
+            f"<div style='display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; color:{rec_text};'>"
+            f"<span>{it['name']} x{it['qty']}</span>"
+            f"<span style='font-weight:700;'>{(it['price']*it['qty']):.2f} ₼</span>"
+            f"</div>"
+            for it in rec_data['items']
+        ])
 
         st.markdown(
             f"""
-            <div style="background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 20px; font-family: monospace; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-                <div style="text-align: center; font-weight: 800; font-size: 16px; margin-bottom: 4px;">{rec_data['store'].upper()}</div>
-                <div style="text-align: center; font-size: 12px; color: #64748b; margin-bottom: 12px;">VÖEN: {rec_data['voen']}</div>
-                <div style="border-top: 1px dashed #e2e8f0; margin-bottom: 12px;"></div>
-                <div style="font-size: 12px; margin-bottom: 6px;">Fiskal İD: <b>{rec_data['fiscal_id']}</b></div>
-                <div style="font-size: 12px; margin-bottom: 12px;">Tarix: <b>{rec_data['date']}</b></div>
-                <div style="border-top: 1px dashed #e2e8f0; margin-bottom: 12px;"></div>
+            <div style="background: {rec_bg}; border: 2px dashed {rec_border}; border-radius: 14px; padding: 22px; font-family: 'Courier New', Courier, monospace; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+                <div style="text-align: center; font-size: 11px; letter-spacing: 0.1em; color: {rec_sub}; margin-bottom: 2px;">AZƏRBAYCAN RESPUBLİKASI DVX</div>
+                <div style="text-align: center; font-weight: 800; font-size: 16px; margin-bottom: 4px; color: {rec_text};">{rec_data['store'].upper()}</div>
+                <div style="text-align: center; font-size: 11px; color: {rec_sub}; margin-bottom: 12px;">VÖEN: {rec_data['voen']}</div>
+                <div style="border-top: 1px dashed {rec_border}; margin-bottom: 12px;"></div>
+                <div style="font-size: 11px; color: {rec_sub}; margin-bottom: 4px;">Fiskal İD: <b style="color: {rec_text};">{rec_data['fiscal_id']}</b></div>
+                <div style="font-size: 11px; color: {rec_sub}; margin-bottom: 12px;">Tarix/Saat: <b style="color: {rec_text};">{rec_data['date']}</b></div>
+                <div style="border-top: 1px dashed {rec_border}; margin-bottom: 12px;"></div>
+                <div style="font-size: 11px; font-weight: 700; color: {rec_sub}; margin-bottom: 6px;">MƏHSUL / ÇƏKİ & SAY / MƏBLƏĞ:</div>
                 {items_html}
-                <div style="border-top: 1px dashed #e2e8f0; margin: 12px 0;"></div>
-                <div style="display:flex; justify-content:space-between; font-weight:800; font-size:15px;">
+                <div style="border-top: 2px dashed {rec_border}; margin: 14px 0 10px 0;"></div>
+                <div style="display:flex; justify-content:space-between; font-weight:800; font-size:17px; color: {rec_text};">
                     <span>YEKUN:</span>
-                    <span>{rec_data['total']:.2f} ₼</span>
+                    <span style="color: #10b981;">{rec_data['total']:.2f} ₼</span>
                 </div>
-                <div style="background: #dcfce7; color: #166534; padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 13px; text-align: center; margin-top: 12px;">
-                    ✨ Qazanılan Keşbek: +{rec_data['cashback']} Xal (= {rec_data['cashback']/100:.2f} ₼)
+                <div style="text-align: center; font-size: 11px; color: {rec_sub}; margin-top: 8px;">ƏDV DÖVLƏT BÜDCƏSİNƏ ÖDƏNİLMİŞDİR</div>
+                <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #10b981; padding: 10px; border-radius: 8px; font-weight: 800; font-size: 13px; text-align: center; margin-top: 14px;">
+                    ✨ Qazanılan Keşbek: +{rec_data['cashback']} Sebet Xalı (= {rec_data['cashback']/100:.2f} ₼)
+                </div>
+                <div style="text-align: center; margin-top: 12px; font-size: 18px; letter-spacing: 4px; color: {rec_sub};">
+                    ||| | |||| || ||||| | |||
                 </div>
             </div>
             """,
@@ -1183,7 +1277,6 @@ with tab_about:
         #### 🔗 Faydalı Keçidlər
         - **GitHub Repository**: [Ali0lo/Sebet](https://github.com/Ali0lo/Sebet)
         - **Əsas Veb Tətbiq**: Next.js 15 PWA (`frontend/`)
-        - **Müəllif**: Əli İsgəndərli
         """
     )
 
