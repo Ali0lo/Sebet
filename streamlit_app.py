@@ -655,7 +655,7 @@ def render_map(
     valid_df = valid_df.dropna(subset=[lat, lon])
 
     if valid_df.empty:
-        st.info("📍 Xəritədə göstərmək üçün düzgün koordinatlar tapılmadı.")
+        st.info("📍 Xəritədə göstərmək üçün məkan məlumatı tapılmadı.")
         return
 
     # Default brand colors
@@ -696,6 +696,15 @@ def render_map(
     legend_font = dict(color="#f8fafc" if dark_mode else "#0f172a", size=11)
     target_style = "carto-darkmatter" if dark_mode else "carto-positron"
 
+    # User-friendly hover tooltip: strictly hide raw latitude and longitude coordinates!
+    hover_dict = {lat: False, lon: False}
+    if hover_data:
+        for c in hover_data:
+            if c in valid_df.columns:
+                hover_dict[c] = True
+    if color and color in valid_df.columns:
+        hover_dict[color] = False
+
     try:
         kwargs = dict(
             lat=lat,
@@ -703,6 +712,7 @@ def render_map(
             zoom=zoom,
             height=height,
             center=center,
+            hover_data=hover_dict,
         )
         if hover_name and hover_name in valid_df.columns:
             kwargs["hover_name"] = hover_name
@@ -711,10 +721,6 @@ def render_map(
             kwargs["color_discrete_map"] = default_color_map
         if size and size in valid_df.columns:
             kwargs["size"] = size
-        if hover_data:
-            valid_hover = [c for c in hover_data if c in valid_df.columns]
-            if valid_hover:
-                kwargs["hover_data"] = valid_hover
 
         if hasattr(px, "scatter_map"):
             kwargs["map_style"] = target_style
@@ -1105,7 +1111,7 @@ with st.sidebar:
     gps_status = st.session_state.get("gps_detected")
     if gps_status == "precise":
         acc = int(st.session_state.get("raw_gps_accuracy", 50))
-        st.success(f"🎯 Dəqiq GPS: {st.session_state['user_coords'][0]:.4f}, {st.session_state['user_coords'][1]:.4f} (~{acc}m)")
+        st.success(f"🎯 Dəqiq GPS aktivdir: **{st.session_state.get('selected_loc_name', 'Məkanınız')}** (~{acc}m dəqiqliklə)")
     elif gps_status == "coarse":
         acc_km = round(st.session_state.get("raw_gps_accuracy", 3000) / 1000, 1)
         st.warning(f"⚠️ Şəbəkə təxmini (~{acc_km}km xəta). Dəqiq ünvanınızı aşağıdan seçin 👇")
@@ -1114,10 +1120,10 @@ with st.sidebar:
     else:
         st.caption("ℹ️ Brauzer icazəsi verdikdə GPS yoxlanılır və ya aşağıdan ərazi seçə bilərsiniz.")
 
-    # Location mode selection
+    # Location mode selection - user friendly (no complex coordinates)
     loc_mode = st.radio(
         "Məkan Seçim Üsulu:",
-        ["🏙️ Bakı Əraziləri", "🔍 Ünvan / Axtarış", "🎯 Xüsusi Koordinat"],
+        ["🏙️ Bakı Əraziləri", "🔍 Ünvan / Axtarış"],
         index=0,
         horizontal=True,
         label_visibility="collapsed",
@@ -1160,7 +1166,8 @@ with st.sidebar:
             else:
                 st.caption("Axtarışa uyğun məkan tapılmadı. Məsələn: *Port Baku*, *Torqovaya*, *Gənclik*, *Yasamal*, *Əhmədli*")
 
-    else:
+    # Optional developer/advanced coordinates collapsed at the bottom
+    with st.expander("⚙️ Xüsusi koordinat daxil et (İxtiyari)", expanded=False):
         cur_c = st.session_state["user_coords"]
         c_lat_col, c_lon_col = st.columns(2)
         with c_lat_col:
@@ -1169,7 +1176,7 @@ with st.sidebar:
             new_lon = st.number_input("Uzunluq (Lon)", value=float(cur_c[1]), format="%.4f", step=0.001, key="sb_cust_lon")
         if (new_lat, new_lon) != cur_c:
             st.session_state["user_coords"] = (new_lat, new_lon)
-            st.session_state["selected_loc_name"] = f"Xüsusi ({new_lat:.4f}, {new_lon:.4f})"
+            st.session_state["selected_loc_name"] = "Xüsusi Məkan"
             st.session_state["user_location_confirmed"] = True
             st.session_state["gps_detected"] = "manual"
 
@@ -1294,8 +1301,8 @@ with tab_optimizer:
                     {status_badge_html}
                 </div>
                 <div style="font-size: 17px; font-weight: 800; color: {card_text};">{cur_loc}</div>
-                <div style="font-size: 12px; color: {sub_text}; margin-top: 2px;">
-                    Koordinatlar: <code style="color: {loc_accent}; background: transparent; font-weight: 600;">{u_lat:.4f}, {u_lon:.4f}</code> · Piyada radius: <b style="color: {card_text};">{walk_dist} m</b> (~{walk_time_est} dəqiqə piyada)
+                <div style="font-size: 13px; color: {sub_text}; margin-top: 3px;">
+                    🚶 Maksimum piyada radiusu: <b style="color: {card_text};">{walk_dist} metr</b> (~{walk_time_est} dəqiqə piyada) · Ən yaxın filiallar əsasında
                 </div>
             </div>
         </div>
@@ -1417,7 +1424,7 @@ with tab_optimizer:
                     "Şəbəkə": "🔴 Sizin Məkanınız",
                     "lat": float(u_lat),
                     "lon": float(u_lon),
-                    "Məsafə": "0 m (Siz buradasınız)",
+                    "Məsafə": "Siz buradasınız",
                 }
             ]
             all_store_dists = []
