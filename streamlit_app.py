@@ -2826,7 +2826,7 @@ with tab_loyalty:
     with col_user:
         st.markdown("#### 💳 İstifadəçi Keşbek Balansı")
         curr_u = st.session_state.get("current_user")
-        user_pts = curr_u.get("sebet_points", 250) if curr_u else st.session_state.get("points", 250)
+        user_pts = curr_u.get("sebet_points", 0) if curr_u else st.session_state.get("points", 0)
         card_holder = curr_u["full_name"] if curr_u else "Qonaq İstifadəçi"
         card_tier = curr_u.get("membership_tier", "SEBET PLATINUM CARD") if curr_u else "SEBET QONAQ KARTI"
         card_num = f"•••• •••• •••• {curr_u['id']:04d}" if curr_u else "•••• •••• •••• 4892"
@@ -2848,24 +2848,47 @@ with tab_loyalty:
 
         st.markdown("<br/>", unsafe_allow_html=True)
         st.markdown("##### 🎟️ Xalları Endirim Vayçerinə Çevir")
-        max_v = max(50, min(user_pts, 500))
-        voucher_pts = st.slider("İstifadə ediləcək xal miqdarı:", min_value=50, max_value=max(50, user_pts) if user_pts >= 50 else 50, value=min(100, max_v), step=50)
-        voucher_val = voucher_pts / 100.0
 
-        if st.button("Endirim Barkodu Yarat", key="create_voucher_btn", type="primary", use_container_width=True):
-            if user_pts >= voucher_pts:
-                new_pts = user_pts - voucher_pts
-                st.session_state["points"] = new_pts
-                if curr_u:
-                    user_db.update_user_points(curr_u["id"], new_pts)
-                    curr_u["sebet_points"] = new_pts
-                    st.session_state["current_user"] = curr_u
-                st.success(f"Təbriklər! {voucher_val:.2f} AZN dəyərində vayçer aktivləşdirildi.")
-                st.code(f"SEBET-AZN-{voucher_val:.2f}-PROMO-8291", language="bash")
-                st.caption("Bu barkodu Bravo, Araz və ya OBA kassasında skan edərək dərhal endirim əldə edə bilərsiniz.")
-                st.rerun()
+        if user_pts < 50:
+            st.info(f"💡 Endirim vayçeri yaratmaq üçün ən azı **50 xal (0.50 AZN)** tələb olunur. Cari balansınız: **{user_pts} xal**. Qəbzlərinizi skan edərək keşbek xalları toplaya bilərsiniz!")
+            st.button("Endirim Barkodu Yarat", key="create_voucher_btn_disabled", disabled=True, use_container_width=True)
+        else:
+            max_redeemable = min((user_pts // 50) * 50, 500)
+            if max_redeemable <= 50:
+                voucher_pts = 50
+                st.markdown(
+                    f"""
+                    <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid #10b981; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 13px;">
+                        İstifadə ediləcək xal: <b>50 Xal (0.50 AZN)</b> (Maksimum mövcud balans)
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
             else:
-                st.error("Balansınızda kifayət qədər xal yoxdur!")
+                voucher_pts = st.slider(
+                    "İstifadə ediləcək xal miqdarı:",
+                    min_value=50,
+                    max_value=max_redeemable,
+                    value=min(100, max_redeemable),
+                    step=50,
+                    help="Hər 100 xal = 1.00 AZN nağd endirim təşkil edir."
+                )
+            voucher_val = voucher_pts / 100.0
+
+            if st.button(f"🎟️ {voucher_val:.2f} AZN Endirim Barkodu Yarat", key="create_voucher_btn", type="primary", use_container_width=True):
+                if user_pts >= voucher_pts:
+                    new_pts = user_pts - voucher_pts
+                    st.session_state["points"] = new_pts
+                    if curr_u:
+                        user_db.update_user_points(curr_u["id"], new_pts)
+                        curr_u["sebet_points"] = new_pts
+                        st.session_state["current_user"] = curr_u
+                    st.success(f"Təbriklər! {voucher_val:.2f} AZN dəyərində vayçer aktivləşdirildi.")
+                    st.code(f"SEBET-AZN-{voucher_val:.2f}-PROMO-8291", language="bash")
+                    st.caption("Bu barkodu Bravo, Araz və ya OBA kassasında skan edərək dərhal endirim əldə edə bilərsiniz.")
+                    st.rerun()
+                else:
+                    st.error("Balansınızda kifayət qədər xal yoxdur!")
 
     with col_media:
         st.markdown("#### 📣 FMCG Retail Media & Brand Boost")
