@@ -2913,10 +2913,15 @@ with tab_scan:
         if st.button("🚀 Qəbzi OCR Skan Et & Keşbek Qazan", key="scan_receipt_btn", type="primary", use_container_width=True):
             with st.spinner("🔍 Qəbz OCR mühərriki işə salınır, fiskal şifrə və VÖEN oxunur..."):
                 time.sleep(0.4)
-            st.session_state["scanned_receipt"] = active_rec
-            st.session_state.points = st.session_state.get("points", 250) + active_rec["cashback"]
-            st.success(f"🎉 Qəbz təsdiqləndi! +{active_rec['cashback']} Sebet xalı balansınıza əlavə edildi.")
-            st.toast(f"+{active_rec['cashback']} Sebet Xalı qazanıldı!")
+            earned_cb = int(active_rec.get("cashback", 10))
+            new_pts = st.session_state.get("points", 0) + earned_cb
+            st.session_state["points"] = new_pts
+            if st.session_state.get("user_authenticated") and st.session_state.get("current_user"):
+                u_curr = st.session_state["current_user"]
+                u_curr["sebet_points"] = new_pts
+                user_db.update_user_points(u_curr["id"], new_pts)
+            st.success(f"🎉 Qəbz təsdiqləndi! +{earned_cb} Sebet xalı ({earned_cb/100:.2f} ₼) balansınıza əlavə edildi.")
+            st.toast(f"+{earned_cb} Sebet Xalı qazanıldı!", icon="✨")
 
     with c_sc2:
         st.markdown("#### 📑 Tanınmış E-Kassa Qəbzi")
