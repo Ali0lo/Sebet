@@ -2639,16 +2639,17 @@ with tab_flyers:
     for idx, fl in enumerate(sample_flyers):
         with flyer_cols[idx % 3]:
             fl_box_bg = "#0f172a" if dark_mode else "#f8fafc"
+            is_active_fl = (st.session_state.get("selected_discount_chain", "bravo") == fl["chain"].lower())
             st.markdown(
                 f"""
-                <div class="store-card" style="border-top: 4px solid {fl['color']}; margin-bottom: 20px;">
+                <div class="store-card" style="border-top: 4px solid {fl['color']}; margin-bottom: 12px; {'border: 2px solid ' + fl['color'] if is_active_fl else ''}">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <span class="store-badge" style="background: {fl['color']};">{fl['chain']}</span>
                         <span class="promo-tag">🔥 {fl['discount']}</span>
                     </div>
                     <h4 style="margin: 4px 0 2px 0; color: {card_text};">{fl['title']}</h4>
-                    <p style="font-size: 12px; color: {sub_text}; margin-bottom: 12px;">📅 {fl['dates']}</p>
-                    <div style="background: {fl_box_bg}; border: 1px solid {card_border}; border-radius: 8px; padding: 10px; margin-bottom: 12px;">
+                    <p style="font-size: 12px; color: {sub_text}; margin-bottom: 10px;">📅 {fl['dates']}</p>
+                    <div style="background: {fl_box_bg}; border: 1px solid {card_border}; border-radius: 8px; padding: 10px; margin-bottom: 10px;">
                         <div style="font-size: 12px; font-weight: 700; color: {sub_text}; margin-bottom: 4px;">Seçilmiş Təkliflər:</div>
                         <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: {card_text};">
                             {''.join(f'<li>{h}</li>' for h in fl['highlights'])}
@@ -2658,8 +2659,167 @@ with tab_flyers:
                 """,
                 unsafe_allow_html=True,
             )
-            if st.button(f"🏷️ Endirimlərə Bax ({fl['chain']})", key=f"flyer_btn_{idx}", use_container_width=True):
-                st.success(f"{fl['chain']} həftəlik endirimlərindəki bütün təkliflər qiymət bazamıza daxil edilib.")
+            btn_label = f"🔥 {fl['chain']} Endirimləri Aktivdir" if is_active_fl else f"🏷️ Endirimlərə Bax ({fl['chain']})"
+            if st.button(btn_label, key=f"flyer_btn_{idx}", type="primary" if is_active_fl else "secondary", use_container_width=True):
+                st.session_state["selected_discount_chain"] = fl["chain"].lower()
+                st.toast(f"🏷️ {fl['chain']} həftəlik endirimləri göstərilir!", icon="🔥")
+                st.rerun()
+
+    st.markdown("---")
+
+    selected_chain_slug = st.session_state.get("selected_discount_chain", "bravo")
+
+    # Supermarket filter selector buttons
+    st.markdown("##### 🛒 Supermarket üzrə Endirimləri Süzün:")
+    chain_filter_list = [
+        ("Bravo", "bravo", "#74b826"),
+        ("Araz", "araz", "#E30613"),
+        ("OBA", "oba", "#009640"),
+        ("Bazarstore", "bazarstore", "#D01026"),
+        ("Al Market", "almarket", "#E31E24"),
+        ("Bütün Marketlər", "all", "#10b981"),
+    ]
+    p_cols = st.columns(len(chain_filter_list))
+    for p_col, (c_label, c_slug, c_col) in zip(p_cols, chain_filter_list):
+        with p_col:
+            is_active_btn = (selected_chain_slug == c_slug)
+            if st.button(c_label, key=f"btn_tab3_c_{c_slug}", type="primary" if is_active_btn else "secondary", use_container_width=True):
+                st.session_state["selected_discount_chain"] = c_slug
+                st.rerun()
+
+    # Search and category filters
+    col_d_search, col_d_cat, col_d_add_all = st.columns([2, 1.3, 1.4], gap="medium")
+    with col_d_search:
+        search_d_q = st.text_input("🔍 Endirimli məhsullarda axtar:", placeholder="Məs: Kərə yağı, Ariel, Düyü, Süd...", key="inp_deal_search")
+    with col_d_cat:
+        cat_options = ["Bütün Kateqoriyalar"] + sorted(list(set(c["name_az"] for c in CATEGORIES.values())))
+        cat_filter_d = st.selectbox("Kateqoriya üzrə süzgəc:", cat_options, key="sel_deal_cat")
+
+    # Fetch active deals
+    active_deals = get_weekly_deals(selected_chain_slug)
+
+    if search_d_q:
+        q_low = search_d_q.strip().lower()
+        active_deals = [d for d in active_deals if q_low in d["name"].lower() or q_low in d["brand"].lower() or q_low in d.get("note", "").lower()]
+
+    if cat_filter_d != "Bütün Kateqoriyalar":
+        active_deals = [d for d in active_deals if d["cat_name"] == cat_filter_d]
+
+    # Batch Add All button
+    with col_d_add_all:
+        st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+        if st.button(f"🛒 Hamısını Səbətə Əlavə Et ({len(active_deals)})", key="btn_add_all_deals", type="primary", use_container_width=True, disabled=len(active_deals) == 0):
+            for d in active_deals:
+                p_item = d["product"]
+                b_code = p_item["barcode"]
+                existing = next((it for it in st.session_state.basket if it["barcode"] == b_code), None)
+                if existing:
+                    existing["quantity"] = round(existing["quantity"] + 1.0, 2)
+                else:
+                    st.session_state.basket.append({
+                        "barcode": b_code,
+                        "canonical_name": p_item["canonical_name"],
+                        "brand": p_item["brand"],
+                        "quantity": 1.0,
+                        "unit": p_item.get("unit", "ədəd"),
+                        "cat_slug": p_item.get("cat_slug", ""),
+                    })
+            clear_basket_keys()
+            st.toast(f"🎉 {len(active_deals)} endirimli məhsul səbətə əlavə edildi!", icon="🛒")
+            st.rerun()
+
+    chain_title = CHAINS.get(selected_chain_slug, {}).get("name", "Bütün Marketlər") if selected_chain_slug != "all" else "Bütün Supermarketlər"
+    chain_color = CHAINS.get(selected_chain_slug, {}).get("color", "#10b981") if selected_chain_slug != "all" else "#10b981"
+
+    st.markdown(
+        f"""
+        <div style="background: {card_bg}; border: 1.5px solid {chain_color}; border-radius: 12px; padding: 12px 18px; margin: 12px 0 16px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="background: {chain_color}; color: white; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 13px;">{chain_title}</span>
+                <span style="font-size: 15px; font-weight: 800; color: {card_text};">Həftəlik Endirimli Məhsulları (Sales & Deals)</span>
+            </div>
+            <div style="font-size: 13px; color: {sub_text};">
+                Göstərilir: <b style="color: #10b981;">{len(active_deals)} məhsul</b> &bull; Kassada və onlayn keçərlidir
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Grid of sales cards
+    if not active_deals:
+        st.info("Axtarışınıza və ya seçilmiş kateqoriyaya uyğun endirimli məhsul tapılmadı.")
+    else:
+        # Display 2 products per row
+        row_cols = st.columns(2, gap="medium")
+        for d_idx, deal in enumerate(active_deals):
+            with row_cols[d_idx % 2]:
+                p_item = deal["product"]
+                b_code = deal["barcode"]
+                c_color = deal["chain_color"]
+                c_name = deal["chain_name"]
+
+                # Check if item in basket
+                in_basket_item = next((it for it in st.session_state.basket if it["barcode"] == b_code), None)
+                qty_in_basket = in_basket_item["quantity"] if in_basket_item else 0
+
+                deal_card_bg = "#1e293b" if dark_mode else "#ffffff"
+                deal_border_color = "#334155" if dark_mode else "#e2e8f0"
+
+                st.markdown(
+                    f"""
+                    <div style="background: {deal_card_bg}; border: 1px solid {deal_border_color}; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                            <span style="background: {c_color}; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">{c_name}</span>
+                            <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">
+                                🔥 -{deal['discount_pct']}% ENDİRİM
+                            </span>
+                        </div>
+                        <div style="font-size: 14px; font-weight: 800; color: {card_text}; line-height: 1.3; margin-bottom: 4px;">
+                            {deal['name']}
+                        </div>
+                        <div style="font-size: 12px; color: {sub_text}; margin-bottom: 10px;">
+                            {deal['brand']} &bull; {deal['cat_name']} &bull; <i>{deal['note']}</i>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: baseline; padding-top: 8px; border-top: 1px dashed {deal_border_color};">
+                            <div>
+                                <span style="font-size: 13px; color: #94a3b8; text-decoration: line-through; margin-right: 8px;">{deal['regular_price']:.2f} ₼</span>
+                                <span style="font-size: 18px; font-weight: 800; color: #10b981;">{deal['promo_price']:.2f} ₼</span>
+                            </div>
+                            <div style="font-size: 11px; font-weight: 700; color: #10b981;">
+                                Qənaət: {deal['savings']:.2f} ₼
+                            </div>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+                col_btn_deal, col_qty_info = st.columns([1.6, 1])
+                with col_btn_deal:
+                    btn_label = f"🛒 Səbətə Əlavə Et (+1)" if qty_in_basket > 0 else "🛒 Səbətə Əlavə Et"
+                    if st.button(btn_label, key=f"deal_add_{b_code}_{deal['chain_slug']}_{d_idx}", type="primary" if qty_in_basket == 0 else "secondary", use_container_width=True):
+                        existing = next((it for it in st.session_state.basket if it["barcode"] == b_code), None)
+                        if existing:
+                            existing["quantity"] = round(existing["quantity"] + 1.0, 2)
+                        else:
+                            st.session_state.basket.append({
+                                "barcode": b_code,
+                                "canonical_name": p_item["canonical_name"],
+                                "brand": p_item["brand"],
+                                "quantity": 1.0,
+                                "unit": p_item.get("unit", "ədəd"),
+                                "cat_slug": p_item.get("cat_slug", ""),
+                            })
+                        clear_basket_keys()
+                        st.toast(f"✅ {deal['name']} səbətə əlavə edildi!", icon="🛒")
+                        st.rerun()
+                with col_qty_info:
+                    if qty_in_basket > 0:
+                        unit_lbl = "kq" if p_item.get("unit") == "kg" else "ədəd"
+                        st.markdown(f"<div style='font-size: 12px; font-weight: 700; color: #10b981; padding-top: 8px; text-align: center;'>Səbətdə: {qty_in_basket:g} {unit_lbl}</div>", unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"<div style='font-size: 11px; color: {sub_text}; padding-top: 8px; text-align: center;'>Hələ əlavə edilməyib</div>", unsafe_allow_html=True)
 
 
 # =============================================================================
