@@ -2916,10 +2916,23 @@ with tab_scan:
             earned_cb = int(active_rec.get("cashback", 10))
             new_pts = st.session_state.get("points", 0) + earned_cb
             st.session_state["points"] = new_pts
+            u_id = None
             if st.session_state.get("user_authenticated") and st.session_state.get("current_user"):
                 u_curr = st.session_state["current_user"]
                 u_curr["sebet_points"] = new_pts
-                user_db.update_user_points(u_curr["id"], new_pts)
+                u_id = u_curr.get("id")
+                user_db.update_user_points(u_id, new_pts)
+            
+            # Persist scanned receipt to SQLite database
+            user_db.save_scanned_receipt(
+                user_id=u_id,
+                store_name=active_rec["store"],
+                chain_name=active_rec["chain"],
+                fiscal_id=active_rec["fiscal_id"],
+                total_amount=active_rec["total"],
+                cashback_points=earned_cb,
+                items=active_rec.get("items", []),
+            )
             st.success(f"🎉 Qəbz təsdiqləndi! +{earned_cb} Sebet xalı ({earned_cb/100:.2f} ₼) balansınıza əlavə edildi.")
             st.toast(f"+{earned_cb} Sebet Xalı qazanıldı!", icon="✨")
 
@@ -2968,6 +2981,44 @@ with tab_scan:
             """,
             unsafe_allow_html=True,
         )
+
+    # Scanned Receipts History Section
+    st.markdown("---")
+    st.markdown("#### 📜 Son Skan Edilmiş Qəbzlər və Keşbek Qeydiyyatı")
+
+    is_auth_scan = st.session_state.get("user_authenticated", False)
+    curr_u_scan = st.session_state.get("current_user", {})
+    if is_auth_scan and curr_u_scan:
+        recent_recs = user_db.get_user_receipts(curr_u_scan["id"])
+        st.caption(f"**{curr_u_scan.get('full_name', 'İstifadəçi')}** hesabına aid son qəbzlər (Cəmi: {len(recent_recs)} ədəd):")
+    else:
+        recent_recs = user_db.get_recent_receipts(limit=6)
+        st.caption("Platformada son skan edilmiş qəbzlər (SQLite canlı məlumat):")
+
+    if recent_recs:
+        r_cols = st.columns(min(len(recent_recs), 3))
+        for r_i, rec_item in enumerate(recent_recs[:3]):
+            with r_cols[r_i % len(r_cols)]:
+                ch_color = CHAINS.get(rec_item["chain_name"].lower(), {}).get("color", "#10b981")
+                st.markdown(
+                    f"""
+                    <div style="background: {card_bg}; border: 1px solid {card_border}; border-left: 4px solid {ch_color}; border-radius: 10px; padding: 14px; margin-bottom: 10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                            <span style="font-weight: 700; font-size: 14px; color: {main_text};">{rec_item['store_name']}</span>
+                            <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 12px;">+{rec_item['cashback_points']} xal</span>
+                        </div>
+                        <div style="font-size: 12px; color: {sub_text}; margin-bottom: 4px;">Fiskal: <code>{rec_item['fiscal_id']}</code></div>
+                        <div style="font-size: 12px; color: {sub_text}; margin-bottom: 6px;">Tarix: {rec_item['scanned_at']}</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size: 13px; font-weight: 700;">
+                            <span style="color: {sub_text};">Ödənilən:</span>
+                            <span style="color: {main_text};">{rec_item['total_amount']:.2f} ₼</span>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+    else:
+        st.info("ℹ️ Hələ ki heç bir qəbz qeydə alınmayıb. Yuxarıdakı 'Qəbzi OCR Skan Et & Keşbek Qazan' düyməsinə klikləyərək ilk qəbzinizi əlavə edin!")
 
 
 # =============================================================================
@@ -3287,6 +3338,26 @@ with tab_auth:
                 st.toast("Hesabdan çıxış edildi", icon="🚪")
                 st.rerun()
 
+        user_scanned = user_db.get_user_receipts(u_id)
+        if user_scanned:
+            st.markdown("---")
+            total_receipt_spent = sum(r["total_amount"] for r in user_scanned)
+            total_cb_earned = sum(r["cashback_points"] for r in user_scanned)
+            st.markdown(f"#### 🧾 Şəxsi Qəbz Tarixçəsi & Qazanılmış Keşbek ({len(user_scanned)} Qəbz)")
+            st.caption(f"Qəbzlər üzrə ümumi dövriyyəniz: **{total_receipt_spent:.2f} ₼** | Qazanılmış ümumi keşbek: **+{total_cb_earned} xal ({total_cb_earned/100:.2f} ₼)**")
+
+            rec_table_data = []
+            for r in user_scanned:
+                rec_table_data.append({
+                    "Tarix": r["scanned_at"],
+                    "Supermarket": r["store_name"],
+                    "Fiskal ID": r["fiscal_id"],
+                    "Məbləğ": f"{r['total_amount']:.2f} ₼",
+                    "Keşbek Xalı": f"+{r['cashback_points']} xal",
+                    "Məhsul Sayı": len(r.get("items", [])),
+                })
+            st.dataframe(pd.DataFrame(rec_table_data), use_container_width=True, hide_index=True)
+
     else:
         st.info("💡 Ərzaq siyahınızı yadda saxlamaq, keşbek xalları toplamaq və endirim çekləri əldə etmək üçün daxil olun və ya qeydiyyatdan keçin.")
 
@@ -3393,6 +3464,7 @@ with tab_auth:
     all_users = user_db.get_all_users_summary()
     total_users_count = len(all_users)
     total_db_points = sum(u.get("sebet_points", 0) for u in all_users)
+    all_db_receipts = user_db.get_recent_receipts(limit=50)
 
     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
     with col_m1:
@@ -3402,7 +3474,7 @@ with tab_auth:
     with col_m3:
         st.metric("💰 Ümumi Keşbek Dəyəri", f"{total_db_points / 100:.2f} ₼")
     with col_m4:
-        st.metric("🗄️ Baza Sistemi", "SQLite (sebet_users.db)")
+        st.metric("🧾 Skan Edilən Qəbzlər", f"{len(all_db_receipts)} qəbz")
 
     with st.expander("📋 Verilənlər Bazasındakı İstifadəçilərin Cədvəli (Live Data)", expanded=True):
         if all_users:
@@ -3424,6 +3496,25 @@ with tab_auth:
             st.dataframe(df_display, use_container_width=True, hide_index=True)
         else:
             st.info("Bazada hələ qeydiyyatdan keçmiş istifadəçi yoxdur.")
+
+    with st.expander("🧾 Verilənlər Bazasındakı Bütün Skan Edilmiş Qəbzlər (Audit Logs)", expanded=False):
+        if all_db_receipts:
+            import pandas as pd
+            df_recs = pd.DataFrame([
+                {
+                    "ID": r["id"],
+                    "İstifadəçi": r.get("user_full_name") or (f"İstifadəçi #{r.get('user_id')}" if r.get("user_id") else "Qonaq"),
+                    "Supermarket": r["store_name"],
+                    "Fiskal ID": r["fiscal_id"],
+                    "Məbləğ": f"{r['total_amount']:.2f} ₼",
+                    "Keşbek Xalı": f"+{r['cashback_points']}",
+                    "Skan Tarixi": r["scanned_at"],
+                }
+                for r in all_db_receipts
+            ])
+            st.dataframe(df_recs, use_container_width=True, hide_index=True)
+        else:
+            st.info("Bazada hələ skan edilmiş qəbz qeydi yoxdur.")
 
     st.markdown(
         """
