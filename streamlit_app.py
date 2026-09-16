@@ -8,6 +8,7 @@ import os
 import time
 import textwrap
 from typing import List, Dict, Any, Tuple
+import urllib.parse
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -682,6 +683,40 @@ def render_html(html_str: str):
         st.markdown(clean_html, unsafe_allow_html=True)
 
 
+def get_gmaps_walking_dir_url(origin: Tuple[float, float], destination: Tuple[float, float]) -> str:
+    """Generates official Google Maps turn-by-turn walking navigation URL."""
+    return f"https://www.google.com/maps/dir/?api=1&origin={origin[0]:.6f},{origin[1]:.6f}&destination={destination[0]:.6f},{destination[1]:.6f}&travelmode=walking"
+
+
+def get_gmaps_multistop_walking_dir_url(origin: Tuple[float, float], stop1: Tuple[float, float], destination: Tuple[float, float]) -> str:
+    """Generates official Google Maps multi-stop walking navigation URL with waypoint."""
+    return f"https://www.google.com/maps/dir/?api=1&origin={origin[0]:.6f},{origin[1]:.6f}&destination={destination[0]:.6f},{destination[1]:.6f}&waypoints={stop1[0]:.6f},{stop1[1]:.6f}&travelmode=walking"
+
+
+def render_gmaps_embed_route(origin: Tuple[float, float], destination: Tuple[float, float], waypoint: Tuple[float, float] = None, height: int = 360):
+    """Renders free, responsive embedded Google Maps route viewer without requiring paid API key."""
+    if waypoint:
+        src = f"https://maps.google.com/maps?saddr={origin[0]:.5f},{origin[1]:.5f}&daddr={waypoint[0]:.5f},{waypoint[1]:.5f}+to:{destination[0]:.5f},{destination[1]:.5f}&hl=az&output=embed"
+    else:
+        src = f"https://maps.google.com/maps?saddr={origin[0]:.5f},{origin[1]:.5f}&daddr={destination[0]:.5f},{destination[1]:.5f}&hl=az&output=embed"
+
+    iframe_html = f"""
+    <div style="width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid rgba(148, 163, 184, 0.25); box-shadow: 0 4px 12px rgba(0,0,0,0.18); margin: 8px 0;">
+        <iframe
+            title="Google Maps Canlı Marşrut"
+            width="100%"
+            height="{height}"
+            style="border: 0; display: block;"
+            loading="lazy"
+            allowfullscreen
+            referrerpolicy="no-referrer-when-downgrade"
+            src="{src}">
+        </iframe>
+    </div>
+    """
+    render_html(iframe_html)
+
+
 def render_basket_items_table(items: List[Dict[str, Any]], dark: bool = True):
     """Renders a clean, highly readable HTML table for basket items breakdown in dark and light modes."""
     if not items:
@@ -696,6 +731,7 @@ def render_basket_items_table(items: List[Dict[str, Any]], dark: bool = True):
     badge_color = "#34d399" if dark else "#059669"
     badge_border = "rgba(16, 185, 129, 0.35)" if dark else "#a7f3d0"
 
+    rows_html = ""
     rows = []
     for i, it in enumerate(items):
         bg = td_alt_bg if i % 2 == 1 else td_bg
@@ -771,6 +807,10 @@ def load_all_data():
             "lat": s["latitude"],
             "lon": s["longitude"],
             "prices": prices,
+            "gmaps_rating": s.get("gmaps_rating", 4.4),
+            "gmaps_reviews": s.get("gmaps_reviews", 1200),
+            "opening_hours": s.get("opening_hours", "08:00 – 23:00"),
+            "google_maps_url": s.get("google_maps_url", f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(s['branch_name'] + ' ' + s['address'])}"),
         })
 
     return chains, categories, products, stores, stores_inventory
@@ -953,38 +993,205 @@ with st.sidebar:
     st.markdown("### 📍 Bakı Məkanı & Radius")
 
     LOCATION_PRESETS = {
-        "28 May / Nəsimi": (40.3798, 49.8475),
-        "Yasamal / Elmlər": (40.3745, 49.8130),
-        "Nərimanov": (40.4024, 49.8712),
-        "Xırdalan": (40.4505, 49.7540),
-        "Sumqayıt": (40.5855, 49.6317),
-        "Gəncə": (40.6828, 46.3606),
+        "28 May / Dəmiryol Vağzalı": (40.3798, 49.8475),
+        "Sahil / Torqovı (Nizami küç.)": (40.3705, 49.8415),
+        "Fəvvarələr Meydanı (Fountain Sq.)": (40.3712, 49.8375),
+        "İçərişəhər (Old City)": (40.3662, 49.8335),
+        "Elmlər Akademiyası / BDU": (40.3745, 49.8130),
+        "Nizami m. / Zivərbəy Əhmədbəyov": (40.3790, 49.8295),
+        "Gənclik Mall / Atatürk pr.": (40.4005, 49.8525),
+        "Nərimanov / Metropark": (40.4024, 49.8712),
+        "İnşaatçılar / A. M. Şərifzadə": (40.3885, 49.8055),
+        "20 Yanvar / Tbilisi pr.": (40.4045, 49.8080),
+        "Xətai / Ağ Şəhər (White City)": (40.3838, 49.8725),
+        "Koroğlu Nəqliyyat Qovşağı": (40.4208, 49.9192),
+        "Qara Qarayev": (40.4042, 49.9328),
+        "Neftçilər metrosu": (40.4055, 49.9425),
+        "Xalqlar Dostluğu": (40.3970, 49.9535),
+        "Əhmədli / M. Hadi": (40.3850, 49.9530),
+        "Həzi Aslanov metrosu": (40.3735, 49.9535),
+        "Bayıl / Su İdmanı Sarayı": (40.3450, 49.8320),
+        "Badamdar qəsəbəsi": (40.3480, 49.8080),
+        "Yasamal / H. Zərdabi": (40.3920, 49.8020),
+        "Biləcəri qəsəbəsi": (40.4312, 49.8145),
+        "Bakıxanov (Razin)": (40.4215, 49.9650),
+        "Xırdalan Mərkəz (AAAF Park)": (40.4505, 49.7540),
+        "Masazır (Yeni Bakı)": (40.4720, 49.7420),
+        "Sumqayıt Mərkəz": (40.5855, 49.6317),
+        "Gəncə Mərkəz (Gəncə Mall)": (40.6828, 46.3606),
     }
 
-    selected_loc_name = st.selectbox(
-        "Yaşadığınız ərazi:",
-        list(LOCATION_PRESETS.keys()) + ["Xüsusi Koordinatlar..."],
+    BAKU_LANDMARKS = {
+        "28 mall": (40.3798, 49.8475, "28 Mall Ticarət Mərkəzi"),
+        "port baku": (40.3762, 49.8568, "Port Baku Mall"),
+        "park bulvar": (40.3695, 49.8480, "Park Bulvar Ticarət Mərkəzi"),
+        "deniz mall": (40.3585, 49.8340, "Dəniz Mall"),
+        "dəniz mall": (40.3585, 49.8340, "Dəniz Mall"),
+        "genclik mall": (40.4005, 49.8525, "Gənclik Mall"),
+        "gənclik mall": (40.4005, 49.8525, "Gənclik Mall"),
+        "crescent mall": (40.3748, 49.8605, "Crescent Mall"),
+        "metropark": (40.4024, 49.8712, "Metropark Nərimanov"),
+        "flame towers": (40.3598, 49.8275, "Flame Towers"),
+        "alov qulleri": (40.3598, 49.8275, "Alov Qüllələri"),
+        "torqovaya": (40.3705, 49.8415, "Torqovaya / Nizami küç."),
+        "tarqovi": (40.3705, 49.8415, "Torqovaya / Nizami küç."),
+        "nizami kucesi": (40.3705, 49.8415, "Nizami küçəsi"),
+        "bdu": (40.3745, 49.8130, "Bakı Dövlət Universiteti"),
+        "ada": (40.3950, 49.8510, "ADA Universiteti"),
+        "ada universiteti": (40.3950, 49.8510, "ADA Universiteti"),
+        "heyder eliyev merkezi": (40.3960, 49.8675, "Heydər Əliyev Mərkəzi"),
+        "heydər əliyev mərkəzi": (40.3960, 49.8675, "Heydər Əliyev Mərkəzi"),
+        "fevvareler meydani": (40.3712, 49.8375, "Fəvvarələr Meydanı"),
+        "koroglu": (40.4208, 49.9192, "Koroğlu Nəqliyyat Qovşağı"),
+        "koroğlu": (40.4208, 49.9192, "Koroğlu Nəqliyyat Qovşağı"),
+        "bravo koroglu": (40.4208, 49.9192, "Bravo Hypermarket Koroğlu"),
+        "aaaf park": (40.4530, 49.7610, "AAAF Park Xırdalan"),
+        "kristal abseron": (40.4470, 49.7600, "Kristal Abşeron Xırdalan"),
+    }
+
+    # Initialize session state defaults for location
+    if "user_coords" not in st.session_state:
+        st.session_state["user_coords"] = (40.3798, 49.8475)
+    if "selected_loc_name" not in st.session_state:
+        st.session_state["selected_loc_name"] = "28 May / Dəmiryol Vağzalı"
+    if "max_walking_dist" not in st.session_state:
+        st.session_state["max_walking_dist"] = 750
+
+    # Auto-detect from URL query parameters (e.g. from browser GPS callback)
+    if "user_lat" in st.query_params and "user_lon" in st.query_params:
+        try:
+            q_lat = float(st.query_params["user_lat"])
+            q_lon = float(st.query_params["user_lon"])
+            st.session_state["user_coords"] = (q_lat, q_lon)
+            closest_k = min(
+                LOCATION_PRESETS.keys(),
+                key=lambda k: calculate_distance_meters((q_lat, q_lon), LOCATION_PRESETS[k]),
+            )
+            st.session_state["selected_loc_name"] = f"📍 GPS ({closest_k} yaxınlığı)"
+        except (ValueError, TypeError):
+            pass
+
+    # Location mode tabs: Preset vs Landmark Search vs Custom / GPS
+    loc_mode = st.radio(
+        "Məkan Seçim Üsulu:",
+        ["🏙️ Bakı Əraziləri", "🔍 Landmark / Ünvan", "🎯 Xüsusi / GPS"],
         index=0,
+        horizontal=True,
+        label_visibility="collapsed",
     )
 
-    if selected_loc_name == "Xüsusi Koordinatlar...":
-        col_lat, col_lon = st.columns(2)
-        with col_lat:
-            user_lat = st.number_input("Enlik (Lat)", value=40.3798, format="%.4f")
-        with col_lon:
-            user_lon = st.number_input("Uzunluq (Lon)", value=49.8475, format="%.4f")
-        user_coords = (user_lat, user_lon)
+    preset_keys = list(LOCATION_PRESETS.keys())
+    cur_sel_name = st.session_state["selected_loc_name"]
+
+    if loc_mode == "🏙️ Bakı Əraziləri":
+        cur_idx = preset_keys.index(cur_sel_name) if cur_sel_name in preset_keys else 0
+        chosen_preset = st.selectbox(
+            "Yaşadığınız ərazi:",
+            preset_keys,
+            index=cur_idx,
+            key="sidebar_preset_select",
+        )
+        if chosen_preset != st.session_state.get("selected_loc_name"):
+            st.session_state["selected_loc_name"] = chosen_preset
+            st.session_state["user_coords"] = LOCATION_PRESETS[chosen_preset]
+
+    elif loc_mode == "🔍 Landmark / Ünvan":
+        landmark_q = st.text_input(
+            "Landmark və ya ticarət mərkəzi axtarın:",
+            placeholder="Məs: Port Baku, 28 Mall, Flame Towers, BDU...",
+            key="sidebar_landmark_input",
+        )
+        if landmark_q:
+            clean_q = landmark_q.lower().strip()
+            matched = False
+            for k, (l_lat, l_lon, l_title) in BAKU_LANDMARKS.items():
+                if clean_q in k or k in clean_q:
+                    st.session_state["user_coords"] = (l_lat, l_lon)
+                    st.session_state["selected_loc_name"] = f"📍 {l_title}"
+                    st.success(f"Seçildi: **{l_title}** ({l_lat:.4f}, {l_lon:.4f})")
+                    matched = True
+                    break
+            if not matched:
+                st.caption("ℹ️ Məsələn: *Port Baku*, *28 Mall*, *Gənclik Mall*, *Park Bulvar*, *Dəniz Mall*, *BDU*, *ADA*, *Torqovaya*")
+
     else:
-        user_coords = LOCATION_PRESETS[selected_loc_name]
+        st.markdown(
+            """
+            <div style="margin-bottom: 6px;">
+                <button id="sidebar-gps-btn" onclick="askBrowserGPS()" style="
+                    width: 100%;
+                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                    color: white;
+                    border: none;
+                    padding: 8px 12px;
+                    border-radius: 8px;
+                    font-weight: 700;
+                    font-size: 13px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 6px;
+                    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+                ">
+                    📍 Cari Məkanımı Tap (GPS)
+                </button>
+                <div id="gps-log" style="font-size: 11px; color: #94a3b8; margin-top: 4px; text-align: center;"></div>
+            </div>
+            <script>
+            function askBrowserGPS() {
+                const btn = document.getElementById('sidebar-gps-btn');
+                const log = document.getElementById('gps-log');
+                if (!navigator.geolocation) {
+                    log.innerText = "GPS dəstəklənmir";
+                    return;
+                }
+                btn.disabled = true;
+                log.innerText = "Peyk əlaqəsi qurulur...";
+                navigator.geolocation.getCurrentPosition(
+                    function(p) {
+                        const lat = p.coords.latitude.toFixed(4);
+                        const lon = p.coords.longitude.toFixed(4);
+                        log.innerText = "Məkan təsdiqləndi: " + lat + ", " + lon;
+                        const u = new URL(window.parent.location.href);
+                        u.searchParams.set('user_lat', lat);
+                        u.searchParams.set('user_lon', lon);
+                        window.parent.location.href = u.href;
+                    },
+                    function(e) {
+                        btn.disabled = false;
+                        log.innerText = "Xəta: " + e.message;
+                    },
+                    { enableHighAccuracy: true, timeout: 8000 }
+                );
+            }
+            </script>
+            """,
+            unsafe_allow_html=True,
+        )
+        cur_c = st.session_state["user_coords"]
+        c_lat_col, c_lon_col = st.columns(2)
+        with c_lat_col:
+            new_lat = st.number_input("Enlik (Lat)", value=float(cur_c[0]), format="%.4f", step=0.001)
+        with c_lon_col:
+            new_lon = st.number_input("Uzunluq (Lon)", value=float(cur_c[1]), format="%.4f", step=0.001)
+        if (new_lat, new_lon) != cur_c:
+            st.session_state["user_coords"] = (new_lat, new_lon)
+            st.session_state["selected_loc_name"] = f"Xüsusi ({new_lat:.4f}, {new_lon:.4f})"
+
+    user_coords = st.session_state["user_coords"]
+    selected_loc_name = st.session_state["selected_loc_name"]
 
     max_walking_dist = st.slider(
         "🚶 Piyada məsafə limiti (metr):",
         min_value=200,
-        max_value=1500,
-        value=750,
+        max_value=2000,
+        value=int(st.session_state["max_walking_dist"]),
         step=50,
         help="2 market arasındakı maksimum gəzinti məsafəsi. Bakıda adətən 750 metr (7-9 dəqiqə) optimaldır.",
+        key="sidebar_walk_slider",
     )
+    st.session_state["max_walking_dist"] = max_walking_dist
 
     pts = st.session_state.get("points", 250)
     card_bg = "#1e293b" if dark_mode else "#f1f5f9"
@@ -1048,6 +1255,154 @@ tab_optimizer, tab_comparison, tab_flyers, tab_scan, tab_analytics, tab_loyalty,
 # TAB 1: AĞILLI SƏBƏT (SMART BASKET OPTIMIZER)
 # =============================================================================
 with tab_optimizer:
+    # -------------------------------------------------------------------------
+    # Top Location Bar & Fast Switcher
+    # -------------------------------------------------------------------------
+    cur_loc = st.session_state.get("selected_loc_name", "28 May / Dəmiryol Vağzalı")
+    u_lat, u_lon = st.session_state.get("user_coords", (40.3798, 49.8475))
+    walk_dist = int(st.session_state.get("max_walking_dist", 750))
+    walk_time_est = max(1, round(walk_dist / 80))
+
+    loc_top_bg = "rgba(30, 41, 59, 0.75)" if dark_mode else "#f8fafc"
+    loc_top_border = "rgba(16, 185, 129, 0.35)" if dark_mode else "#cbd5e1"
+    loc_accent = "#34d399" if dark_mode else "#059669"
+
+    render_html(f"""
+    <div style="background: {loc_top_bg}; border: 1px solid {loc_top_border}; border-radius: 14px; padding: 12px 18px; margin-bottom: 16px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+                📍
+            </div>
+            <div>
+                <div style="font-size: 11px; font-weight: 700; color: {loc_accent}; text-transform: uppercase; letter-spacing: 0.05em;">Cari Məkan & Radius</div>
+                <div style="font-size: 16px; font-weight: 800; color: {card_text};">{cur_loc}</div>
+                <div style="font-size: 12px; color: {sub_text};">
+                    Koordinatlar: <code style="color: {loc_accent}; background: transparent; font-weight: 600;">{u_lat:.4f}, {u_lon:.4f}</code> · Piyada radius: <b style="color: {card_text};">{walk_dist} m</b> (~{walk_time_est} dəqiqə piyada)
+                </div>
+            </div>
+        </div>
+    </div>
+    """)
+
+    with st.expander("⚙️ Məkanı & Radiusu Dəyişdir / Canlı GPS / Landmark Axtarışı", expanded=False):
+        st.markdown("<div style='font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;'>⚡ Tez Məkan Seçimi:</div>", unsafe_allow_html=True)
+        q_cols = st.columns(6)
+        quick_hubs = [
+            ("28 May", "28 May / Dəmiryol Vağzalı"),
+            ("Sahil / Torqovı", "Sahil / Torqovı (Nizami küç.)"),
+            ("Gənclik", "Gənclik Mall / Atatürk pr."),
+            ("Elmlər", "Elmlər Akademiyası / BDU"),
+            ("Nərimanov", "Nərimanov / Metropark"),
+            ("Xırdalan", "Xırdalan Mərkəz (AAAF Park)"),
+        ]
+        for col_i, (short_label, full_key) in zip(q_cols, quick_hubs):
+            with col_i:
+                if st.button(short_label, key=f"quick_loc_{short_label}", use_container_width=True):
+                    st.session_state["selected_loc_name"] = full_key
+                    st.session_state["user_coords"] = LOCATION_PRESETS[full_key]
+                    st.rerun()
+
+        st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+        tab_loc_col1, tab_loc_col2 = st.columns([1.5, 1])
+        with tab_loc_col1:
+            lm_input = st.text_input(
+                "Landmark və ya ticarət mərkəzi axtarışı:",
+                placeholder="Məs: Port Baku, 28 Mall, Flame Towers, BDU, ADA...",
+                key="tab1_landmark_search",
+            )
+            if lm_input:
+                clean_lm = lm_input.lower().strip()
+                matched = False
+                for k, (l_lat, l_lon, l_title) in BAKU_LANDMARKS.items():
+                    if clean_lm in k or k in clean_lm:
+                        st.session_state["user_coords"] = (l_lat, l_lon)
+                        st.session_state["selected_loc_name"] = f"📍 {l_title}"
+                        st.success(f"Seçildi: **{l_title}** ({l_lat:.4f}, {l_lon:.4f})")
+                        matched = True
+                        break
+                if not matched:
+                    st.caption("ℹ️ Məsələn: *Port Baku*, *28 Mall*, *Gənclik Mall*, *Park Bulvar*, *Dəniz Mall*, *BDU*, *ADA*, *Torqovaya*")
+
+            cur_p_keys = list(LOCATION_PRESETS.keys())
+            c_idx = cur_p_keys.index(cur_loc) if cur_loc in cur_p_keys else 0
+            new_preset = st.selectbox(
+                "Və ya siyahıdan seçin (26 Bakı ərazisi):",
+                cur_p_keys,
+                index=c_idx,
+                key="tab1_preset_select",
+            )
+            if new_preset != st.session_state.get("selected_loc_name") and not lm_input:
+                st.session_state["selected_loc_name"] = new_preset
+                st.session_state["user_coords"] = LOCATION_PRESETS[new_preset]
+                st.rerun()
+
+        with tab_loc_col2:
+            st.markdown(
+                """
+                <div style="margin-top: 24px; margin-bottom: 12px;">
+                    <button id="tab1-gps-btn" onclick="askTab1GPS()" style="
+                        width: 100%;
+                        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                        color: white;
+                        border: none;
+                        padding: 9px 14px;
+                        border-radius: 8px;
+                        font-weight: 700;
+                        font-size: 13px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+                        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+                    ">
+                        📍 Cari Məkanımı Tap (GPS)
+                    </button>
+                    <div id="tab1-gps-log" style="font-size: 11px; color: #94a3b8; margin-top: 4px; text-align: center;"></div>
+                </div>
+                <script>
+                function askTab1GPS() {
+                    const btn = document.getElementById('tab1-gps-btn');
+                    const log = document.getElementById('tab1-gps-log');
+                    if (!navigator.geolocation) {
+                        log.innerText = "GPS dəstəklənmir";
+                        return;
+                    }
+                    btn.disabled = true;
+                    log.innerText = "Peyk axtarılır...";
+                    navigator.geolocation.getCurrentPosition(
+                        function(p) {
+                            const lat = p.coords.latitude.toFixed(4);
+                            const lon = p.coords.longitude.toFixed(4);
+                            log.innerText = "Məkan təsdiqləndi: " + lat + ", " + lon;
+                            const u = new URL(window.parent.location.href);
+                            u.searchParams.set('user_lat', lat);
+                            u.searchParams.set('user_lon', lon);
+                            window.parent.location.href = u.href;
+                        },
+                        function(e) {
+                            btn.disabled = false;
+                            log.innerText = "Xəta: " + e.message;
+                        },
+                        { enableHighAccuracy: true, timeout: 8000 }
+                    );
+                }
+                </script>
+                """,
+                unsafe_allow_html=True,
+            )
+            new_radius = st.slider(
+                "🚶 Piyada məsafə limiti (metr):",
+                min_value=200,
+                max_value=2000,
+                value=int(st.session_state["max_walking_dist"]),
+                step=50,
+                key="tab1_walk_slider",
+            )
+            if new_radius != st.session_state["max_walking_dist"]:
+                st.session_state["max_walking_dist"] = new_radius
+                st.rerun()
+
     col_basket_mgr, col_optimizer_view = st.columns([1, 1.4], gap="large")
 
     with col_basket_mgr:
@@ -1296,19 +1651,40 @@ with tab_optimizer:
                 card_col1, card_col2 = st.columns(2)
 
                 with card_col1:
+                    single_walk_url = get_gmaps_walking_dir_url((u_lat, u_lon), (single["lat"], single["lon"]))
+                    s_rating = single.get("gmaps_rating", 4.5)
+                    s_revs = single.get("gmaps_reviews", 1200)
+                    s_hours = single.get("opening_hours", "08:00 – 23:00")
+
                     render_html(f"""
                     <div class="store-card" style="border-top: 4px solid {single['chain_color']};">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <span class="store-badge" style="background: {single['chain_color']};">{single['chain_name']}</span>
-                            <span style="font-size: 12px; color: {sub_text};">📍 {single['distance_km']} km məsafə</span>
+                            <span style="font-size: 12px; color: {sub_text}; font-weight: 600;">📍 {single['distance_km']} km məsafə</span>
                         </div>
-                        <h4 style="margin: 0 0 4px 0; color: {card_text};">{single['branch_name']}</h4>
-                        <p style="font-size: 13px; color: {sub_text}; margin-bottom: 12px;">{single['address']}</p>
-                        <div style="font-size: 20px; font-weight: 800; color: {card_text}; margin-bottom: 12px;">
+                        <h4 style="margin: 0 0 4px 0; color: {card_text}; font-size: 17px;">{single['branch_name']}</h4>
+                        <p style="font-size: 13px; color: {sub_text}; margin-bottom: 8px;">{single['address']}</p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; margin-bottom: 12px;">
+                            <span style="background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.3); padding: 3px 8px; border-radius: 6px; font-weight: 700;">
+                                ⭐ {s_rating} ({s_revs:,} Google rəy)
+                            </span>
+                            <span style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 3px 8px; border-radius: 6px; font-weight: 600;">
+                                🕒 {s_hours}
+                            </span>
+                        </div>
+                        <div style="font-size: 22px; font-weight: 800; color: {card_text}; margin-bottom: 4px;">
                             Cəmi: {single['total_cost']:.2f} ₼
                         </div>
                     </div>
                     """)
+
+                    st.link_button(
+                        "🗺️ Google Maps-də Marşrutu Aç (Piyada 🚶)",
+                        single_walk_url,
+                        type="primary",
+                        use_container_width=True,
+                    )
+
                     with st.expander(f"🛒 Səbət tərkibi ({len(single['items'])} məhsul)", expanded=True):
                         render_basket_items_table(single["items"], dark=dark_mode)
 
@@ -1320,6 +1696,11 @@ with tab_optimizer:
                         split_card_border = "#10b981"
                         split_card_title = "#6ee7b7" if dark_mode else "#166534"
                         split_card_price = "#34d399" if dark_mode else "#15803d"
+                        split_walk_url = get_gmaps_multistop_walking_dir_url(
+                            (u_lat, u_lon),
+                            (s1["lat"], s1["lon"]),
+                            (s2["lat"], s2["lon"]),
+                        )
 
                         render_html(f"""
                         <div class="store-card" style="border: 1px solid {split_card_border}; border-top: 4px solid {split_card_border}; background: {split_card_bg};">
@@ -1327,12 +1708,27 @@ with tab_optimizer:
                                 <span class="savings-badge">✨ {split['savings_azn']:.2f} ₼ Qənaət ({split['savings_pct']}%)</span>
                                 <span style="font-size: 12px; color: {split_card_price}; font-weight: 700;">🚶 {split['walking_meters']}m aralı</span>
                             </div>
-                            <h4 style="margin: 0 0 4px 0; color: {split_card_title};">1. {s1['branch_name']} + 2. {s2['branch_name']}</h4>
-                            <div style="font-size: 20px; font-weight: 800; color: {split_card_price}; margin-bottom: 12px;">
+                            <h4 style="margin: 0 0 4px 0; color: {split_card_title}; font-size: 17px;">1. {s1['branch_name']} + 2. {s2['branch_name']}</h4>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; margin-bottom: 12px;">
+                                <span style="background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.3); padding: 3px 8px; border-radius: 6px; font-weight: 600;">
+                                    ⭐ {s1.get('gmaps_rating', 4.5)} {s1['chain_name']} ({s1.get('gmaps_reviews', 1200):,} rəy)
+                                </span>
+                                <span style="background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.3); padding: 3px 8px; border-radius: 6px; font-weight: 600;">
+                                    ⭐ {s2.get('gmaps_rating', 4.5)} {s2['chain_name']} ({s2.get('gmaps_reviews', 1200):,} rəy)
+                                </span>
+                            </div>
+                            <div style="font-size: 22px; font-weight: 800; color: {split_card_price}; margin-bottom: 4px;">
                                 Cəmi: {split['total_cost']:.2f} ₼ <span style="font-size: 14px; text-decoration: line-through; color: {sub_text};">{single['total_cost']:.2f} ₼</span>
                             </div>
                         </div>
                         """)
+
+                        st.link_button(
+                            "🧭 Google Maps 2-Market Marşrutu Aç (Multi-Stop 🚶)",
+                            split_walk_url,
+                            type="primary",
+                            use_container_width=True,
+                        )
 
                         with st.expander(f"🛒 1-ci Market: {s1['branch_name']} ({len(split['s1_items'])} məhsul)", expanded=True):
                             render_basket_items_table(split["s1_items"], dark=dark_mode)
@@ -1341,6 +1737,24 @@ with tab_optimizer:
                             render_basket_items_table(split["s2_items"], dark=dark_mode)
                     else:
                         st.info("ℹ️ Seçilmiş piyada radiusunda qiymət fərqi 0.15 ₼-dən az olduğu üçün tək marketdən alış-veriş etmək ən optimal qərardır.")
+
+                # Live Embedded Google Maps Viewer
+                st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+                with st.expander("🗺️ Canlı Google Maps Xəritəsi & Marşrut (İnteraktiv)", expanded=False):
+                    st.caption("Google Maps üzərində cari məkanınızdan supermarketə qədər olan dəqiq piyada marşrutu.")
+                    if is_split_viable and split:
+                        render_gmaps_embed_route(
+                            origin=(u_lat, u_lon),
+                            destination=(split["s2"]["lat"], split["s2"]["lon"]),
+                            waypoint=(split["s1"]["lat"], split["s1"]["lon"]),
+                            height=380,
+                        )
+                    else:
+                        render_gmaps_embed_route(
+                            origin=(u_lat, u_lon),
+                            destination=(single["lat"], single["lon"]),
+                            height=380,
+                        )
 
 
 # =============================================================================
@@ -1725,6 +2139,8 @@ with tab_analytics:
                 "Filial": s["branch_name"],
                 "Şəbəkə": s["chain_slug"].title(),
                 "Ərazi": s["neighborhood"],
+                "Google Reytinqi ⭐": f"⭐ {s.get('gmaps_rating', 4.4)} ({s.get('gmaps_reviews', 1200):,} rəy)",
+                "İş Saatları 🕒": s.get("opening_hours", "08:00 – 23:00"),
                 "lat": s["latitude"],
                 "lon": s["longitude"],
             }
@@ -1736,7 +2152,7 @@ with tab_analytics:
             lon="lon",
             color="Şəbəkə",
             hover_name="Filial",
-            hover_data=["Ərazi"],
+            hover_data=["Ərazi", "Google Reytinqi ⭐", "İş Saatları 🕒"],
             zoom=10.5,
             height=370,
         )
