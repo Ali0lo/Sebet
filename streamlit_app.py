@@ -724,101 +724,43 @@ def render_gmaps_embed_route(origin: Tuple[float, float], destination: Tuple[flo
 
 
 def render_basket_items_table(items: List[Dict[str, Any]], dark: bool = True):
-    """Renders a clean, highly readable HTML table for basket items breakdown in dark and light modes."""
+    """Renders a clean, highly readable table for basket items breakdown in dark and light modes."""
     if not items:
+        st.info("Məhsul yoxdur.")
         return
-    th_bg = "#0f172a" if dark else "#f8fafc"
-    td_bg = "#1e293b" if dark else "#ffffff"
-    td_alt_bg = "#182338" if dark else "#f1f5f9"
-    text_color = "#f8fafc" if dark else "#0f172a"
-    sub_color = "#94a3b8" if dark else "#64748b"
-    border_color = "#334155" if dark else "#e2e8f0"
-    badge_bg = "rgba(16, 185, 129, 0.18)" if dark else "#ecfdf5"
-    badge_color = "#34d399" if dark else "#059669"
-    badge_border = "rgba(16, 185, 129, 0.35)" if dark else "#a7f3d0"
 
-    rows_html = ""
-    rows = []
-    for i, it in enumerate(items):
-        bg = td_alt_bg if i % 2 == 1 else td_bg
-        is_item_kg = (it.get("unit") == "kg")
-        qty_val = it["quantity"]
-        if is_item_kg:
-            qty_display = f"{qty_val:.2f} kq"
+    table_rows = []
+    total_cost = 0.0
+    for it in items:
+        qty = it.get("quantity", 1.0)
+        unit = it.get("unit", "ədəd")
+        if unit == "kg":
+            qty_label = f"{qty:.2f} kq"
+        elif unit == "liter":
+            qty_label = f"{int(qty) if isinstance(qty, (int, float)) and float(qty).is_integer() else qty} L"
         else:
-            qty_display = f"{int(qty_val) if isinstance(qty_val, float) and qty_val.is_integer() else qty_val} {it.get('unit', '')}"
+            qty_label = f"{int(qty) if isinstance(qty, (int, float)) and float(qty).is_integer() else qty} ədəd"
 
-        rows_html += f"""
-        <tr style="background-color: {bg}; border-bottom: 1px solid {border_color};">
-            <td style="padding: 10px 14px; font-weight: 600; color: {text_color}; text-align: left;">{it['name']}</td>
-            <td style="padding: 10px 14px; color: {sub_color}; text-align: center; font-weight: 500;">{qty_display}</td>
-            <td style="padding: 10px 14px; color: {text_color}; text-align: right; font-weight: 500;">{it['unit_price']:.2f} ₼</td>
-            <td style="padding: 10px 14px; text-align: right;">
-                <span style="background: {badge_bg}; color: {badge_color}; border: 1px solid {badge_border}; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 13px;">
-                    {it['total']:.2f} ₼
-                </span>
-            </td>
-        </tr>
-        """
-        row_html = (
-            f'<tr style="background-color: {bg}; border-bottom: 1px solid {border_color};">'
-            f'<td style="padding: 10px 14px; font-weight: 600; color: {text_color}; text-align: left;">{it["name"]}</td>'
-            f'<td style="padding: 10px 14px; color: {sub_color}; text-align: center; font-weight: 500;">{qty_display}</td>'
-            f'<td style="padding: 10px 14px; color: {text_color}; text-align: right; font-weight: 500;">{it["unit_price"]:.2f} ₼</td>'
-            f'<td style="padding: 10px 14px; text-align: right;">'
-            f'<span style="background: {badge_bg}; color: {badge_color}; border: 1px solid {badge_border}; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 13px;">'
-            f'{it["total"]:.2f} ₼</span></td>'
-            f'</tr>'
-        )
-        rows.append(row_html)
+        u_p = it.get("unit_price", 0.0)
+        tot = it.get("total", round(u_p * qty, 2))
+        total_cost += tot
 
-    total_sum = sum(it.get("total", 0.0) for it in items)
-    table_html = f"""
-    <div style="width: 100%; overflow-x: auto; border: 1px solid {border_color}; border-radius: 12px; margin: 8px 0 14px 0;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 13px; font-family: inherit;">
-            <thead>
-                <tr style="background-color: {th_bg}; border-bottom: 2px solid {border_color};">
-                    <th style="padding: 10px 14px; text-align: left; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Məhsul</th>
-                    <th style="padding: 10px 14px; text-align: center; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Miqdar</th>
-                    <th style="padding: 10px 14px; text-align: right; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Qiymət</th>
-                    <th style="padding: 10px 14px; text-align: right; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Məbləğ</th>
-                </tr>
-            </thead>
-            <tbody>
-                {rows_html}
-            </tbody>
-            <tfoot>
-                <tr style="background-color: {th_bg}; border-top: 2px solid {border_color};">
-                    <td colspan="3" style="padding: 10px 14px; font-weight: 700; color: {text_color}; text-align: right;">Cəmi:</td>
-                    <td style="padding: 10px 14px; text-align: right; font-weight: 800; font-size: 14px; color: {badge_color};">{total_sum:.2f} ₼</td>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
-    """
-    st.markdown(table_html, unsafe_allow_html=True)
-    table_html = (
-        f'<div style="width: 100%; overflow-x: auto; border: 1px solid {border_color}; border-radius: 12px; margin: 8px 0 14px 0;">'
-        f'<table style="width: 100%; border-collapse: collapse; font-size: 13px; font-family: inherit;">'
-        f'<thead>'
-        f'<tr style="background-color: {th_bg}; border-bottom: 2px solid {border_color};">'
-        f'<th style="padding: 10px 14px; text-align: left; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Məhsul</th>'
-        f'<th style="padding: 10px 14px; text-align: center; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Miqdar</th>'
-        f'<th style="padding: 10px 14px; text-align: right; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Qiymət</th>'
-        f'<th style="padding: 10px 14px; text-align: right; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Məbləğ</th>'
-        f'</tr>'
-        f'</thead>'
-        f'<tbody>{"".join(rows)}</tbody>'
-        f'<tfoot>'
-        f'<tr style="background-color: {th_bg}; border-top: 2px solid {border_color};">'
-        f'<td colspan="3" style="padding: 10px 14px; font-weight: 700; color: {text_color}; text-align: right;">Cəmi:</td>'
-        f'<td style="padding: 10px 14px; text-align: right; font-weight: 800; font-size: 14px; color: {badge_color};">{total_sum:.2f} ₼</td>'
-        f'</tr>'
-        f'</tfoot>'
-        f'</table>'
-        f'</div>'
+        table_rows.append({
+            "Məhsul": it.get("name", ""),
+            "Miqdar": qty_label,
+            "Vahid Qiyməti": f"{u_p:.2f} ₼",
+            "Məbləğ": f"{tot:.2f} ₼",
+        })
+
+    df = pd.DataFrame(table_rows)
+    st.dataframe(df, hide_index=True, use_container_width=True)
+
+    st.markdown(
+        f"<div style='text-align: right; font-weight: 800; font-size: 14px; color: #10b981; padding: 4px 6px;'>"
+        f"Cəmi ({len(items)} məhsul): {total_cost:.2f} ₼"
+        f"</div>",
+        unsafe_allow_html=True,
     )
-    render_html(table_html)
 
 
 # -----------------------------------------------------------------------------
