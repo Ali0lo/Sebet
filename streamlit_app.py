@@ -1377,7 +1377,10 @@ if "basket" not in st.session_state:
 # -----------------------------------------------------------------------------
 # Split-Window Modal Dialog: Login & Register
 # -----------------------------------------------------------------------------
-@st.dialog("👤 SebEt — İstifadəçi Girişi və Qeydiyyat", width="large")
+def on_auth_modal_dismiss():
+    st.session_state["show_auth_modal"] = False
+
+@st.dialog("👤 SebEt — İstifadəçi Girişi və Qeydiyyat", width="large", on_dismiss=on_auth_modal_dismiss)
 def show_auth_dialog():
     """Split modal window containing branding perks on the left and login/register tabs on the right."""
     is_dark = st.session_state.get("dark_mode_toggle", True)
@@ -1437,6 +1440,7 @@ def show_auth_dialog():
                     s_b, s_loc = user_db.load_user_basket(u_data["id"])
                     if s_b:
                         st.session_state["basket"] = s_b
+                    st.session_state["show_auth_modal"] = False
                     st.toast(f"Xoş gəldiniz, {u_data['full_name']}!", icon="👋")
                     st.rerun()
 
@@ -1459,6 +1463,7 @@ def show_auth_dialog():
                             s_b, s_loc = user_db.load_user_basket(u_data["id"])
                             if s_b:
                                 st.session_state["basket"] = s_b
+                            st.session_state["show_auth_modal"] = False
                             st.success(msg)
                             st.rerun()
                         else:
@@ -1517,10 +1522,21 @@ def show_auth_dialog():
                             st.session_state["user_authenticated"] = True
                             st.session_state["current_user"] = u_data
                             st.session_state["points"] = u_data.get("sebet_points", 0)
+                            st.session_state["show_auth_modal"] = False
                             st.success(f"🎉 Təbriklər, {reg_name}! Hesabınız uğurla yaradıldı.")
                             st.rerun()
                         else:
                             st.error(msg)
+
+        st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+        if st.button("✕ Pəncərəni Bağla", key="dlg_btn_close_footer", use_container_width=True):
+            st.session_state["show_auth_modal"] = False
+            st.rerun()
+
+
+# Render split-window auth modal if triggered
+if st.session_state.get("show_auth_modal", False):
+    show_auth_dialog()
 
 
 # -----------------------------------------------------------------------------
@@ -1590,7 +1606,8 @@ with st.sidebar:
         col_sb_auth_btn, col_sb_demo = st.columns([1.15, 1])
         with col_sb_auth_btn:
             if st.button("👤 Giriş / Qeydiyyat", key="sb_btn_open_auth_dialog", type="primary", use_container_width=True, help="Split pəncərədə giriş və ya qeydiyyat"):
-                show_auth_dialog()
+                st.session_state["show_auth_modal"] = True
+                st.rerun()
         with col_sb_demo:
             if st.button("⚡ Demo Giriş", key="sb_btn_demo_login", use_container_width=True, help="Ali İskəndərli demo hesabı ilə 1-kliklə daxil ol"):
                 ok, msg, u_data = user_db.authenticate_user("demo", "sebet2026")
