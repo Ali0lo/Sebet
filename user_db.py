@@ -69,6 +69,21 @@ def init_user_db():
     )
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS user_receipts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        store_name TEXT NOT NULL,
+        chain_name TEXT NOT NULL,
+        fiscal_id TEXT NOT NULL,
+        total_amount REAL NOT NULL,
+        cashback_points INTEGER NOT NULL,
+        items_json TEXT DEFAULT '[]',
+        scanned_at TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+    """)
+
     conn.commit()
 
     # Seed demo account if users table is empty
@@ -319,4 +334,99 @@ def get_all_users_summary() -> List[Dict[str, Any]]:
     rows = cursor.fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+
+def save_scanned_receipt(
+    user_id: Optional[int],
+    store_name: str,
+    chain_name: str,
+    fiscal_id: str,
+    total_amount: float,
+    cashback_points: int,
+    items: Optional[List[Dict[str, Any]]] = None,
+) -> int:
+    """Saves a scanned receipt into SQLite and logs the user activity."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    items_json = json.dumps(items or [], ensure_ascii=False)
+
+    cursor.execute("""
+    INSERT INTO user_receipts (
+        user_id, store_name, chain_name, fiscal_id, total_amount, cashback_points, items_json, scanned_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        user_id,
+        store_name,
+        chain_name,
+        fiscal_id,
+        float(total_amount),
+        int(cashback_points),
+        items_json,
+        now_iso,
+    ))
+    receipt_id = cursor.lastrowid
+
+    if user_id:
+        cursor.execute("""
+        INSERT INTO user_activity_logs (user_id, action, details, created_at)
+        VALUES (?, 'scan_receipt', ?, ?)
+        """, (
+            user_id,
+            f"{chain_name} qəbzi skan edildi ({total_amount:.2f} ₼, +{cashback_points} xal)",
+            now_iso,
+        ))
+
+    conn.commit()
+    conn.close()
+    return receipt_id
+
+
+def get_user_receipts(user_id: int) -> List[Dict[str, Any]]:
+    """Retrieves all scanned receipts for a specific user ordered by latest first."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+    SELECT id, user_id, store_name, chain_name, fiscal_id, total_amount, cashback_points, items_json, scanned_at
+    FROM user_receipts
+    WHERE user_id = ?
+    ORDER BY id DESC
+    """, (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+
+    receipts = []
+    for r in rows:
+        d = dict(r)
+        try:
+            d["items"] = json.loads(d.get("items_json") or "[]")
+        except Exception:
+            d["items"] = []
+        receipts.append(d)
+    return receipts
+
+
+def get_recent_receipts(limit: int = 10) -> List[Dict[str, Any]]:
+    """Retrieves latest scanned receipts across the platform."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+    SELECT r.id, r.user_id, r.store_name, r.chain_name, r.fiscal_id, r.total_amount, r.cashback_points, r.items_json, r.scanned_at, u.full_name as user_full_name
+    FROM user_receipts r
+    LEFT JOIN users u ON r.user_id = u.id
+    ORDER BY r.id DESC
+    LIMIT ?
+    """, (limit,))
+    rows = cursor.fetchall()
+    conn.close()
+
+    receipts = []
+    for r in rows:
+        d = dict(r)
+        try:
+            d["items"] = json.loads(d.get("items_json") or "[]")
+        except Exception:
+            d["items"] = []
+        receipts.append(d)
+    return receipts
 
