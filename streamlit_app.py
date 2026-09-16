@@ -1650,7 +1650,7 @@ with st.sidebar:
                         else:
                             st.error(msg)
 
-    st.markdown("### 📍 Bakı Məkanı & Radius")
+    st.markdown("---")
 
     # Build full Baku location presets from comprehensive database
     LOCATION_PRESETS = {
@@ -1680,7 +1680,6 @@ with st.sidebar:
                 g_lon = round(float(raw_lon), 4)
                 st.session_state["raw_gps_coords"] = (g_lat, g_lon)
                 st.session_state["raw_gps_accuracy"] = accuracy
-                # Only automatically set coordinates if the user has NOT manually set their location
                 if not st.session_state.get("user_location_confirmed", False):
                     if st.session_state.get("last_auto_gps") != (g_lat, g_lon):
                         st.session_state["last_auto_gps"] = (g_lat, g_lon)
@@ -1690,95 +1689,56 @@ with st.sidebar:
                             key=lambda k: calculate_distance_meters((g_lat, g_lon), LOCATION_PRESETS[k]),
                         )
                         if accuracy <= 1000:
-                            st.session_state["selected_loc_name"] = f"📍 Dəqiq GPS ({closest_k} yaxınlığı)"
+                            st.session_state["selected_loc_name"] = closest_k
                             st.session_state["gps_detected"] = "precise"
                         else:
-                            st.session_state["selected_loc_name"] = f"📍 Şəbəkə Təxmini ({closest_k})"
+                            st.session_state["selected_loc_name"] = closest_k
                             st.session_state["gps_detected"] = "coarse"
-
-    # Status indication
-    gps_status = st.session_state.get("gps_detected")
-    if gps_status == "precise":
-        acc = int(st.session_state.get("raw_gps_accuracy", 50))
-        st.success(f"🎯 Dəqiq GPS aktivdir: **{st.session_state.get('selected_loc_name', 'Məkanınız')}** (~{acc}m dəqiqliklə)")
-    elif gps_status == "coarse":
-        acc_km = round(st.session_state.get("raw_gps_accuracy", 3000) / 1000, 1)
-        st.warning(f"⚠️ Şəbəkə təxmini (~{acc_km}km xəta). Dəqiq ünvanınızı aşağıdan seçin 👇")
-    elif st.session_state.get("user_location_confirmed"):
-        st.info(f"✅ Seçilmiş Məkan: **{st.session_state['selected_loc_name']}**")
-    else:
-        st.caption("ℹ️ Brauzer icazəsi verdikdə GPS yoxlanılır və ya aşağıdan ərazi seçə bilərsiniz.")
-
-    # Location mode selection - user friendly (no complex coordinates)
-    loc_mode = st.radio(
-        "Məkan Seçim Üsulu:",
-        ["🏙️ Bakı Əraziləri", "🔍 Ünvan / Axtarış"],
-        index=0,
-        horizontal=True,
-        label_visibility="collapsed",
-    )
 
     preset_keys = list(LOCATION_PRESETS.keys())
     cur_sel_name = st.session_state["selected_loc_name"]
+    cur_idx = preset_keys.index(cur_sel_name) if cur_sel_name in preset_keys else 0
 
-    if loc_mode == "🏙️ Bakı Əraziləri":
-        cur_idx = preset_keys.index(cur_sel_name) if cur_sel_name in preset_keys else 0
-        chosen_preset = st.selectbox(
-            "Yaşadığınız ərazi (80+ Məkan):",
-            preset_keys,
-            index=cur_idx,
-            key="sidebar_preset_select",
-        )
-        if chosen_preset != st.session_state.get("selected_loc_name"):
-            st.session_state["selected_loc_name"] = chosen_preset
-            st.session_state["user_coords"] = LOCATION_PRESETS[chosen_preset]
-            st.session_state["user_location_confirmed"] = True
-            st.session_state["gps_detected"] = "manual"
+    st.markdown(
+        f"""
+        <div style="background: {card_bg}; border: 1px solid {card_border}; border-radius: 12px; padding: 12px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                <span style="font-size: 11px; font-weight: 800; color: #10b981; text-transform: uppercase; letter-spacing: 0.05em;">📍 Məkan & Ərazi</span>
+                <span style="font-size: 11px; color: {sub_text};">🚶 {int(st.session_state['max_walking_dist'])}m</span>
+            </div>
+            <div style="font-size: 13px; font-weight: 700; color: {card_text}; line-height: 1.3;">
+                {cur_sel_name}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    elif loc_mode == "🔍 Ünvan / Axtarış":
-        search_kw = st.text_input(
-            "Küçə, metro və ya landmark axtarın:",
-            placeholder="Məs: Həzi Aslanov, İnşaatçılar, Təbriz, BDU, Yasamal...",
-            key="sidebar_location_search",
-        )
-        if search_kw:
-            found_locs = sebet_data.search_baku_locations(search_kw, limit=5)
-            if found_locs:
-                st.caption("Tapılan məkanlar (seçmək üçün klikləyin):")
-                for s_loc in found_locs:
-                    if st.button(f"📍 {s_loc['title']} ({s_loc['category']})", key=f"sb_srch_{s_loc['title']}", use_container_width=True):
-                        st.session_state["user_coords"] = (s_loc["lat"], s_loc["lon"])
-                        st.session_state["selected_loc_name"] = s_loc["title"]
-                        st.session_state["user_location_confirmed"] = True
-                        st.session_state["gps_detected"] = "manual"
-                        st.rerun()
-            else:
-                st.caption("Axtarışa uyğun məkan tapılmadı. Məsələn: *Port Baku*, *Torqovaya*, *Gənclik*, *Yasamal*, *Əhmədli*")
-
-    # Optional developer/advanced coordinates collapsed at the bottom
-    with st.expander("⚙️ Xüsusi koordinat daxil et (İxtiyari)", expanded=False):
-        cur_c = st.session_state["user_coords"]
-        c_lat_col, c_lon_col = st.columns(2)
-        with c_lat_col:
-            new_lat = st.number_input("Enlik (Lat)", value=float(cur_c[0]), format="%.4f", step=0.001, key="sb_cust_lat")
-        with c_lon_col:
-            new_lon = st.number_input("Uzunluq (Lon)", value=float(cur_c[1]), format="%.4f", step=0.001, key="sb_cust_lon")
-        if (new_lat, new_lon) != cur_c:
-            st.session_state["user_coords"] = (new_lat, new_lon)
-            st.session_state["selected_loc_name"] = "Xüsusi Məkan"
-            st.session_state["user_location_confirmed"] = True
-            st.session_state["gps_detected"] = "manual"
+    chosen_preset = st.selectbox(
+        "Məkanı Dəyişdir (80+ Ərazi & Metro):",
+        preset_keys,
+        index=cur_idx,
+        key="sidebar_preset_select",
+        help="Yaşadığınız ərazini və ya ən yaxın metronu seçin",
+    )
+    if chosen_preset != st.session_state.get("selected_loc_name"):
+        st.session_state["selected_loc_name"] = chosen_preset
+        st.session_state["user_coords"] = LOCATION_PRESETS[chosen_preset]
+        st.session_state["user_location_confirmed"] = True
+        st.session_state["gps_detected"] = "manual"
+        st.rerun()
 
     user_coords = st.session_state["user_coords"]
     selected_loc_name = st.session_state["selected_loc_name"]
 
+    walk_mins = max(1, round(int(st.session_state["max_walking_dist"]) / 80))
     max_walking_dist = st.slider(
-        "🚶 Piyada məsafə limiti (metr):",
-        min_value=200,
-        max_value=2000,
+        f"🚶 Piyada Radius: {int(st.session_state['max_walking_dist'])}m (~{walk_mins} dəq)",
+        min_value=300,
+        max_value=1500,
         value=int(st.session_state["max_walking_dist"]),
         step=50,
-        help="2 market arasındakı maksimum gəzinti məsafəsi. Bakıda adətən 750 metr (7-9 dəqiqə) optimaldır.",
+        help="2 market arasındakı maksimum piyada gəzinti məsafəsi (optimal: 750m)",
         key="sidebar_walk_slider",
     )
     st.session_state["max_walking_dist"] = max_walking_dist
