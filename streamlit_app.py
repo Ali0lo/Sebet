@@ -1373,6 +1373,155 @@ if "basket" not in st.session_state:
         {"barcode": PRODUCTS[28]["barcode"], "canonical_name": PRODUCTS[28]["canonical_name"], "brand": PRODUCTS[28]["brand"], "quantity": 1.5, "unit": "kg", "cat_slug": PRODUCTS[28]["cat_slug"]},
     ]
 
+
+# -----------------------------------------------------------------------------
+# Split-Window Modal Dialog: Login & Register
+# -----------------------------------------------------------------------------
+@st.dialog("👤 SebEt — İstifadəçi Girişi və Qeydiyyat", width="large")
+def show_auth_dialog():
+    """Split modal window containing branding perks on the left and login/register tabs on the right."""
+    is_dark = st.session_state.get("dark_mode_toggle", True)
+    dlg_text = "#f8fafc" if is_dark else "#0f172a"
+    dlg_sub = "#94a3b8" if is_dark else "#64748b"
+    dlg_card_bg = "rgba(16, 185, 129, 0.08)" if is_dark else "#f0fdf4"
+
+    col_brand, col_forms = st.columns([1, 1.3], gap="large")
+
+    with col_brand:
+        logo_path = "frontend/public/logo-light.png" if is_dark else "frontend/public/logo-dark.png"
+        if not os.path.exists(logo_path):
+            logo_path = "frontend/public/sebet-logo-banner.png"
+        if os.path.exists(logo_path):
+            st.image(logo_path, width=190)
+        else:
+            st.markdown("### 🛒 SebEt")
+
+        st.markdown(
+            f"""
+            <div style="margin-top: 12px; line-height: 1.5;">
+                <h4 style="margin: 0 0 10px 0; color: #10b981; font-weight: 800; font-size: 17px;">Bakının Ağıllı Səbət Platforması</h4>
+                <div style="font-size: 13px; color: {dlg_text}; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px;">
+                    <span>🎁</span>
+                    <div><b>Xoş gəldin bonusu:</b> Yeni qeydiyyatdan keçən hər istifadəçiyə dərhal <b style="color: #10b981;">+250 Sebet Xalı (2.50 ₼)</b> hədiyyə olunur!</div>
+                </div>
+                <div style="font-size: 13px; color: {dlg_text}; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px;">
+                    <span>💾</span>
+                    <div><b>Səbət Sinxronizasiyası:</b> Yığdığınız ərzaqları bir toxunuşla bazada yadda saxlayın və istənilən vaxt bərpa edin.</div>
+                </div>
+                <div style="font-size: 13px; color: {dlg_text}; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px;">
+                    <span>💳</span>
+                    <div><b>2x Keşbek & Endirim:</b> Bravo, Araz, OBA, Bazarstore və digər marketlərdən keşbek toplayın.</div>
+                </div>
+                <div style="font-size: 13px; color: {dlg_text}; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px;">
+                    <span>📍</span>
+                    <div><b>Optimal Marşrut:</b> Ünvanınıza ən yaxın 2 market kombinasiyası ilə büdcənizə qənaət edin.</div>
+                </div>
+            </div>
+            <div style="margin-top: 14px; padding: 10px 12px; background: {dlg_card_bg}; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; font-size: 12px; color: #10b981;">
+                🔒 Şifrəniz PBKDF2-HMAC-SHA256 (100,000 iterasiya) ilə etibarlı şifrələnir.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col_forms:
+        diag_tab_login, diag_tab_reg = st.tabs(["🔑 Daxil Ol (Login)", "📝 Yeni Qeydiyyat (Register)"])
+
+        with diag_tab_login:
+            if st.button("⚡ 1-Kliklə Demo Giriş (Ali İskəndərli)", key="dlg_btn_demo_in", use_container_width=True, type="primary"):
+                ok, msg, u_data = user_db.authenticate_user("demo", "sebet2026")
+                if ok:
+                    st.session_state["user_authenticated"] = True
+                    st.session_state["current_user"] = u_data
+                    st.session_state["points"] = u_data.get("sebet_points", 300)
+                    s_b, s_loc = user_db.load_user_basket(u_data["id"])
+                    if s_b:
+                        st.session_state["basket"] = s_b
+                    st.toast(f"Xoş gəldiniz, {u_data['full_name']}!", icon="👋")
+                    st.rerun()
+
+            st.markdown("<div style='text-align: center; color: #94a3b8; margin: 8px 0; font-size: 12px;'>və ya öz hesabınızla</div>", unsafe_allow_html=True)
+
+            with st.form(key="dlg_form_login"):
+                u_in = st.text_input("İstifadəçi adı və ya Telefon / E-poçt", placeholder="Məs: demo və ya ali@sebet.az", key="dlg_inp_user")
+                p_in = st.text_input("Şifrə", type="password", placeholder="••••••••", key="dlg_inp_pwd")
+                sub_login = st.form_submit_button("Daxil Ol", use_container_width=True)
+
+                if sub_login:
+                    if not u_in or not p_in:
+                        st.error("Zəhmət olmasa istifadəçi adı və şifrəni daxil edin.")
+                    else:
+                        ok, msg, u_data = user_db.authenticate_user(u_in.strip(), p_in)
+                        if ok:
+                            st.session_state["user_authenticated"] = True
+                            st.session_state["current_user"] = u_data
+                            st.session_state["points"] = u_data.get("sebet_points", 0)
+                            s_b, s_loc = user_db.load_user_basket(u_data["id"])
+                            if s_b:
+                                st.session_state["basket"] = s_b
+                            st.success(msg)
+                            st.rerun()
+                        else:
+                            st.error(msg)
+
+        with diag_tab_reg:
+            st.markdown(
+                """
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; font-size: 12px; color: #10b981; font-weight: 600;">
+                    🎁 Qeydiyyat tamamlanan kimi 250 Sebet Xalı (2.50 AZN) balansınıza oturacaq!
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            with st.form(key="dlg_form_register"):
+                reg_name = st.text_input("Ad və Soyadınız", placeholder="Məs: Rəşad Məmmədov", key="dlg_r_name")
+                reg_u = st.text_input("İstifadəçi Adı və ya Telefon", placeholder="reshad99 və ya 0501234567", key="dlg_r_user")
+                reg_e = st.text_input("E-poçt Ünvanı (Könüllü)", placeholder="reshad@example.com", key="dlg_r_email")
+                reg_loc = st.selectbox(
+                    "Sevimli Ərazi / Metro",
+                    [
+                        "28 May m. / Dəmiryol Vağzalı",
+                        "Gənclik m. / Atatürk pr. / Gənclik Mall",
+                        "Nərimanov m. / Metropark",
+                        "Elmlər Akademiyası m. / BDU",
+                        "İnşaatçılar m. / A. M. Şərifzadə",
+                        "20 Yanvar m. / Tbilisi pr.",
+                        "Əhmədli m. / M. Hadi",
+                        "Neftçilər m. / Q. Qarayev pr.",
+                        "Sahil m. / Nizami küç. (Tarqovı)",
+                    ],
+                    key="dlg_r_loc",
+                )
+                reg_p1 = st.text_input("Şifrə", type="password", placeholder="Ən azı 4 simvol", key="dlg_r_p1")
+                reg_p2 = st.text_input("Şifrənin Təkrarı", type="password", placeholder="Şifrəni yenidən yazın", key="dlg_r_p2")
+                sub_reg = st.form_submit_button("Qeydiyyatdan Keç (+250 Xal Qazan)", use_container_width=True, type="primary")
+
+                if sub_reg:
+                    if not reg_name or not reg_u or not reg_p1:
+                        st.error("Zəhmət olmasa bütün tələb olunan sahələri doldurun.")
+                    elif len(reg_p1) < 4:
+                        st.error("Şifrə ən azı 4 simvoldan ibarət olmalıdır.")
+                    elif reg_p1 != reg_p2:
+                        st.error("Daxil edilən şifrələr bir-biri ilə uyğun gəlmir.")
+                    else:
+                        ok, msg, u_data = user_db.register_user(
+                            username=reg_u.strip(),
+                            full_name=reg_name.strip(),
+                            password=reg_p1,
+                            email=reg_e.strip(),
+                            phone=reg_u.strip(),
+                            home_location=reg_loc,
+                        )
+                        if ok:
+                            st.session_state["user_authenticated"] = True
+                            st.session_state["current_user"] = u_data
+                            st.session_state["points"] = u_data.get("sebet_points", 250)
+                            st.success(f"🎉 Təbriklər, {reg_name}! Hesabınız yaradıldı və 250 xal əlavə edildi.")
+                            st.rerun()
+                        else:
+                            st.error(msg)
+
+
 # -----------------------------------------------------------------------------
 # 6. Sidebar Controls
 # -----------------------------------------------------------------------------
