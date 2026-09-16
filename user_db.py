@@ -49,7 +49,7 @@ def init_user_db():
         email TEXT,
         password_hash TEXT NOT NULL,
         salt TEXT NOT NULL,
-        sebet_points INTEGER NOT NULL DEFAULT 250,
+        sebet_points INTEGER NOT NULL DEFAULT 0,
         membership_tier TEXT NOT NULL DEFAULT 'Sebet Platinum',
         saved_basket TEXT DEFAULT '[]',
         home_location TEXT DEFAULT '28 May m. / Dəmiryol Vağzalı',
@@ -91,7 +91,7 @@ def init_user_db():
             "ali@sebet.az",
             demo_hash,
             demo_salt,
-            300,
+            100,
             "Sebet Platinum",
             "[]",
             "28 May m. / Dəmiryol Vağzalı",
@@ -120,6 +120,7 @@ def register_user(
     phone: str = "",
     email: str = "",
     home_location: str = "28 May m. / Dəmiryol Vağzalı",
+    initial_points: int = 0,
 ) -> Tuple[bool, str, Optional[Dict[str, Any]]]:
     """
     Registers a new user in the database.
@@ -149,7 +150,6 @@ def register_user(
     salt = secrets.token_hex(16)
     pwd_hash = _hash_password(password, salt)
     now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-    initial_points = 250
 
     try:
         cursor.execute("""
@@ -178,7 +178,7 @@ def register_user(
         cursor.execute("""
         INSERT INTO user_activity_logs (user_id, action, details, created_at)
         VALUES (?, ?, ?, ?)
-        """, (new_id, "REGISTER", "Yeni hesab qeydiyyatı və +250 xal bonus", now_iso))
+        """, (new_id, "REGISTER", "Yeni hesab qeydiyyatı", now_iso))
         conn.commit()
 
         # Fetch created user
@@ -189,7 +189,7 @@ def register_user(
         user_dict.pop("password_hash", None)
         user_dict.pop("salt", None)
         conn.close()
-        return True, "🎉 Qeydiyyat uğurla tamamlandı! Hesabınıza 250 Xal (2.50 ₼) bonus əlavə edildi.", user_dict
+        return True, "🎉 Qeydiyyat uğurla tamamlandı! Hesabınız hazırdır.", user_dict
 
     except Exception as ex:
         conn.close()
