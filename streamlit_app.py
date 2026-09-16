@@ -1034,70 +1034,21 @@ with st.sidebar:
 
     st.markdown("### 📍 Bakı Məkanı & Radius")
 
+    # Build full Baku location presets from comprehensive database
     LOCATION_PRESETS = {
-        "28 May / Dəmiryol Vağzalı": (40.3798, 49.8475),
-        "Sahil / Torqovı (Nizami küç.)": (40.3705, 49.8415),
-        "Fəvvarələr Meydanı (Fountain Sq.)": (40.3712, 49.8375),
-        "İçərişəhər (Old City)": (40.3662, 49.8335),
-        "Elmlər Akademiyası / BDU": (40.3745, 49.8130),
-        "Nizami m. / Zivərbəy Əhmədbəyov": (40.3790, 49.8295),
-        "Gənclik Mall / Atatürk pr.": (40.4005, 49.8525),
-        "Nərimanov / Metropark": (40.4024, 49.8712),
-        "İnşaatçılar / A. M. Şərifzadə": (40.3885, 49.8055),
-        "20 Yanvar / Tbilisi pr.": (40.4045, 49.8080),
-        "Xətai / Ağ Şəhər (White City)": (40.3838, 49.8725),
-        "Koroğlu Nəqliyyat Qovşağı": (40.4208, 49.9192),
-        "Qara Qarayev": (40.4042, 49.9328),
-        "Neftçilər metrosu": (40.4055, 49.9425),
-        "Xalqlar Dostluğu": (40.3970, 49.9535),
-        "Əhmədli / M. Hadi": (40.3850, 49.9530),
-        "Həzi Aslanov metrosu": (40.3735, 49.9535),
-        "Bayıl / Su İdmanı Sarayı": (40.3450, 49.8320),
-        "Badamdar qəsəbəsi": (40.3480, 49.8080),
-        "Yasamal / H. Zərdabi": (40.3920, 49.8020),
-        "Biləcəri qəsəbəsi": (40.4312, 49.8145),
-        "Bakıxanov (Razin)": (40.4215, 49.9650),
-        "Xırdalan Mərkəz (AAAF Park)": (40.4505, 49.7540),
-        "Masazır (Yeni Bakı)": (40.4720, 49.7420),
-        "Sumqayıt Mərkəz": (40.5855, 49.6317),
-        "Gəncə Mərkəz (Gəncə Mall)": (40.6828, 46.3606),
-    }
-
-    BAKU_LANDMARKS = {
-        "28 mall": (40.3798, 49.8475, "28 Mall Ticarət Mərkəzi"),
-        "port baku": (40.3762, 49.8568, "Port Baku Mall"),
-        "park bulvar": (40.3695, 49.8480, "Park Bulvar Ticarət Mərkəzi"),
-        "deniz mall": (40.3585, 49.8340, "Dəniz Mall"),
-        "dəniz mall": (40.3585, 49.8340, "Dəniz Mall"),
-        "genclik mall": (40.4005, 49.8525, "Gənclik Mall"),
-        "gənclik mall": (40.4005, 49.8525, "Gənclik Mall"),
-        "crescent mall": (40.3748, 49.8605, "Crescent Mall"),
-        "metropark": (40.4024, 49.8712, "Metropark Nərimanov"),
-        "flame towers": (40.3598, 49.8275, "Flame Towers"),
-        "alov qulleri": (40.3598, 49.8275, "Alov Qüllələri"),
-        "torqovaya": (40.3705, 49.8415, "Torqovaya / Nizami küç."),
-        "tarqovi": (40.3705, 49.8415, "Torqovaya / Nizami küç."),
-        "nizami kucesi": (40.3705, 49.8415, "Nizami küçəsi"),
-        "bdu": (40.3745, 49.8130, "Bakı Dövlət Universiteti"),
-        "ada": (40.3950, 49.8510, "ADA Universiteti"),
-        "ada universiteti": (40.3950, 49.8510, "ADA Universiteti"),
-        "heyder eliyev merkezi": (40.3960, 49.8675, "Heydər Əliyev Mərkəzi"),
-        "heydər əliyev mərkəzi": (40.3960, 49.8675, "Heydər Əliyev Mərkəzi"),
-        "fevvareler meydani": (40.3712, 49.8375, "Fəvvarələr Meydanı"),
-        "koroglu": (40.4208, 49.9192, "Koroğlu Nəqliyyat Qovşağı"),
-        "koroğlu": (40.4208, 49.9192, "Koroğlu Nəqliyyat Qovşağı"),
-        "bravo koroglu": (40.4208, 49.9192, "Bravo Hypermarket Koroğlu"),
-        "aaaf park": (40.4530, 49.7610, "AAAF Park Xırdalan"),
-        "kristal abseron": (40.4470, 49.7600, "Kristal Abşeron Xırdalan"),
+        loc["title"]: (loc["lat"], loc["lon"])
+        for loc in sebet_data.BAKU_ALL_LOCATIONS.values()
     }
 
     # Initialize location state
     if "user_coords" not in st.session_state:
         st.session_state["user_coords"] = (40.3798, 49.8475)
     if "selected_loc_name" not in st.session_state:
-        st.session_state["selected_loc_name"] = "28 May / Dəmiryol Vağzalı"
+        st.session_state["selected_loc_name"] = "28 May m. / Dəmiryol Vağzalı"
     if "max_walking_dist" not in st.session_state:
         st.session_state["max_walking_dist"] = 750
+    if "user_location_confirmed" not in st.session_state:
+        st.session_state["user_location_confirmed"] = False
 
     # Actively request browser geolocation via streamlit_js_eval
     if HAS_GEO:
@@ -1105,28 +1056,45 @@ with st.sidebar:
         if geo_info and isinstance(geo_info, dict) and "coords" in geo_info and geo_info["coords"]:
             raw_lat = geo_info["coords"].get("latitude")
             raw_lon = geo_info["coords"].get("longitude")
+            accuracy = float(geo_info["coords"].get("accuracy", 9999.0))
             if raw_lat and raw_lon:
                 g_lat = round(float(raw_lat), 4)
                 g_lon = round(float(raw_lon), 4)
-                if st.session_state.get("last_auto_gps") != (g_lat, g_lon):
-                    st.session_state["last_auto_gps"] = (g_lat, g_lon)
-                    st.session_state["user_coords"] = (g_lat, g_lon)
-                    closest_k = min(
-                        LOCATION_PRESETS.keys(),
-                        key=lambda k: calculate_distance_meters((g_lat, g_lon), LOCATION_PRESETS[k]),
-                    )
-                    st.session_state["selected_loc_name"] = f"📍 Dəqiq GPS ({closest_k} yaxınlığı)"
-                    st.session_state["gps_detected"] = True
+                st.session_state["raw_gps_coords"] = (g_lat, g_lon)
+                st.session_state["raw_gps_accuracy"] = accuracy
+                # Only automatically set coordinates if the user has NOT manually set their location
+                if not st.session_state.get("user_location_confirmed", False):
+                    if st.session_state.get("last_auto_gps") != (g_lat, g_lon):
+                        st.session_state["last_auto_gps"] = (g_lat, g_lon)
+                        st.session_state["user_coords"] = (g_lat, g_lon)
+                        closest_k = min(
+                            LOCATION_PRESETS.keys(),
+                            key=lambda k: calculate_distance_meters((g_lat, g_lon), LOCATION_PRESETS[k]),
+                        )
+                        if accuracy <= 1000:
+                            st.session_state["selected_loc_name"] = f"📍 Dəqiq GPS ({closest_k} yaxınlığı)"
+                            st.session_state["gps_detected"] = "precise"
+                        else:
+                            st.session_state["selected_loc_name"] = f"📍 Şəbəkə Təxmini ({closest_k})"
+                            st.session_state["gps_detected"] = "coarse"
 
-    if st.session_state.get("gps_detected"):
-        st.success(f"✅ Məkanınız GPS ilə müəyyən edildi: {st.session_state['user_coords'][0]:.4f}, {st.session_state['user_coords'][1]:.4f}")
+    # Status indication
+    gps_status = st.session_state.get("gps_detected")
+    if gps_status == "precise":
+        acc = int(st.session_state.get("raw_gps_accuracy", 50))
+        st.success(f"🎯 Dəqiq GPS: {st.session_state['user_coords'][0]:.4f}, {st.session_state['user_coords'][1]:.4f} (~{acc}m)")
+    elif gps_status == "coarse":
+        acc_km = round(st.session_state.get("raw_gps_accuracy", 3000) / 1000, 1)
+        st.warning(f"⚠️ Şəbəkə təxmini (~{acc_km}km xəta). Dəqiq ünvanınızı aşağıdan seçin 👇")
+    elif st.session_state.get("user_location_confirmed"):
+        st.info(f"✅ Seçilmiş Məkan: **{st.session_state['selected_loc_name']}**")
     else:
-        st.caption("ℹ️ Brauzer məkan icazəsi soruşduqda 'İcazə ver' (Allow) seçin və ya aşağıdan ərazi seçin.")
+        st.caption("ℹ️ Brauzer icazəsi verdikdə GPS yoxlanılır və ya aşağıdan ərazi seçə bilərsiniz.")
 
-    # Location mode tabs: Preset vs Landmark Search vs Custom
+    # Location mode selection
     loc_mode = st.radio(
         "Məkan Seçim Üsulu:",
-        ["🏙️ Bakı Əraziləri", "🔍 Landmark / Ünvan", "🎯 Xüsusi Koordinat"],
+        ["🏙️ Bakı Əraziləri", "🔍 Ünvan / Axtarış", "🎯 Xüsusi Koordinat"],
         index=0,
         horizontal=True,
         label_visibility="collapsed",
@@ -1138,7 +1106,7 @@ with st.sidebar:
     if loc_mode == "🏙️ Bakı Əraziləri":
         cur_idx = preset_keys.index(cur_sel_name) if cur_sel_name in preset_keys else 0
         chosen_preset = st.selectbox(
-            "Yaşadığınız ərazi:",
+            "Yaşadığınız ərazi (80+ Məkan):",
             preset_keys,
             index=cur_idx,
             key="sidebar_preset_select",
@@ -1146,27 +1114,28 @@ with st.sidebar:
         if chosen_preset != st.session_state.get("selected_loc_name"):
             st.session_state["selected_loc_name"] = chosen_preset
             st.session_state["user_coords"] = LOCATION_PRESETS[chosen_preset]
-            st.session_state["gps_detected"] = False
+            st.session_state["user_location_confirmed"] = True
+            st.session_state["gps_detected"] = "manual"
 
-    elif loc_mode == "🔍 Landmark / Ünvan":
-        landmark_q = st.text_input(
-            "Landmark və ya ticarət mərkəzi axtarın:",
-            placeholder="Məs: Port Baku, 28 Mall, Flame Towers, BDU...",
-            key="sidebar_landmark_input",
+    elif loc_mode == "🔍 Ünvan / Axtarış":
+        search_kw = st.text_input(
+            "Küçə, metro və ya landmark axtarın:",
+            placeholder="Məs: Həzi Aslanov, İnşaatçılar, Təbriz, BDU, Yasamal...",
+            key="sidebar_location_search",
         )
-        if landmark_q:
-            clean_q = landmark_q.lower().strip()
-            matched = False
-            for k, (l_lat, l_lon, l_title) in BAKU_LANDMARKS.items():
-                if clean_q in k or k in clean_q:
-                    st.session_state["user_coords"] = (l_lat, l_lon)
-                    st.session_state["selected_loc_name"] = f"📍 {l_title}"
-                    st.session_state["gps_detected"] = False
-                    st.success(f"Seçildi: **{l_title}** ({l_lat:.4f}, {l_lon:.4f})")
-                    matched = True
-                    break
-            if not matched:
-                st.caption("ℹ️ Məsələn: *Port Baku*, *28 Mall*, *Gənclik Mall*, *Park Bulvar*, *Dəniz Mall*, *BDU*, *ADA*, *Torqovaya*")
+        if search_kw:
+            found_locs = sebet_data.search_baku_locations(search_kw, limit=5)
+            if found_locs:
+                st.caption("Tapılan məkanlar (seçmək üçün klikləyin):")
+                for s_loc in found_locs:
+                    if st.button(f"📍 {s_loc['title']} ({s_loc['category']})", key=f"sb_srch_{s_loc['title']}", use_container_width=True):
+                        st.session_state["user_coords"] = (s_loc["lat"], s_loc["lon"])
+                        st.session_state["selected_loc_name"] = s_loc["title"]
+                        st.session_state["user_location_confirmed"] = True
+                        st.session_state["gps_detected"] = "manual"
+                        st.rerun()
+            else:
+                st.caption("Axtarışa uyğun məkan tapılmadı. Məsələn: *Port Baku*, *Torqovaya*, *Gənclik*, *Yasamal*, *Əhmədli*")
 
     else:
         cur_c = st.session_state["user_coords"]
@@ -1178,7 +1147,8 @@ with st.sidebar:
         if (new_lat, new_lon) != cur_c:
             st.session_state["user_coords"] = (new_lat, new_lon)
             st.session_state["selected_loc_name"] = f"Xüsusi ({new_lat:.4f}, {new_lon:.4f})"
-            st.session_state["gps_detected"] = False
+            st.session_state["user_location_confirmed"] = True
+            st.session_state["gps_detected"] = "manual"
 
     user_coords = st.session_state["user_coords"]
     selected_loc_name = st.session_state["selected_loc_name"]
@@ -1268,16 +1238,40 @@ with tab_optimizer:
     loc_top_border = "rgba(16, 185, 129, 0.35)" if dark_mode else "#cbd5e1"
     loc_accent = "#34d399" if dark_mode else "#059669"
 
+    # -------------------------------------------------------------------------
+    # Top Location Bar & Intuitive Baku Location Switcher
+    # -------------------------------------------------------------------------
+    cur_loc = st.session_state.get("selected_loc_name", "28 May m. / Dəmiryol Vağzalı")
+    u_lat, u_lon = st.session_state.get("user_coords", (40.3798, 49.8475))
+    walk_dist = int(st.session_state.get("max_walking_dist", 750))
+    walk_time_est = max(1, round(walk_dist / 80))
+
+    loc_top_bg = "rgba(30, 41, 59, 0.75)" if dark_mode else "#f8fafc"
+    loc_top_border = "rgba(16, 185, 129, 0.35)" if dark_mode else "#cbd5e1"
+    loc_accent = "#34d399" if dark_mode else "#059669"
+    gps_st = st.session_state.get("gps_detected")
+
+    status_badge_html = ""
+    if gps_st == "coarse":
+        status_badge_html = """<span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">⚠️ Təxmini Şəbəkə Məkanı (Dəqiq deyil? Aşağıdan seçin)</span>"""
+    elif gps_st == "precise":
+        status_badge_html = """<span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">🎯 Dəqiq GPS Aktivdir</span>"""
+    elif st.session_state.get("user_location_confirmed"):
+        status_badge_html = """<span style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">✅ Təsdiqlənmiş Ünvan</span>"""
+
     render_html(f"""
-    <div style="background: {loc_top_bg}; border: 1px solid {loc_top_border}; border-radius: 14px; padding: 12px 18px; margin-bottom: 16px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+    <div style="background: {loc_top_bg}; border: 1px solid {loc_top_border}; border-radius: 14px; padding: 14px 18px; margin-bottom: 16px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
                 📍
             </div>
             <div>
-                <div style="font-size: 11px; font-weight: 700; color: {loc_accent}; text-transform: uppercase; letter-spacing: 0.05em;">Cari Məkan & Radius</div>
-                <div style="font-size: 16px; font-weight: 800; color: {card_text};">{cur_loc}</div>
-                <div style="font-size: 12px; color: {sub_text};">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 3px;">
+                    <span style="font-size: 11px; font-weight: 800; color: {loc_accent}; text-transform: uppercase; letter-spacing: 0.05em;">Cari Məkan & Radius</span>
+                    {status_badge_html}
+                </div>
+                <div style="font-size: 17px; font-weight: 800; color: {card_text};">{cur_loc}</div>
+                <div style="font-size: 12px; color: {sub_text}; margin-top: 2px;">
                     Koordinatlar: <code style="color: {loc_accent}; background: transparent; font-weight: 600;">{u_lat:.4f}, {u_lon:.4f}</code> · Piyada radius: <b style="color: {card_text};">{walk_dist} m</b> (~{walk_time_est} dəqiqə piyada)
                 </div>
             </div>
@@ -1285,82 +1279,101 @@ with tab_optimizer:
     </div>
     """)
 
-    with st.expander("⚙️ Məkanı & Radiusu Dəyişdir / Canlı GPS / Landmark Axtarışı", expanded=False):
-        st.markdown("<div style='font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;'>⚡ Tez Məkan Seçimi:</div>", unsafe_allow_html=True)
-        q_cols = st.columns(6)
-        quick_hubs = [
-            ("28 May", "28 May / Dəmiryol Vağzalı"),
-            ("Sahil / Torqovı", "Sahil / Torqovı (Nizami küç.)"),
-            ("Gənclik", "Gənclik Mall / Atatürk pr."),
-            ("Elmlər", "Elmlər Akademiyası / BDU"),
-            ("Nərimanov", "Nərimanov / Metropark"),
-            ("Xırdalan", "Xırdalan Mərkəz (AAAF Park)"),
+    # Open expander by default if user hasn't manually confirmed location or if coarse GPS
+    is_exp_open = not st.session_state.get("user_location_confirmed", False)
+    with st.expander("📍 Məkanı Dəyişdir / Ünvan Axtar / Xəritədə Seç", expanded=is_exp_open):
+        st.markdown("<div style='font-size: 13px; font-weight: 700; color: #94a3b8; margin-bottom: 6px;'>⚡ 1-Kliklə Populyar Bakı Məkanları:</div>", unsafe_allow_html=True)
+
+        row1_cols = st.columns(6)
+        row1_hubs = [
+            ("🚇 28 May", "28 May m. / Dəmiryol Vağzalı"),
+            ("🚇 Gənclik", "Gənclik m. / Atatürk pr. / Gənclik Mall"),
+            ("🚇 Nərimanov", "Nərimanov m. / Metropark"),
+            ("🚇 Elmlər / BDU", "Elmlər Akademiyası m. / BDU"),
+            ("🚇 İnşaatçılar", "İnşaatçılar m. / A. M. Şərifzadə"),
+            ("🚇 20 Yanvar", "20 Yanvar m. / Tbilisi pr."),
         ]
-        for col_i, (short_label, full_key) in zip(q_cols, quick_hubs):
+        for col_i, (short_label, full_key) in zip(row1_cols, row1_hubs):
             with col_i:
-                if st.button(short_label, key=f"quick_loc_{short_label}", use_container_width=True):
+                if st.button(short_label, key=f"t1_q1_{short_label}", use_container_width=True):
                     st.session_state["selected_loc_name"] = full_key
                     st.session_state["user_coords"] = LOCATION_PRESETS[full_key]
+                    st.session_state["user_location_confirmed"] = True
+                    st.session_state["gps_detected"] = "manual"
                     st.rerun()
 
-        st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
-        tab_loc_col1, tab_loc_col2 = st.columns([1.5, 1])
+        row2_cols = st.columns(6)
+        row2_hubs = [
+            ("🚇 Əhmədli", "Əhmədli m. / Məhəmməd Hadi"),
+            ("🚇 Neftçilər", "Neftçilər m. / Rüstəm Rüstəmov"),
+            ("🏢 Sahil / Torqovı", "Sahil m. / Torqovı (Nizami küç.)"),
+            ("🏢 Port Baku", "Port Baku Mall / Neftçilər pr."),
+            ("🏘️ Yasamal", "Yasamal (Mərkəz)"),
+            ("🏘️ Xırdalan", "Xırdalan Mərkəz (Heydər Əliyev parkı)"),
+        ]
+        for col_i, (short_label, full_key) in zip(row2_cols, row2_hubs):
+            with col_i:
+                if st.button(short_label, key=f"t1_q2_{short_label}", use_container_width=True):
+                    st.session_state["selected_loc_name"] = full_key
+                    st.session_state["user_coords"] = LOCATION_PRESETS[full_key]
+                    st.session_state["user_location_confirmed"] = True
+                    st.session_state["gps_detected"] = "manual"
+                    st.rerun()
+
+        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+        tab_loc_col1, tab_loc_col2 = st.columns([1.4, 1.1], gap="medium")
+
         with tab_loc_col1:
-            lm_input = st.text_input(
-                "Landmark və ya ticarət mərkəzi axtarışı:",
-                placeholder="Məs: Port Baku, 28 Mall, Flame Towers, BDU, ADA...",
-                key="tab1_landmark_search",
+            t1_search_q = st.text_input(
+                "🔍 Bakı üzrə istənilən küçə, prospekt, metro və ya landmark axtarın:",
+                placeholder="Məs: Həzi Aslanov, Təbriz küç., BDU, Dəniz Mall, Badamdar, Biləcəri...",
+                key="tab1_fuzzy_location_search",
             )
-            if lm_input:
-                clean_lm = lm_input.lower().strip()
-                matched = False
-                for k, (l_lat, l_lon, l_title) in BAKU_LANDMARKS.items():
-                    if clean_lm in k or k in clean_lm:
-                        st.session_state["user_coords"] = (l_lat, l_lon)
-                        st.session_state["selected_loc_name"] = f"📍 {l_title}"
-                        st.success(f"Seçildi: **{l_title}** ({l_lat:.4f}, {l_lon:.4f})")
-                        matched = True
-                        break
-                if not matched:
-                    st.caption("ℹ️ Məsələn: *Port Baku*, *28 Mall*, *Gənclik Mall*, *Park Bulvar*, *Dəniz Mall*, *BDU*, *ADA*, *Torqovaya*")
+            if t1_search_q:
+                found = sebet_data.search_baku_locations(t1_search_q, limit=6)
+                if found:
+                    st.markdown("<div style='font-size: 12px; font-weight: 600; color: #10b981; margin: 4px 0;'>Tapılan nəticələr (seçmək üçün klikləyin):</div>", unsafe_allow_html=True)
+                    f_cols = st.columns(2)
+                    for idx_f, f_item in enumerate(found):
+                        with f_cols[idx_f % 2]:
+                            btn_label = f"📍 {f_item['title']}"
+                            if st.button(btn_label, key=f"t1_found_{f_item['title']}_{idx_f}", use_container_width=True):
+                                st.session_state["user_coords"] = (f_item["lat"], f_item["lon"])
+                                st.session_state["selected_loc_name"] = f_item["title"]
+                                st.session_state["user_location_confirmed"] = True
+                                st.session_state["gps_detected"] = "manual"
+                                st.rerun()
+                else:
+                    st.caption("ℹ️ Axtarışa uyğun məkan tapılmadı. Məsələn: *Port Baku*, *Torqovaya*, *Yasamal*, *Əhmədli*, *Atatürk pr.*")
 
             cur_p_keys = list(LOCATION_PRESETS.keys())
             c_idx = cur_p_keys.index(cur_loc) if cur_loc in cur_p_keys else 0
             new_preset = st.selectbox(
-                "Və ya siyahıdan seçin (26 Bakı ərazisi):",
+                "Və ya siyahıdan seçin (80+ Bakı məkanı):",
                 cur_p_keys,
                 index=c_idx,
                 key="tab1_preset_select",
             )
-            if new_preset != st.session_state.get("selected_loc_name") and not lm_input:
+            if new_preset != st.session_state.get("selected_loc_name") and not t1_search_q:
                 st.session_state["selected_loc_name"] = new_preset
                 st.session_state["user_coords"] = LOCATION_PRESETS[new_preset]
+                st.session_state["user_location_confirmed"] = True
+                st.session_state["gps_detected"] = "manual"
                 st.rerun()
 
-        with tab_loc_col2:
-            if st.session_state.get("gps_detected"):
-                st.success(f"✅ GPS: {st.session_state['user_coords'][0]:.4f}, {st.session_state['user_coords'][1]:.4f}")
-            else:
-                st.info("📡 GPS Məkanınızı müəyyən etmək üçün brauzerinizin təqdim etdiyi icazə pəncərəsini təsdiqləyin.")
-
-            if HAS_GEO:
-                t1_geo = get_geolocation(component_key="tab1_gps_request")
-                if t1_geo and isinstance(t1_geo, dict) and "coords" in t1_geo and t1_geo["coords"]:
-                    t1_lat = round(float(t1_geo["coords"].get("latitude", 0.0)), 4)
-                    t1_lon = round(float(t1_geo["coords"].get("longitude", 0.0)), 4)
-                    if t1_lat != 0.0 and t1_lon != 0.0 and st.session_state.get("last_auto_gps") != (t1_lat, t1_lon):
-                        st.session_state["last_auto_gps"] = (t1_lat, t1_lon)
-                        st.session_state["user_coords"] = (t1_lat, t1_lon)
-                        closest_k = min(
-                            LOCATION_PRESETS.keys(),
-                            key=lambda k: calculate_distance_meters((t1_lat, t1_lon), LOCATION_PRESETS[k]),
-                        )
-                        st.session_state["selected_loc_name"] = f"📍 Dəqiq GPS ({closest_k} yaxınlığı)"
-                        st.session_state["gps_detected"] = True
+            # Walking radius selector buttons + slider
+            st.markdown("<div style='font-size: 13px; font-weight: 600; color: #94a3b8; margin-top: 8px;'>🚶 Piyada Məsafə Radiusu:</div>", unsafe_allow_html=True)
+            r_cols = st.columns(5)
+            radii_presets = [(300, "300m"), (500, "500m"), (750, "750m"), (1000, "1000m"), (1500, "1500m")]
+            for r_col, (r_val, r_label) in zip(r_cols, radii_presets):
+                with r_col:
+                    btn_type = "primary" if walk_dist == r_val else "secondary"
+                    if st.button(r_label, key=f"t1_rbtn_{r_val}", use_container_width=True, type=btn_type):
+                        st.session_state["max_walking_dist"] = r_val
                         st.rerun()
 
             new_radius = st.slider(
-                "🚶 Piyada məsafə limiti (metr):",
+                "Dəqiq metr tənzimlənməsi:",
                 min_value=200,
                 max_value=2000,
                 value=int(st.session_state["max_walking_dist"]),
@@ -1369,6 +1382,49 @@ with tab_optimizer:
             )
             if new_radius != st.session_state["max_walking_dist"]:
                 st.session_state["max_walking_dist"] = new_radius
+                st.rerun()
+
+        with tab_loc_col2:
+            st.markdown("<div style='font-size: 13px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;'>🗺️ Cari Məkanınız & Yaxın Marketlər:</div>", unsafe_allow_html=True)
+
+            # Build dataframe with User location + nearby supermarkets
+            map_pts = [
+                {
+                    "Məkan": f"🔴 Siz ({cur_loc.split('/')[0].strip()})",
+                    "Şəbəkə": "🔴 Sizin Məkanınız",
+                    "lat": u_lat,
+                    "lon": u_lon,
+                    "Məsafə": "0 m (Siz buradasınız)",
+                }
+            ]
+            for s in STORES:
+                d_m = calculate_distance_meters((u_lat, u_lon), (s["latitude"], s["longitude"]))
+                if d_m <= max(walk_dist * 2.2, 1800):
+                    map_pts.append({
+                        "Məkan": s["branch_name"],
+                        "Şəbəkə": s["chain_slug"].title(),
+                        "lat": s["latitude"],
+                        "lon": s["longitude"],
+                        "Məsafə": f"{int(d_m)}m (~{max(1, round(d_m / 80))} dəq piyada)",
+                    })
+
+            loc_preview_df = pd.DataFrame(map_pts)
+            render_map(
+                loc_preview_df,
+                lat="lat",
+                lon="lon",
+                color="Şəbəkə",
+                hover_name="Məkan",
+                hover_data=["Məsafə"],
+                zoom=13.2,
+                height=260,
+            )
+
+            # Re-check GPS button
+            if st.button("📡 Brauzer GPS-ini Yenidən Yoxla", key="t1_refresh_gps_btn", use_container_width=True):
+                st.session_state["user_location_confirmed"] = False
+                st.session_state["last_auto_gps"] = None
+                st.session_state["gps_detected"] = None
                 st.rerun()
 
     col_basket_mgr, col_optimizer_view = st.columns([1, 1.4], gap="large")
