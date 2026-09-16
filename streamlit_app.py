@@ -14,6 +14,12 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
+try:
+    from streamlit_js_eval import get_geolocation
+    HAS_GEO = True
+except ImportError:
+    HAS_GEO = False
+
 import sebet_data
 
 if "points" not in st.session_state:
@@ -742,6 +748,18 @@ def render_basket_items_table(items: List[Dict[str, Any]], dark: bool = True):
         else:
             qty_display = f"{int(qty_val) if isinstance(qty_val, float) and qty_val.is_integer() else qty_val} {it.get('unit', '')}"
 
+        rows_html += f"""
+        <tr style="background-color: {bg}; border-bottom: 1px solid {border_color};">
+            <td style="padding: 10px 14px; font-weight: 600; color: {text_color}; text-align: left;">{it['name']}</td>
+            <td style="padding: 10px 14px; color: {sub_color}; text-align: center; font-weight: 500;">{qty_display}</td>
+            <td style="padding: 10px 14px; color: {text_color}; text-align: right; font-weight: 500;">{it['unit_price']:.2f} ₼</td>
+            <td style="padding: 10px 14px; text-align: right;">
+                <span style="background: {badge_bg}; color: {badge_color}; border: 1px solid {badge_border}; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 13px;">
+                    {it['total']:.2f} ₼
+                </span>
+            </td>
+        </tr>
+        """
         row_html = (
             f'<tr style="background-color: {bg}; border-bottom: 1px solid {border_color};">'
             f'<td style="padding: 10px 14px; font-weight: 600; color: {text_color}; text-align: left;">{it["name"]}</td>'
@@ -755,6 +773,30 @@ def render_basket_items_table(items: List[Dict[str, Any]], dark: bool = True):
         rows.append(row_html)
 
     total_sum = sum(it.get("total", 0.0) for it in items)
+    table_html = f"""
+    <div style="width: 100%; overflow-x: auto; border: 1px solid {border_color}; border-radius: 12px; margin: 8px 0 14px 0;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; font-family: inherit;">
+            <thead>
+                <tr style="background-color: {th_bg}; border-bottom: 2px solid {border_color};">
+                    <th style="padding: 10px 14px; text-align: left; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Məhsul</th>
+                    <th style="padding: 10px 14px; text-align: center; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Miqdar</th>
+                    <th style="padding: 10px 14px; text-align: right; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Qiymət</th>
+                    <th style="padding: 10px 14px; text-align: right; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Məbləğ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {rows_html}
+            </tbody>
+            <tfoot>
+                <tr style="background-color: {th_bg}; border-top: 2px solid {border_color};">
+                    <td colspan="3" style="padding: 10px 14px; font-weight: 700; color: {text_color}; text-align: right;">Cəmi:</td>
+                    <td style="padding: 10px 14px; text-align: right; font-weight: 800; font-size: 14px; color: {badge_color};">{total_sum:.2f} ₼</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    """
+    st.markdown(table_html, unsafe_allow_html=True)
     table_html = (
         f'<div style="width: 100%; overflow-x: auto; border: 1px solid {border_color}; border-radius: 12px; margin: 8px 0 14px 0;">'
         f'<table style="width: 100%; border-collapse: collapse; font-size: 13px; font-family: inherit;">'
@@ -1049,7 +1091,7 @@ with st.sidebar:
         "kristal abseron": (40.4470, 49.7600, "Kristal Abşeron Xırdalan"),
     }
 
-    # Initialize session state defaults for location
+    # Initialize location state
     if "user_coords" not in st.session_state:
         st.session_state["user_coords"] = (40.3798, 49.8475)
     if "selected_loc_name" not in st.session_state:
@@ -1057,24 +1099,34 @@ with st.sidebar:
     if "max_walking_dist" not in st.session_state:
         st.session_state["max_walking_dist"] = 750
 
-    # Auto-detect from URL query parameters (e.g. from browser GPS callback)
-    if "user_lat" in st.query_params and "user_lon" in st.query_params:
-        try:
-            q_lat = float(st.query_params["user_lat"])
-            q_lon = float(st.query_params["user_lon"])
-            st.session_state["user_coords"] = (q_lat, q_lon)
-            closest_k = min(
-                LOCATION_PRESETS.keys(),
-                key=lambda k: calculate_distance_meters((q_lat, q_lon), LOCATION_PRESETS[k]),
-            )
-            st.session_state["selected_loc_name"] = f"📍 GPS ({closest_k} yaxınlığı)"
-        except (ValueError, TypeError):
-            pass
+    # Actively request browser geolocation via streamlit_js_eval
+    if HAS_GEO:
+        geo_info = get_geolocation(component_key="browser_auto_gps_locator")
+        if geo_info and isinstance(geo_info, dict) and "coords" in geo_info and geo_info["coords"]:
+            raw_lat = geo_info["coords"].get("latitude")
+            raw_lon = geo_info["coords"].get("longitude")
+            if raw_lat and raw_lon:
+                g_lat = round(float(raw_lat), 4)
+                g_lon = round(float(raw_lon), 4)
+                if st.session_state.get("last_auto_gps") != (g_lat, g_lon):
+                    st.session_state["last_auto_gps"] = (g_lat, g_lon)
+                    st.session_state["user_coords"] = (g_lat, g_lon)
+                    closest_k = min(
+                        LOCATION_PRESETS.keys(),
+                        key=lambda k: calculate_distance_meters((g_lat, g_lon), LOCATION_PRESETS[k]),
+                    )
+                    st.session_state["selected_loc_name"] = f"📍 Dəqiq GPS ({closest_k} yaxınlığı)"
+                    st.session_state["gps_detected"] = True
 
-    # Location mode tabs: Preset vs Landmark Search vs Custom / GPS
+    if st.session_state.get("gps_detected"):
+        st.success(f"✅ Məkanınız GPS ilə müəyyən edildi: {st.session_state['user_coords'][0]:.4f}, {st.session_state['user_coords'][1]:.4f}")
+    else:
+        st.caption("ℹ️ Brauzer məkan icazəsi soruşduqda 'İcazə ver' (Allow) seçin və ya aşağıdan ərazi seçin.")
+
+    # Location mode tabs: Preset vs Landmark Search vs Custom
     loc_mode = st.radio(
         "Məkan Seçim Üsulu:",
-        ["🏙️ Bakı Əraziləri", "🔍 Landmark / Ünvan", "🎯 Xüsusi / GPS"],
+        ["🏙️ Bakı Əraziləri", "🔍 Landmark / Ünvan", "🎯 Xüsusi Koordinat"],
         index=0,
         horizontal=True,
         label_visibility="collapsed",
@@ -1094,6 +1146,7 @@ with st.sidebar:
         if chosen_preset != st.session_state.get("selected_loc_name"):
             st.session_state["selected_loc_name"] = chosen_preset
             st.session_state["user_coords"] = LOCATION_PRESETS[chosen_preset]
+            st.session_state["gps_detected"] = False
 
     elif loc_mode == "🔍 Landmark / Ünvan":
         landmark_q = st.text_input(
@@ -1108,6 +1161,7 @@ with st.sidebar:
                 if clean_q in k or k in clean_q:
                     st.session_state["user_coords"] = (l_lat, l_lon)
                     st.session_state["selected_loc_name"] = f"📍 {l_title}"
+                    st.session_state["gps_detected"] = False
                     st.success(f"Seçildi: **{l_title}** ({l_lat:.4f}, {l_lon:.4f})")
                     matched = True
                     break
@@ -1115,69 +1169,16 @@ with st.sidebar:
                 st.caption("ℹ️ Məsələn: *Port Baku*, *28 Mall*, *Gənclik Mall*, *Park Bulvar*, *Dəniz Mall*, *BDU*, *ADA*, *Torqovaya*")
 
     else:
-        st.markdown(
-            """
-            <div style="margin-bottom: 6px;">
-                <button id="sidebar-gps-btn" onclick="askBrowserGPS()" style="
-                    width: 100%;
-                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                    color: white;
-                    border: none;
-                    padding: 8px 12px;
-                    border-radius: 8px;
-                    font-weight: 700;
-                    font-size: 13px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 6px;
-                    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-                ">
-                    📍 Cari Məkanımı Tap (GPS)
-                </button>
-                <div id="gps-log" style="font-size: 11px; color: #94a3b8; margin-top: 4px; text-align: center;"></div>
-            </div>
-            <script>
-            function askBrowserGPS() {
-                const btn = document.getElementById('sidebar-gps-btn');
-                const log = document.getElementById('gps-log');
-                if (!navigator.geolocation) {
-                    log.innerText = "GPS dəstəklənmir";
-                    return;
-                }
-                btn.disabled = true;
-                log.innerText = "Peyk əlaqəsi qurulur...";
-                navigator.geolocation.getCurrentPosition(
-                    function(p) {
-                        const lat = p.coords.latitude.toFixed(4);
-                        const lon = p.coords.longitude.toFixed(4);
-                        log.innerText = "Məkan təsdiqləndi: " + lat + ", " + lon;
-                        const u = new URL(window.parent.location.href);
-                        u.searchParams.set('user_lat', lat);
-                        u.searchParams.set('user_lon', lon);
-                        window.parent.location.href = u.href;
-                    },
-                    function(e) {
-                        btn.disabled = false;
-                        log.innerText = "Xəta: " + e.message;
-                    },
-                    { enableHighAccuracy: true, timeout: 8000 }
-                );
-            }
-            </script>
-            """,
-            unsafe_allow_html=True,
-        )
         cur_c = st.session_state["user_coords"]
         c_lat_col, c_lon_col = st.columns(2)
         with c_lat_col:
-            new_lat = st.number_input("Enlik (Lat)", value=float(cur_c[0]), format="%.4f", step=0.001)
+            new_lat = st.number_input("Enlik (Lat)", value=float(cur_c[0]), format="%.4f", step=0.001, key="sb_cust_lat")
         with c_lon_col:
-            new_lon = st.number_input("Uzunluq (Lon)", value=float(cur_c[1]), format="%.4f", step=0.001)
+            new_lon = st.number_input("Uzunluq (Lon)", value=float(cur_c[1]), format="%.4f", step=0.001, key="sb_cust_lon")
         if (new_lat, new_lon) != cur_c:
             st.session_state["user_coords"] = (new_lat, new_lon)
             st.session_state["selected_loc_name"] = f"Xüsusi ({new_lat:.4f}, {new_lon:.4f})"
+            st.session_state["gps_detected"] = False
 
     user_coords = st.session_state["user_coords"]
     selected_loc_name = st.session_state["selected_loc_name"]
@@ -1337,60 +1338,27 @@ with tab_optimizer:
                 st.rerun()
 
         with tab_loc_col2:
-            st.markdown(
-                """
-                <div style="margin-top: 24px; margin-bottom: 12px;">
-                    <button id="tab1-gps-btn" onclick="askTab1GPS()" style="
-                        width: 100%;
-                        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                        color: white;
-                        border: none;
-                        padding: 9px 14px;
-                        border-radius: 8px;
-                        font-weight: 700;
-                        font-size: 13px;
-                        cursor: pointer;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 6px;
-                        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-                    ">
-                        📍 Cari Məkanımı Tap (GPS)
-                    </button>
-                    <div id="tab1-gps-log" style="font-size: 11px; color: #94a3b8; margin-top: 4px; text-align: center;"></div>
-                </div>
-                <script>
-                function askTab1GPS() {
-                    const btn = document.getElementById('tab1-gps-btn');
-                    const log = document.getElementById('tab1-gps-log');
-                    if (!navigator.geolocation) {
-                        log.innerText = "GPS dəstəklənmir";
-                        return;
-                    }
-                    btn.disabled = true;
-                    log.innerText = "Peyk axtarılır...";
-                    navigator.geolocation.getCurrentPosition(
-                        function(p) {
-                            const lat = p.coords.latitude.toFixed(4);
-                            const lon = p.coords.longitude.toFixed(4);
-                            log.innerText = "Məkan təsdiqləndi: " + lat + ", " + lon;
-                            const u = new URL(window.parent.location.href);
-                            u.searchParams.set('user_lat', lat);
-                            u.searchParams.set('user_lon', lon);
-                            window.parent.location.href = u.href;
-                        },
-                        function(e) {
-                            btn.disabled = false;
-                            log.innerText = "Xəta: " + e.message;
-                        },
-                        { enableHighAccuracy: true, timeout: 8000 }
-                    );
-                }
-                </script>
-                """,
-                unsafe_allow_html=True,
-            )
+            if st.session_state.get("gps_detected"):
+                st.success(f"✅ GPS: {st.session_state['user_coords'][0]:.4f}, {st.session_state['user_coords'][1]:.4f}")
+            else:
+                st.info("📡 GPS Məkanınızı müəyyən etmək üçün brauzerinizin təqdim etdiyi icazə pəncərəsini təsdiqləyin.")
+
+            if HAS_GEO:
+                t1_geo = get_geolocation(component_key="tab1_gps_request")
+                if t1_geo and isinstance(t1_geo, dict) and "coords" in t1_geo and t1_geo["coords"]:
+                    t1_lat = round(float(t1_geo["coords"].get("latitude", 0.0)), 4)
+                    t1_lon = round(float(t1_geo["coords"].get("longitude", 0.0)), 4)
+                    if t1_lat != 0.0 and t1_lon != 0.0 and st.session_state.get("last_auto_gps") != (t1_lat, t1_lon):
+                        st.session_state["last_auto_gps"] = (t1_lat, t1_lon)
+                        st.session_state["user_coords"] = (t1_lat, t1_lon)
+                        closest_k = min(
+                            LOCATION_PRESETS.keys(),
+                            key=lambda k: calculate_distance_meters((t1_lat, t1_lon), LOCATION_PRESETS[k]),
+                        )
+                        st.session_state["selected_loc_name"] = f"📍 Dəqiq GPS ({closest_k} yaxınlığı)"
+                        st.session_state["gps_detected"] = True
+                        st.rerun()
+
             new_radius = st.slider(
                 "🚶 Piyada məsafə limiti (metr):",
                 min_value=200,
