@@ -3,9 +3,6 @@ gatherUsageStats = false
 
 [theme]
 primaryColor = "#10b981"
-backgroundColor = "#ffffff"
-secondaryBackgroundColor = "#f8fafc"
-textColor = "#0f172a"
 font = "sans serif"
 
 [server]

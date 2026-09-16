@@ -27,23 +27,313 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Custom Styling
-st.markdown(
-    """
+# Dark Mode State (checked early from session state)
+dark_mode = bool(st.session_state.get("dark_mode_toggle", False))
+
+# Shared Theme Variables
+card_bg = "#1e293b" if dark_mode else "#ffffff"
+card_border = "#334155" if dark_mode else "#e2e8f0"
+card_text = "#f8fafc" if dark_mode else "#0f172a"
+sub_text = "#94a3b8" if dark_mode else "#64748b"
+
+if dark_mode:
+    custom_css = """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-    
-    html, body, [class*="css"] {
+
+    :root, [data-testid="stAppViewContainer"], .stApp {
+        --text-color: #f8fafc !important;
+        --background-color: #0b1120 !important;
+        --secondary-background-color: #1e293b !important;
+        --primary-color: #10b981 !important;
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     }
-    
+
+    html, body, [class*="css"], .stApp {
+        background-color: #0b1120 !important;
+        color: #f8fafc !important;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    [data-testid="stAppViewContainer"] {
+        background-color: #0b1120 !important;
+        color: #f8fafc !important;
+    }
+
+    [data-testid="stHeader"] {
+        background-color: rgba(11, 17, 32, 0.95) !important;
+    }
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background-color: #0f172a !important;
+        border-right: 1px solid #1e293b !important;
+    }
+    section[data-testid="stSidebar"] * {
+        color: #f8fafc;
+    }
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p,
+    section[data-testid="stSidebar"] [data-testid="stWidgetLabel"] span {
+        color: #cbd5e1 !important;
+        font-weight: 600 !important;
+    }
+
+    /* Headings & Text */
+    h1, h2, h3, h4, h5, h6 {
+        color: #f8fafc !important;
+    }
+    p, span, label, li {
+        color: #e2e8f0;
+    }
+    .stMarkdown, .stMarkdown p, .stMarkdown span, .stMarkdown li, .stMarkdown strong {
+        color: #f1f5f9 !important;
+    }
+    .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6 {
+        color: #f8fafc !important;
+    }
+    .stCaption, [data-testid="stCaptionContainer"] p {
+        color: #94a3b8 !important;
+    }
+
+    /* Widget Labels */
+    label[data-testid="stWidgetLabel"],
+    label[data-testid="stWidgetLabel"] p,
+    label[data-testid="stWidgetLabel"] span {
+        color: #f8fafc !important;
+        font-weight: 600 !important;
+    }
+
+    /* Tabs */
+    button[data-baseweb="tab"] {
+        background-color: transparent !important;
+        border-color: #334155 !important;
+    }
+    button[data-baseweb="tab"] p,
+    button[data-baseweb="tab"] div,
+    button[data-baseweb="tab"] span {
+        color: #94a3b8 !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+    }
+    button[data-baseweb="tab"]:hover p,
+    button[data-baseweb="tab"]:hover span {
+        color: #34d399 !important;
+    }
+    button[data-baseweb="tab"][aria-selected="true"] {
+        border-bottom: 2px solid #10b981 !important;
+    }
+    button[data-baseweb="tab"][aria-selected="true"] p,
+    button[data-baseweb="tab"][aria-selected="true"] span {
+        color: #10b981 !important;
+        font-weight: 700 !important;
+    }
+    div[data-baseweb="tab-highlight"] {
+        background-color: #10b981 !important;
+    }
+    div[data-baseweb="tab-border"] {
+        background-color: #334155 !important;
+    }
+
+    /* Inputs & Form Controls */
+    input, textarea, [data-baseweb="input"], [data-baseweb="input"] input {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+        border-color: #475569 !important;
+        -webkit-text-fill-color: #f8fafc !important;
+    }
+    input::placeholder, textarea::placeholder {
+        color: #64748b !important;
+        -webkit-text-fill-color: #64748b !important;
+    }
+
+    /* Selectbox */
+    div[data-baseweb="select"] {
+        background-color: #1e293b !important;
+        border-color: #475569 !important;
+    }
+    div[data-baseweb="select"] * {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+    }
+    div[data-baseweb="select"] svg {
+        fill: #f8fafc !important;
+    }
+
+    /* Selectbox Dropdown Menu (Popover) */
+    div[data-baseweb="popover"],
+    ul[data-baseweb="menu"],
+    ul[role="listbox"] {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+        border: 1px solid #334155 !important;
+    }
+    li[role="option"] {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+    }
+    li[role="option"]:hover,
+    li[aria-selected="true"] {
+        background-color: #334155 !important;
+        color: #34d399 !important;
+    }
+    li[role="option"] * {
+        color: inherit !important;
+    }
+
+    /* Buttons */
+    button[kind="secondary"],
+    button[data-testid="baseButton-secondary"] {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+        border: 1px solid #475569 !important;
+    }
+    button[kind="secondary"]:hover,
+    button[data-testid="baseButton-secondary"]:hover {
+        background-color: #334155 !important;
+        border-color: #10b981 !important;
+        color: #34d399 !important;
+    }
+    button[kind="secondary"] p,
+    button[data-testid="baseButton-secondary"] p {
+        color: #f8fafc !important;
+    }
+    button[kind="secondary"]:hover p,
+    button[data-testid="baseButton-secondary"]:hover p {
+        color: #34d399 !important;
+    }
+    button[kind="primary"],
+    button[data-testid="baseButton-primary"] {
+        background-color: #10b981 !important;
+        color: #ffffff !important;
+        border: none !important;
+    }
+    button[kind="primary"] p,
+    button[data-testid="baseButton-primary"] p {
+        color: #ffffff !important;
+    }
+
+    /* Expanders */
+    div[data-testid="stExpander"] {
+        background-color: #1e293b !important;
+        border: 1px solid #334155 !important;
+        border-radius: 12px !important;
+    }
+    div[data-testid="stExpander"] summary {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+    }
+    div[data-testid="stExpander"] summary * {
+        color: #f8fafc !important;
+    }
+    div[data-testid="stExpander"] summary:hover {
+        color: #34d399 !important;
+    }
+    div[data-testid="stExpander"] div[role="region"] {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+    }
+
+    /* Metrics */
+    div[data-testid="stMetric"] {
+        background-color: #1e293b !important;
+        border: 1px solid #334155 !important;
+        border-radius: 12px !important;
+        padding: 14px 16px !important;
+    }
+    div[data-testid="stMetricLabel"],
+    div[data-testid="stMetricLabel"] p,
+    div[data-testid="stMetricLabel"] span {
+        color: #94a3b8 !important;
+        font-size: 13px !important;
+    }
+    div[data-testid="stMetricValue"],
+    div[data-testid="stMetricValue"] p,
+    div[data-testid="stMetricValue"] span,
+    div[data-testid="stMetricValue"] div {
+        color: #34d399 !important;
+        font-weight: 800 !important;
+    }
+
+    /* Sliders */
+    div[data-testid="stSlider"] div[role="slider"] {
+        background-color: #10b981 !important;
+    }
+    div[data-testid="stSlider"] [data-testid="stTickBar"] div {
+        color: #94a3b8 !important;
+    }
+    div[data-testid="stSlider"] [data-testid="stThumbValue"] {
+        color: #f8fafc !important;
+    }
+
+    /* Cards & Badges */
+    .store-card {
+        background-color: #1e293b !important;
+        border: 1px solid #334155 !important;
+        border-radius: 16px;
+        padding: 20px;
+        color: #f8fafc !important;
+    }
+    .metric-card {
+        background-color: #1e293b !important;
+        border: 1px solid #334155 !important;
+        border-radius: 16px;
+        padding: 18px 20px;
+        color: #f8fafc !important;
+    }
+    .store-card h4, .store-card h3, .store-card h2, .store-card p {
+        color: #f8fafc !important;
+    }
+    .store-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        color: white !important;
+    }
+    .savings-badge {
+        background: rgba(16, 185, 129, 0.25) !important;
+        color: #34d399 !important;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-weight: 800;
+        font-size: 14px;
+        display: inline-block;
+        border: 1px solid rgba(16, 185, 129, 0.4) !important;
+    }
+    .promo-tag {
+        background: rgba(239, 68, 68, 0.2) !important;
+        color: #f87171 !important;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        border: 1px solid rgba(239, 68, 68, 0.3) !important;
+    }
+
+    /* Alerts */
+    div[data-testid="stAlert"] {
+        background-color: #1e293b !important;
+        border: 1px solid #334155 !important;
+        color: #f8fafc !important;
+    }
+    div[data-testid="stAlert"] * {
+        color: #f8fafc !important;
+    }
+
+    /* Main Hero */
     .main-header {
-        background: linear-gradient(135deg, #1e4d2b 0%, #10b981 100%);
+        background: linear-gradient(135deg, #064e3b 0%, #047857 100%) !important;
         padding: 24px 32px;
         border-radius: 20px;
-        color: white;
+        color: white !important;
         margin-bottom: 24px;
-        box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.25);
+        box-shadow: 0 10px 25px -5px rgba(4, 120, 87, 0.4) !important;
+    }
+    .main-header * {
+        color: white !important;
     }
     .header-badge {
         display: inline-block;
@@ -55,6 +345,42 @@ st.markdown(
         letter-spacing: 0.05em;
         text-transform: uppercase;
         margin-bottom: 8px;
+        color: white !important;
+    }
+    </style>
+    """
+else:
+    custom_css = """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    html, body, [class*="css"], .stApp {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        color: #0f172a;
+    }
+
+    .main-header {
+        background: linear-gradient(135deg, #1e4d2b 0%, #10b981 100%);
+        padding: 24px 32px;
+        border-radius: 20px;
+        color: white !important;
+        margin-bottom: 24px;
+        box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.25);
+    }
+    .main-header * {
+        color: white !important;
+    }
+    .header-badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        color: white !important;
     }
     .metric-card {
         background: #ffffff;
@@ -77,7 +403,7 @@ st.markdown(
         border-radius: 8px;
         font-size: 12px;
         font-weight: 700;
-        color: white;
+        color: white !important;
     }
     .promo-tag {
         background: #fee2e2;
@@ -97,9 +423,9 @@ st.markdown(
         display: inline-block;
     }
     </style>
-    """,
-    unsafe_allow_html=True,
-)
+    """
+
+st.markdown(custom_css, unsafe_allow_html=True)
 
 
 # -----------------------------------------------------------------------------
@@ -445,52 +771,6 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-if dark_mode:
-    st.markdown(
-        """
-        <style>
-        .stApp {
-            background-color: #0b1120 !important;
-            color: #f1f5f9 !important;
-        }
-        section[data-testid="stSidebar"] {
-            background-color: #0f172a !important;
-            border-right: 1px solid #1e293b !important;
-        }
-        .store-card, .metric-card, div[data-testid="stExpander"] {
-            background-color: #1e293b !important;
-            border-color: #334155 !important;
-            color: #f1f5f9 !important;
-        }
-        div[data-testid="stMetricValue"] {
-            color: #34d399 !important;
-        }
-        div[data-testid="stMetricLabel"] {
-            color: #94a3b8 !important;
-        }
-        .stMarkdown p, .stMarkdown span, .stMarkdown div, h1, h2, h3, h4, h5, h6 {
-            color: #f8fafc !important;
-        }
-        .main-header {
-            background: linear-gradient(135deg, #064e3b 0%, #047857 100%) !important;
-            box-shadow: 0 10px 25px -5px rgba(4, 120, 87, 0.4) !important;
-        }
-        input, select, textarea, div[data-baseweb="select"] {
-            background-color: #1e293b !important;
-            color: #f8fafc !important;
-            border-color: #475569 !important;
-        }
-        .stDataFrame {
-            background-color: #1e293b !important;
-        }
-        div[data-testid="stExpander"] summary {
-            background-color: #1e293b !important;
-            color: #f1f5f9 !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
 
 # -----------------------------------------------------------------------------
 # 7. Main Hero Banner
@@ -531,7 +811,7 @@ with tab_optimizer:
         st.markdown("### 🛒 Səbətiniz")
 
         # Quick preset buttons
-        st.markdown("<div style='font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 6px;'>⚡ Hazır Səbət Şablonları:</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-size: 13px; font-weight: 600; color: {sub_text}; margin-bottom: 6px;'>⚡ Hazır Səbət Şablonları:</div>", unsafe_allow_html=True)
         col_p1, col_p2, col_p3 = st.columns(3)
         with col_p1:
             if st.button("🍳 Səhər Yeməyi", key="preset_breakfast", use_container_width=True):
@@ -706,11 +986,11 @@ with tab_optimizer:
                         <div class="store-card" style="border-top: 4px solid {single['chain_color']};">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <span class="store-badge" style="background: {single['chain_color']};">{single['chain_name']}</span>
-                                <span style="font-size: 12px; color: #64748b;">📍 {single['distance_km']} km məsafə</span>
+                                <span style="font-size: 12px; color: {sub_text};">📍 {single['distance_km']} km məsafə</span>
                             </div>
-                            <h4 style="margin: 0 0 4px 0;">{single['branch_name']}</h4>
-                            <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">{single['address']}</p>
-                            <div style="font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 12px;">
+                            <h4 style="margin: 0 0 4px 0; color: {card_text};">{single['branch_name']}</h4>
+                            <p style="font-size: 13px; color: {sub_text}; margin-bottom: 12px;">{single['address']}</p>
+                            <div style="font-size: 20px; font-weight: 800; color: {card_text}; margin-bottom: 12px;">
                                 Cəmi: {single['total_cost']:.2f} ₼
                             </div>
                         </div>
@@ -733,16 +1013,21 @@ with tab_optimizer:
                     if is_split_viable and split:
                         s1 = split["s1"]
                         s2 = split["s2"]
+                        split_card_bg = "rgba(16, 185, 129, 0.12)" if dark_mode else "#f0fdf4"
+                        split_card_border = "#10b981"
+                        split_card_title = "#6ee7b7" if dark_mode else "#166534"
+                        split_card_price = "#34d399" if dark_mode else "#15803d"
+
                         st.markdown(
                             f"""
-                            <div class="store-card" style="border-top: 4px solid #10b981; background: #f0fdf4;">
+                            <div class="store-card" style="border: 1px solid {split_card_border}; border-top: 4px solid {split_card_border}; background: {split_card_bg};">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                     <span class="savings-badge">✨ {split['savings_azn']:.2f} ₼ Qənaət ({split['savings_pct']}%)</span>
-                                    <span style="font-size: 12px; color: #15803d; font-weight: 700;">🚶 {split['walking_meters']}m aralı</span>
+                                    <span style="font-size: 12px; color: {split_card_price}; font-weight: 700;">🚶 {split['walking_meters']}m aralı</span>
                                 </div>
-                                <h4 style="margin: 0 0 4px 0; color: #166534;">1. {s1['branch_name']} + 2. {s2['branch_name']}</h4>
-                                <div style="font-size: 20px; font-weight: 800; color: #15803d; margin-bottom: 12px;">
-                                    Cəmi: {split['total_cost']:.2f} ₼ <span style="font-size: 14px; text-decoration: line-through; color: #94a3b8;">{single['total_cost']:.2f} ₼</span>
+                                <h4 style="margin: 0 0 4px 0; color: {split_card_title};">1. {s1['branch_name']} + 2. {s2['branch_name']}</h4>
+                                <div style="font-size: 20px; font-weight: 800; color: {split_card_price}; margin-bottom: 12px;">
+                                    Cəmi: {split['total_cost']:.2f} ₼ <span style="font-size: 14px; text-decoration: line-through; color: {sub_text};">{single['total_cost']:.2f} ₼</span>
                                 </div>
                             </div>
                             """,
@@ -896,6 +1181,10 @@ with tab_comparison:
                 yaxis_range=[0, max_val * 1.2],
                 showlegend=False,
                 margin=dict(t=40, b=20, l=20, r=20),
+                template="plotly_dark" if dark_mode else "plotly_white",
+                paper_bgcolor="#1e293b" if dark_mode else "#ffffff",
+                plot_bgcolor="#1e293b" if dark_mode else "#ffffff",
+                font=dict(color="#f8fafc" if dark_mode else "#0f172a"),
             )
             st.plotly_chart(fig_bar, use_container_width=True)
 
@@ -938,6 +1227,7 @@ with tab_flyers:
 
     for idx, fl in enumerate(sample_flyers):
         with flyer_cols[idx % 3]:
+            fl_box_bg = "#0f172a" if dark_mode else "#f8fafc"
             st.markdown(
                 f"""
                 <div class="store-card" style="border-top: 4px solid {fl['color']}; margin-bottom: 20px;">
@@ -945,11 +1235,11 @@ with tab_flyers:
                         <span class="store-badge" style="background: {fl['color']};">{fl['chain']}</span>
                         <span class="promo-tag">🔥 {fl['discount']}</span>
                     </div>
-                    <h4 style="margin: 4px 0 2px 0;">{fl['title']}</h4>
-                    <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">📅 {fl['dates']}</p>
-                    <div style="background: #f8fafc; border-radius: 8px; padding: 10px; margin-bottom: 12px;">
-                        <div style="font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 4px;">Seçilmiş Təkliflər:</div>
-                        <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #1e293b;">
+                    <h4 style="margin: 4px 0 2px 0; color: {card_text};">{fl['title']}</h4>
+                    <p style="font-size: 12px; color: {sub_text}; margin-bottom: 12px;">📅 {fl['dates']}</p>
+                    <div style="background: {fl_box_bg}; border: 1px solid {card_border}; border-radius: 8px; padding: 10px; margin-bottom: 12px;">
+                        <div style="font-size: 12px; font-weight: 700; color: {sub_text}; margin-bottom: 4px;">Seçilmiş Təkliflər:</div>
+                        <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: {card_text};">
                             {''.join(f'<li>{h}</li>' for h in fl['highlights'])}
                         </ul>
                     </div>
@@ -1028,7 +1318,7 @@ with tab_scan:
         st.markdown("#### 📸 Qəbz Seçimi və Skan")
 
         # Fast 1-click sample selector pills
-        st.markdown("<div style='font-size: 13px; font-weight: 600; margin-bottom: 6px;'>Sürətli Nümunə Qəbzlər:</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-size: 13px; font-weight: 600; color: {sub_text}; margin-bottom: 6px;'>Sürətli Nümunə Qəbzlər:</div>", unsafe_allow_html=True)
         btn_cols = st.columns(3)
         for b_idx, s_rec in enumerate(SAMPLE_RECEIPTS):
             with btn_cols[b_idx]:
@@ -1193,13 +1483,14 @@ with tab_loyalty:
 
     with col_user:
         st.markdown("#### 💳 İstifadəçi Keşbek Balansı")
+        user_pts = st.session_state.get("points", 250)
         st.markdown(
-            """
+            f"""
             <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 24px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
                 <div style="font-size: 13px; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">SEBET PLATINUM CARD</div>
-                <div style="font-size: 28px; font-weight: 800; margin: 12px 0 4px 0; color: #10b981;">250 Xal</div>
-                <div style="font-size: 14px; color: #cbd5e1;">Real Dəyəri: <b>2.50 AZN</b> Keşbek</div>
-                <div style="margin-top: 20px; font-size: 12px; color: #64748b; font-family: monospace;">•••• •••• •••• 4892</div>
+                <div style="font-size: 28px; font-weight: 800; margin: 12px 0 4px 0; color: #10b981;">{user_pts} Xal</div>
+                <div style="font-size: 14px; color: #cbd5e1;">Real Dəyəri: <b>{user_pts / 100:.2f} AZN</b> Keşbek</div>
+                <div style="margin-top: 20px; font-size: 12px; color: #94a3b8; font-family: monospace;">•••• •••• •••• 4892</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -1219,19 +1510,34 @@ with tab_loyalty:
         st.markdown("#### 📣 FMCG Retail Media & Brand Boost")
         st.markdown("Milla, Westgold, Ariel kimi qlobal və yerli brendlərin xüsusi təklifləri:")
 
+        wg_bg = "rgba(245, 158, 11, 0.12)" if dark_mode else "#fffbeb"
+        wg_border = "rgba(245, 158, 11, 0.3)" if dark_mode else "#fef3c7"
+        wg_title = "#fbbf24" if dark_mode else "#b45309"
+        wg_text = "#fde68a" if dark_mode else "#78350f"
+
+        mil_bg = "rgba(16, 185, 129, 0.12)" if dark_mode else "#f0fdf4"
+        mil_border = "rgba(16, 185, 129, 0.3)" if dark_mode else "#dcfce7"
+        mil_title = "#34d399" if dark_mode else "#15803d"
+        mil_text = "#a7f3d0" if dark_mode else "#166534"
+
+        ar_bg = "rgba(59, 130, 246, 0.12)" if dark_mode else "#eff6ff"
+        ar_border = "rgba(59, 130, 246, 0.3)" if dark_mode else "#dbeafe"
+        ar_title = "#60a5fa" if dark_mode else "#1d4ed8"
+        ar_text = "#bfdbfe" if dark_mode else "#1e40af"
+
         st.markdown(
-            """
-            <div style="background: #fffbeb; border: 1px solid #fef3c7; padding: 16px; border-radius: 12px; margin-bottom: 12px;">
-                <div style="font-weight: 700; color: #b45309;">🌟 Westgold 82.5% Kərə Yağı — 2x Keşbek</div>
-                <div style="font-size: 13px; color: #78350f;">Bu həftə Westgold kərə yağı alan istifadəçilərə hər qutuda <b>+40 Sebet xalı</b> hədiyyə!</div>
+            f"""
+            <div style="background: {wg_bg}; border: 1px solid {wg_border}; padding: 16px; border-radius: 12px; margin-bottom: 12px;">
+                <div style="font-weight: 700; color: {wg_title};">🌟 Westgold 82.5% Kərə Yağı — 2x Keşbek</div>
+                <div style="font-size: 13px; color: {wg_text};">Bu həftə Westgold kərə yağı alan istifadəçilərə hər qutuda <b>+40 Sebet xalı</b> hədiyyə!</div>
             </div>
-            <div style="background: #f0fdf4; border: 1px solid #dcfce7; padding: 16px; border-radius: 12px; margin-bottom: 12px;">
-                <div style="font-weight: 700; color: #15803d;">🥛 Milla Süd Məhsulları Kampaniyası</div>
-                <div style="font-size: 13px; color: #166534;">Səbətinizə 3 ədəd Milla məhsulu əlavə etdikdə avtomatik <b>0.50 AZN dərhal endirim</b> tətbiq olunur.</div>
+            <div style="background: {mil_bg}; border: 1px solid {mil_border}; padding: 16px; border-radius: 12px; margin-bottom: 12px;">
+                <div style="font-weight: 700; color: {mil_title};">🥛 Milla Süd Məhsulları Kampaniyası</div>
+                <div style="font-size: 13px; color: {mil_text};">Səbətinizə 3 ədəd Milla məhsulu əlavə etdikdə avtomatik <b>0.50 AZN dərhal endirim</b> tətbiq olunur.</div>
             </div>
-            <div style="background: #eff6ff; border: 1px solid #dbeafe; padding: 16px; border-radius: 12px;">
-                <div style="font-weight: 700; color: #1d4ed8;">🧺 Ariel Yuyucu Toz 7kg Eko-Paket</div>
-                <div style="font-size: 13px; color: #1e40af;">Həftənin seçilmiş təmizlik məhsulu. Bravo və Bazarstore filiallarında xüsusi qiymət zəmanəti.</div>
+            <div style="background: {ar_bg}; border: 1px solid {ar_border}; padding: 16px; border-radius: 12px;">
+                <div style="font-weight: 700; color: {ar_title};">🧺 Ariel Yuyucu Toz 7kg Eko-Paket</div>
+                <div style="font-size: 13px; color: {ar_text};">Həftənin seçilmiş təmizlik məhsulu. Bravo və Bazarstore filiallarında xüsusi qiymət zəmanəti.</div>
             </div>
             """,
             unsafe_allow_html=True,
