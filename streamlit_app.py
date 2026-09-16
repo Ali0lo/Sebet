@@ -329,6 +329,25 @@ if dark_mode:
         color: #f8fafc !important;
     }
 
+    /* Matrix Table (Dark Mode) */
+    .matrix-table-container {
+        background-color: #1e293b !important;
+        border: 1px solid #334155 !important;
+        border-radius: 12px !important;
+    }
+    .matrix-table {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+    }
+    .matrix-table th {
+        background-color: #0f172a !important;
+        color: #94a3b8 !important;
+    }
+    .matrix-table td {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+    }
+
     /* Code Tags, Backticks & Code Blocks */
     code, kbd, samp, tt {
         background-color: #1e293b !important;
@@ -652,6 +671,54 @@ else:
         background-color: #ffffff !important;
         color: #0f172a !important;
     }
+
+    /* Matrix Table (Light Mode) */
+    .matrix-table-container {
+        background-color: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+    }
+    .matrix-table {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+    }
+    .matrix-table th {
+        background-color: #f1f5f9 !important;
+        color: #475569 !important;
+    }
+    .matrix-table td {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+    }
+
+    /* Native Streamlit Styled Tables & DataFrames (Light Mode) */
+    .stTable,
+    div[data-testid="stTable"],
+    table[data-testid="stTableStyledTable"],
+    div[data-testid="stDataFrame"],
+    div[data-testid="stDataFrameResizable"],
+    .stDataFrameGlideDataEditor,
+    .dvn-scroller,
+    .dvn-stack,
+    div[data-testid="stDataFrame"] > div {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border-color: #e2e8f0 !important;
+    }
+    table[data-testid="stTableStyledTable"] th {
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+        border: 1px solid #e2e8f0 !important;
+        font-weight: 700 !important;
+    }
+    table[data-testid="stTableStyledTable"] td {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    table[data-testid="stTableStyledTable"] tbody tr:nth-of-type(even) td {
+        background-color: #f8fafc !important;
+    }
     </style>
     """
 
@@ -703,6 +770,7 @@ def render_map(
     center: dict = None,
     color_discrete_map: dict = None,
 ):
+    """Renders map using px.scatter_map (Plotly 7+) or px.scatter_mapbox (Plotly 5/6), with st.map fallback."""
     """Renders interactive map using px.scatter_map (Plotly 7+) or px.scatter_mapbox (Plotly 5/6) with st.map fallback."""
     if df is None or df.empty or lat not in df.columns or lon not in df.columns:
         st.info("📍 Xəritədə göstərmək üçün məkan məlumatı yoxdur.")
@@ -715,6 +783,7 @@ def render_map(
     valid_df = valid_df.dropna(subset=[lat, lon])
 
     if valid_df.empty:
+        st.info("📍 Xəritədə göstərmək üçün düzgün koordinatlar tapılmadı.")
         st.info("📍 Xəritədə göstərmək üçün məkan məlumatı tapılmadı.")
         return
 
@@ -773,12 +842,12 @@ def render_map(
             height=height,
             center=center,
             hover_data=hover_dict,
+            color_discrete_map=default_color_map,
         )
         if hover_name and hover_name in valid_df.columns:
             kwargs["hover_name"] = hover_name
         if color and color in valid_df.columns:
             kwargs["color"] = color
-            kwargs["color_discrete_map"] = default_color_map
         if size and size in valid_df.columns:
             kwargs["size"] = size
 
@@ -799,6 +868,7 @@ def render_map(
             if not size:
                 fig.update_traces(marker=dict(size=14, opacity=0.92))
             fig.update_layout(
+                mapbox_style=target_style,
                 margin={"r": 0, "t": 0, "l": 0, "b": 0},
                 legend=dict(yanchor="top", y=0.98, xanchor="left", x=0.02, bgcolor=legend_bg, font=legend_font),
             )
@@ -807,6 +877,8 @@ def render_map(
     except Exception:
         pass
 
+    # Fallback to standard streamlit map
+    st.map(df[[lat, lon]], zoom=int(zoom))
     # Resilient fallback to standard streamlit map
     try:
         st.map(valid_df, latitude=lat, longitude=lon, zoom=int(zoom), height=height, width="stretch")
@@ -938,6 +1010,156 @@ def render_basket_items_table(items: List[Dict[str, Any]], dark: bool = True):
         f'</div>'
     )
 
+    st.markdown(table_markup, unsafe_allow_html=True)
+
+
+def render_comparison_matrix_table(df: pd.DataFrame, dark: bool = True):
+    """Renders a responsive, high-contrast HTML comparison matrix with sticky headers."""
+    if df is None or df.empty:
+        st.info("Axtarışa uyğun məhsul tapılmadı.")
+        return
+
+    # Theme colors
+    th_bg = "#0f172a" if dark else "#f1f5f9"
+    th_color = "#94a3b8" if dark else "#475569"
+    td_bg = "#1e293b" if dark else "#ffffff"
+    td_alt_bg = "#182338" if dark else "#f8fafc"
+    text_color = "#f8fafc" if dark else "#0f172a"
+    sub_color = "#cbd5e1" if dark else "#475569"
+    border_color = "#334155" if dark else "#e2e8f0"
+
+    # Badges
+    min_pill_bg = "rgba(16, 185, 129, 0.2)" if dark else "#ecfdf5"
+    min_pill_color = "#34d399" if dark else "#059669"
+    min_pill_border = "rgba(16, 185, 129, 0.4)" if dark else "#a7f3d0"
+
+    star_pill_bg = "rgba(16, 185, 129, 0.15)" if dark else "#dcfce7"
+    star_pill_color = "#34d399" if dark else "#166534"
+    star_pill_border = "rgba(16, 185, 129, 0.3)" if dark else "#86efac"
+
+    cols = list(df.columns)
+
+    # Build header HTML with sticky top
+    th_cells = []
+    for c in cols:
+        align = "left" if c in ("Məhsul", "Qablaşdırma", "Kateqoriya") else "right"
+        th_cells.append(
+            f'<th style="padding: 11px 13px; text-align: {align}; color: {th_color} !important; '
+            f'font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; '
+            f'background-color: {th_bg} !important; position: sticky; top: 0; z-index: 2; '
+            f'border-bottom: 2px solid {border_color}; white-space: nowrap;">{c}</th>'
+        )
+    thead_html = f'<thead><tr>{"".join(th_cells)}</tr></thead>'
+
+    # Build rows HTML
+    rows_html = []
+    for i, row in df.iterrows():
+        row_bg = td_alt_bg if i % 2 == 1 else td_bg
+        td_cells = []
+        for c in cols:
+            val = str(row[c])
+            align = "left" if c in ("Məhsul", "Qablaşdırma", "Kateqoriya") else "right"
+
+            if c == "Məhsul":
+                td_cells.append(
+                    f'<td style="padding: 10px 13px; text-align: {align}; font-weight: 600; '
+                    f'color: {text_color} !important; background-color: {row_bg} !important; '
+                    f'border-bottom: 1px solid {border_color}; white-space: nowrap;">{val}</td>'
+                )
+            elif c in ("Qablaşdırma", "Kateqoriya"):
+                td_cells.append(
+                    f'<td style="padding: 10px 13px; text-align: {align}; font-weight: 500; '
+                    f'color: {sub_color} !important; background-color: {row_bg} !important; '
+                    f'border-bottom: 1px solid {border_color}; white-space: nowrap;">{val}</td>'
+                )
+            elif c == "Ən Ucuz (₼)":
+                td_cells.append(
+                    f'<td style="padding: 10px 13px; text-align: {align}; background-color: {row_bg} !important; '
+                    f'border-bottom: 1px solid {border_color}; white-space: nowrap;">'
+                    f'<span style="display: inline-block; background-color: {min_pill_bg} !important; '
+                    f'color: {min_pill_color} !important; border: 1px solid {min_pill_border}; '
+                    f'padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 13px;">{val}</span></td>'
+                )
+            else:
+                if "⭐" in val:
+                    clean_val = val.replace(" ⭐", "")
+                    td_cells.append(
+                        f'<td style="padding: 10px 13px; text-align: {align}; background-color: {row_bg} !important; '
+                        f'border-bottom: 1px solid {border_color}; white-space: nowrap;">'
+                        f'<span style="display: inline-block; background-color: {star_pill_bg} !important; '
+                        f'color: {star_pill_color} !important; border: 1px solid {star_pill_border}; '
+                        f'padding: 3px 7px; border-radius: 6px; font-weight: 700; font-size: 12.5px;">'
+                        f'{clean_val} ⭐</span></td>'
+                    )
+                else:
+                    td_cells.append(
+                        f'<td style="padding: 10px 13px; text-align: {align}; font-weight: 500; '
+                        f'color: {sub_color} !important; background-color: {row_bg} !important; '
+                        f'border-bottom: 1px solid {border_color}; white-space: nowrap;">{val}</td>'
+                    )
+        rows_html.append(f'<tr>{"".join(td_cells)}</tr>')
+
+    table_markup = (
+        f'<div class="matrix-table-container" style="width: 100%; max-height: 480px; overflow-y: auto; '
+        f'overflow-x: auto; border: 1px solid {border_color}; border-radius: 12px; margin: 10px 0 16px 0; '
+        f'background-color: {td_bg} !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">'
+        f'<table class="matrix-table" style="width: 100%; border-collapse: separate; border-spacing: 0; '
+        f'font-size: 13px; background-color: {td_bg} !important; color: {text_color} !important;">'
+        f'{thead_html}'
+        f'<tbody>{"".join(rows_html)}</tbody>'
+        f'</table>'
+        f'</div>'
+    )
+    st.markdown(table_markup, unsafe_allow_html=True)
+
+
+def render_dispersion_table(df: pd.DataFrame, dark: bool = True):
+    """Renders high-contrast table for Top 5 highest price differences."""
+    if df is None or df.empty:
+        return
+
+    th_bg = "#0f172a" if dark else "#f1f5f9"
+    th_color = "#94a3b8" if dark else "#475569"
+    td_bg = "#1e293b" if dark else "#ffffff"
+    td_alt_bg = "#182338" if dark else "#f8fafc"
+    text_color = "#f8fafc" if dark else "#0f172a"
+    sub_color = "#cbd5e1" if dark else "#475569"
+    border_color = "#334155" if dark else "#e2e8f0"
+    badge_bg = "rgba(239, 68, 68, 0.15)" if dark else "#fee2e2"
+    badge_color = "#f87171" if dark else "#dc2626"
+    badge_border = "rgba(239, 68, 68, 0.3)" if dark else "#fca5a5"
+
+    rows_html = []
+    for i, row in df.iterrows():
+        row_bg = td_alt_bg if i % 2 == 1 else td_bg
+        rows_html.append(
+            f'<tr style="background-color: {row_bg} !important; border-bottom: 1px solid {border_color};">'
+            f'<td style="padding: 10px 14px; font-weight: 600; color: {text_color} !important; text-align: left; background-color: {row_bg} !important;">{row["Məhsul"]}</td>'
+            f'<td style="padding: 10px 14px; color: #10b981 !important; text-align: right; font-weight: 700; background-color: {row_bg} !important;">{row["Ən Aşağı Qiymət"]}</td>'
+            f'<td style="padding: 10px 14px; color: #ef4444 !important; text-align: right; font-weight: 700; background-color: {row_bg} !important;">{row["Ən Yuxarı Qiymət"]}</td>'
+            f'<td style="padding: 10px 14px; color: {sub_color} !important; text-align: right; font-weight: 600; background-color: {row_bg} !important;">{row["Fərq (₼)"]:.2f} ₼</td>'
+            f'<td style="padding: 10px 14px; text-align: right; background-color: {row_bg} !important;">'
+            f'<span style="display: inline-block; background-color: {badge_bg} !important; color: {badge_color} !important; border: 1px solid {badge_border}; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 13px;">'
+            f'+{row["Fərq (%)"]:.1f}%</span></td>'
+            f'</tr>'
+        )
+
+    table_markup = (
+        f'<div style="width: 100%; overflow-x: auto; border: 1px solid {border_color}; border-radius: 12px; margin: 10px 0 16px 0; background-color: {td_bg} !important;">'
+        f'<table style="width: 100%; border-collapse: collapse; font-size: 13px; background-color: {td_bg} !important; color: {text_color} !important;">'
+        f'<thead>'
+        f'<tr style="background-color: {th_bg} !important; border-bottom: 2px solid {border_color};">'
+        f'<th style="padding: 11px 14px; text-align: left; color: {th_color} !important; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; background-color: {th_bg} !important;">Məhsul</th>'
+        f'<th style="padding: 11px 14px; text-align: right; color: {th_color} !important; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; background-color: {th_bg} !important;">Ən Aşağı Qiymət</th>'
+        f'<th style="padding: 11px 14px; text-align: right; color: {th_color} !important; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; background-color: {th_bg} !important;">Ən Yuxarı Qiymət</th>'
+        f'<th style="padding: 11px 14px; text-align: right; color: {th_color} !important; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; background-color: {th_bg} !important;">Fərq (₼)</th>'
+        f'<th style="padding: 11px 14px; text-align: right; color: {th_color} !important; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; background-color: {th_bg} !important;">Fərq (%)</th>'
+        f'</tr>'
+        f'</thead>'
+        f'<tbody>{"".join(rows_html)}</tbody>'
+        f'</table>'
+        f'</div>'
+    )
     st.markdown(table_markup, unsafe_allow_html=True)
 
 
@@ -1988,7 +2210,7 @@ with tab_comparison:
 
     if matrix_rows:
         matrix_df = pd.DataFrame(matrix_rows)
-        st.dataframe(matrix_df, use_container_width=True, height=420)
+        render_comparison_matrix_table(matrix_df, dark=dark_mode)
     else:
         st.info("Axtarışa uyğun məhsul tapılmadı.")
 
@@ -2342,7 +2564,7 @@ with tab_analytics:
             "Fərq (%)": spread_pct,
         })
     disp_df = pd.DataFrame(dispersion_list).sort_values("Fərq (%)", ascending=False).head(5)
-    st.dataframe(disp_df, hide_index=True, use_container_width=True)
+    render_dispersion_table(disp_df, dark=dark_mode)
 
 
 # =============================================================================
