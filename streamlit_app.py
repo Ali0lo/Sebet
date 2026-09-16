@@ -534,7 +534,7 @@ with tab_optimizer:
         st.markdown("<div style='font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 6px;'>⚡ Hazır Səbət Şablonları:</div>", unsafe_allow_html=True)
         col_p1, col_p2, col_p3 = st.columns(3)
         with col_p1:
-            if st.button("🍳 Səhər Yeməyi", use_container_width=True):
+            if st.button("🍳 Səhər Yeməyi", key="preset_breakfast", use_container_width=True):
                 st.session_state.basket = [
                     {"barcode": PRODUCTS[0]["barcode"], "canonical_name": PRODUCTS[0]["canonical_name"], "brand": PRODUCTS[0]["brand"], "quantity": 2.0, "unit": "liter", "cat_slug": PRODUCTS[0]["cat_slug"]},
                     {"barcode": PRODUCTS[4]["barcode"], "canonical_name": PRODUCTS[4]["canonical_name"], "brand": PRODUCTS[4]["brand"], "quantity": 1.0, "unit": "piece", "cat_slug": PRODUCTS[4]["cat_slug"]},
@@ -544,7 +544,7 @@ with tab_optimizer:
                 st.rerun()
 
         with col_p2:
-            if st.button("🥗 Meyvə & Tərəvəz", use_container_width=True):
+            if st.button("🥗 Meyvə & Tərəvəz", key="preset_produce", use_container_width=True):
                 st.session_state.basket = [
                     {"barcode": PRODUCTS[28]["barcode"], "canonical_name": PRODUCTS[28]["canonical_name"], "brand": PRODUCTS[28]["brand"], "quantity": 2.0, "unit": "kg", "cat_slug": PRODUCTS[28]["cat_slug"]},
                     {"barcode": PRODUCTS[29]["barcode"], "canonical_name": PRODUCTS[29]["canonical_name"], "brand": PRODUCTS[29]["brand"], "quantity": 1.5, "unit": "kg", "cat_slug": PRODUCTS[29]["cat_slug"]},
@@ -554,7 +554,7 @@ with tab_optimizer:
                 st.rerun()
 
         with col_p3:
-            if st.button("🏠 Ailəvi Həftəlik", use_container_width=True):
+            if st.button("🏠 Ailəvi Həftəlik", key="preset_family", use_container_width=True):
                 st.session_state.basket = [
                     {"barcode": PRODUCTS[15]["barcode"], "canonical_name": PRODUCTS[15]["canonical_name"], "brand": PRODUCTS[15]["brand"], "quantity": 2.0, "unit": "kg", "cat_slug": PRODUCTS[15]["cat_slug"]},
                     {"barcode": PRODUCTS[19]["barcode"], "canonical_name": PRODUCTS[19]["canonical_name"], "brand": PRODUCTS[19]["brand"], "quantity": 1.0, "unit": "piece", "cat_slug": PRODUCTS[19]["cat_slug"]},
@@ -566,9 +566,6 @@ with tab_optimizer:
 
         # Add Product Selector
         with st.expander("➕ Yeni Məhsul Əlavə Et", expanded=False):
-            prod_names = [f"{p['canonical_name']} ({p.get('pack_size', '')})" for p in PRODUCTS]
-            selected_idx = st.selectbox("Məhsul seçin:", range(len(PRODUCTS)), format_func=lambda i: prod_names[i])
-            sel_prod = PRODUCTS[selected_idx]
             f_cat = st.selectbox(
                 "Kateqoriya:",
                 ["Bütün Kateqoriyalar"] + [c["name_az"] for c in CATEGORIES.values()],
@@ -576,22 +573,12 @@ with tab_optimizer:
             )
             f_search = st.text_input("Məhsul axtarışı:", key="basket_prod_search", placeholder="Məs: Süd, Yağ, Çay...")
 
-            is_kg = sel_prod.get("unit") == "kg"
-            if is_kg:
-                new_qty = st.number_input("Çəki (kq):", min_value=0.2, max_value=20.0, value=1.0, step=0.5)
-            else:
-                new_qty = st.number_input("Say (ədəd):", min_value=1.0, max_value=50.0, value=1.0, step=1.0)
             avail_prods = PRODUCTS
             if f_cat != "Bütün Kateqoriyalar":
                 cat_slug = next((c["slug"] for c in CATEGORIES.values() if c["name_az"] == f_cat), None)
                 if cat_slug:
                     avail_prods = [p for p in avail_prods if p["cat_slug"] == cat_slug]
 
-            if st.button("Səbətə Əlavə Et", type="primary", use_container_width=True):
-                # Check if exists
-                existing = next((item for item in st.session_state.basket if item["barcode"] == sel_prod["barcode"]), None)
-                if existing:
-                    existing["quantity"] += new_qty
             if f_search:
                 s_lower = f_search.lower()
                 avail_prods = [p for p in avail_prods if s_lower in p["canonical_name"].lower() or s_lower in p["brand"].lower()]
@@ -607,7 +594,7 @@ with tab_optimizer:
                 else:
                     new_qty = st.number_input("Say (ədəd):", min_value=1.0, max_value=50.0, value=1.0, step=1.0, key="new_qty_count")
 
-                if st.button("Səbətə Əlavə Et", type="primary", use_container_width=True):
+                if st.button("Səbətə Əlavə Et", key="btn_add_to_basket", type="primary", use_container_width=True):
                     existing = next((item for item in st.session_state.basket if item["barcode"] == sel_prod["barcode"]), None)
                     if existing:
                         existing["quantity"] = round(existing["quantity"] + new_qty, 1)
@@ -630,14 +617,12 @@ with tab_optimizer:
         else:
             st.markdown(f"**Səbətdəki Məhsullar ({len(st.session_state.basket)} növ):**")
             for idx, item in enumerate(st.session_state.basket):
-                c_name, c_qty, c_del = st.columns([3, 1.5, 0.8])
                 c_name, c_minus, c_qty, c_plus, c_del = st.columns([3, 0.6, 1.2, 0.6, 0.6])
-                unit_label = "kq" if item.get("unit") == "kg" else "əd"
+                unit_label = "kq" if item.get("unit") == "kg" else "ədəd"
                 step = 0.5 if item.get("unit") == "kg" else 1.0
                 min_val = 0.5 if item.get("unit") == "kg" else 1.0
 
                 with c_name:
-                    unit_label = "kq" if item.get("unit") == "kg" else "ədəd"
                     st.markdown(f"**{item['canonical_name']}**")
                 with c_minus:
                     if st.button("➖", key=f"minus_{idx}"):
@@ -645,8 +630,7 @@ with tab_optimizer:
                             item["quantity"] = round(item["quantity"] - step, 1)
                             st.rerun()
                 with c_qty:
-                    st.markdown(f"`{item['quantity']} {unit_label}`")
-                    st.markdown(f"<div style='text-align: center; padding-top: 6px; font-weight: 700; color: #0f172a;'>{item['quantity']} {unit_label}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='text-align: center; padding-top: 6px; font-weight: 700;'>{item['quantity']} {unit_label}</div>", unsafe_allow_html=True)
                 with c_plus:
                     if st.button("➕", key=f"plus_{idx}"):
                         item["quantity"] = round(item["quantity"] + step, 1)
@@ -656,7 +640,7 @@ with tab_optimizer:
                         st.session_state.basket.pop(idx)
                         st.rerun()
 
-            if st.button("Səbəti Təmizlə", use_container_width=True):
+            if st.button("Səbəti Təmizlə", key="clear_basket_btn", use_container_width=True):
                 st.session_state.basket = []
                 st.rerun()
 
@@ -1065,7 +1049,7 @@ with tab_scan:
             if cam_pic:
                 st.image(cam_pic, caption="Çəkilmiş Qəbz", width=220)
 
-        if st.button("🚀 Qəbzi OCR Skan Et & Keşbek Qazan", type="primary", use_container_width=True):
+        if st.button("🚀 Qəbzi OCR Skan Et & Keşbek Qazan", key="scan_receipt_btn", type="primary", use_container_width=True):
             with st.spinner("🔍 Qəbz OCR mühərriki işə salınır, fiskal şifrə və VÖEN oxunur..."):
                 time.sleep(0.4)
             st.session_state["scanned_receipt"] = active_rec
@@ -1226,7 +1210,7 @@ with tab_loyalty:
         voucher_pts = st.slider("İstifadə ediləcək xal miqdarı:", min_value=50, max_value=250, value=100, step=50)
         voucher_val = voucher_pts / 100.0
 
-        if st.button("Endirim Barkodu Yarat", type="primary", use_container_width=True):
+        if st.button("Endirim Barkodu Yarat", key="create_voucher_btn", type="primary", use_container_width=True):
             st.success(f"Təbriklər! {voucher_val:.2f} AZN dəyərində vayçer aktivləşdirildi.")
             st.code(f"SEBET-AZN-{voucher_val:.2f}-PROMO-8291", language="bash")
             st.caption("Bu barkodu Bravo, Araz və ya OBA kassasında skan edərək dərhal endirim əldə edə bilərsiniz.")
