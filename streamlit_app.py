@@ -453,11 +453,13 @@ st.markdown(
 # -----------------------------------------------------------------------------
 # 8. Main Tabs Layout
 # -----------------------------------------------------------------------------
-tab_optimizer, tab_comparison, tab_analytics, tab_loyalty, tab_about = st.tabs([
+tab_optimizer, tab_comparison, tab_flyers, tab_scan, tab_analytics, tab_loyalty, tab_about = st.tabs([
     "🧺 Ağıllı Səbət (Smart Basket)",
     "🔍 Qiymət Müqayisəsi (Matrix)",
+    "📰 Həftəlik Bukletlər (Flyers)",
+    "🧾 Qəbz Skanı & Keşbek (OCR)",
     "📊 Bazar Analitikası (Analytics)",
-    "🎁 Loyallıq & Retail Media",
+    "🎁 Keşbek & Loyallıq",
     "ℹ️ Texniki Memarlıq (About)",
 ])
 
@@ -506,31 +508,50 @@ with tab_optimizer:
 
         # Add Product Selector
         with st.expander("➕ Yeni Məhsul Əlavə Et", expanded=False):
-            prod_names = [f"{p['canonical_name']} ({p.get('pack_size', '')})" for p in PRODUCTS]
-            selected_idx = st.selectbox("Məhsul seçin:", range(len(PRODUCTS)), format_func=lambda i: prod_names[i])
-            sel_prod = PRODUCTS[selected_idx]
+            f_cat = st.selectbox(
+                "Kateqoriya:",
+                ["Bütün Kateqoriyalar"] + [c["name_az"] for c in CATEGORIES.values()],
+                key="basket_cat_filter",
+            )
+            f_search = st.text_input("Məhsul axtarışı:", key="basket_prod_search", placeholder="Məs: Süd, Yağ, Çay...")
 
-            is_kg = sel_prod.get("unit") == "kg"
-            if is_kg:
-                new_qty = st.number_input("Çəki (kq):", min_value=0.2, max_value=20.0, value=1.0, step=0.5)
-            else:
-                new_qty = st.number_input("Say (ədəd):", min_value=1.0, max_value=50.0, value=1.0, step=1.0)
+            avail_prods = PRODUCTS
+            if f_cat != "Bütün Kateqoriyalar":
+                cat_slug = next((c["slug"] for c in CATEGORIES.values() if c["name_az"] == f_cat), None)
+                if cat_slug:
+                    avail_prods = [p for p in avail_prods if p["cat_slug"] == cat_slug]
 
-            if st.button("Səbətə Əlavə Et", type="primary", use_container_width=True):
-                # Check if exists
-                existing = next((item for item in st.session_state.basket if item["barcode"] == sel_prod["barcode"]), None)
-                if existing:
-                    existing["quantity"] += new_qty
+            if f_search:
+                s_lower = f_search.lower()
+                avail_prods = [p for p in avail_prods if s_lower in p["canonical_name"].lower() or s_lower in p["brand"].lower()]
+
+            if avail_prods:
+                prod_names = [f"{p['canonical_name']} ({p.get('pack_size', '')})" for p in avail_prods]
+                selected_idx = st.selectbox("Məhsul seçin:", range(len(avail_prods)), format_func=lambda i: prod_names[i], key="basket_sel_prod")
+                sel_prod = avail_prods[selected_idx]
+
+                is_kg = sel_prod.get("unit") == "kg"
+                if is_kg:
+                    new_qty = st.number_input("Çəki (kq):", min_value=0.2, max_value=20.0, value=1.0, step=0.5, key="new_qty_kg")
                 else:
-                    st.session_state.basket.append({
-                        "barcode": sel_prod["barcode"],
-                        "canonical_name": sel_prod["canonical_name"],
-                        "brand": sel_prod["brand"],
-                        "quantity": new_qty,
-                        "unit": sel_prod.get("unit", "ədəd"),
-                        "cat_slug": sel_prod["cat_slug"],
-                    })
-                st.rerun()
+                    new_qty = st.number_input("Say (ədəd):", min_value=1.0, max_value=50.0, value=1.0, step=1.0, key="new_qty_count")
+
+                if st.button("Səbətə Əlavə Et", type="primary", use_container_width=True):
+                    existing = next((item for item in st.session_state.basket if item["barcode"] == sel_prod["barcode"]), None)
+                    if existing:
+                        existing["quantity"] = round(existing["quantity"] + new_qty, 1)
+                    else:
+                        st.session_state.basket.append({
+                            "barcode": sel_prod["barcode"],
+                            "canonical_name": sel_prod["canonical_name"],
+                            "brand": sel_prod["brand"],
+                            "quantity": new_qty,
+                            "unit": sel_prod.get("unit", "ədəd"),
+                            "cat_slug": sel_prod["cat_slug"],
+                        })
+                    st.rerun()
+            else:
+                st.info("Axtarışa uyğun məhsul tapılmadı.")
 
         # Display Current Basket Table
         if not st.session_state.basket:
@@ -538,12 +559,24 @@ with tab_optimizer:
         else:
             st.markdown(f"**Səbətdəki Məhsullar ({len(st.session_state.basket)} növ):**")
             for idx, item in enumerate(st.session_state.basket):
-                c_name, c_qty, c_del = st.columns([3, 1.5, 0.8])
+                c_name, c_minus, c_qty, c_plus, c_del = st.columns([3, 0.6, 1.2, 0.6, 0.6])
+                unit_label = "kq" if item.get("unit") == "kg" else "əd"
+                step = 0.5 if item.get("unit") == "kg" else 1.0
+                min_val = 0.5 if item.get("unit") == "kg" else 1.0
+
                 with c_name:
-                    unit_label = "kq" if item.get("unit") == "kg" else "ədəd"
                     st.markdown(f"**{item['canonical_name']}**")
+                with c_minus:
+                    if st.button("➖", key=f"minus_{idx}"):
+                        if item["quantity"] > min_val:
+                            item["quantity"] = round(item["quantity"] - step, 1)
+                            st.rerun()
                 with c_qty:
-                    st.markdown(f"`{item['quantity']} {unit_label}`")
+                    st.markdown(f"<div style='text-align: center; padding-top: 6px; font-weight: 700; color: #0f172a;'>{item['quantity']} {unit_label}</div>", unsafe_allow_html=True)
+                with c_plus:
+                    if st.button("➕", key=f"plus_{idx}"):
+                        item["quantity"] = round(item["quantity"] + step, 1)
+                        st.rerun()
                 with c_del:
                     if st.button("🗑️", key=f"del_{idx}"):
                         st.session_state.basket.pop(idx)
@@ -832,7 +865,169 @@ with tab_comparison:
 
 
 # =============================================================================
-# TAB 3: BAZAR ANALİTİKASI (MARKET ANALYTICS)
+# TAB 3: HƏFTƏLİK BUKLETLƏR (WEEKLY FLYERS)
+# =============================================================================
+with tab_flyers:
+    st.markdown("### 📰 Bakı Supermarketlərinin Həftəlik Endirim Bukletləri")
+    st.markdown("Bravo, Araz, OBA və Bazarstore-un rəsmi çap olunmuş və rəqəmsal kataloqları.")
+
+    flyer_cols = st.columns(3)
+    sample_flyers = [
+        {
+            "chain": "Bravo",
+            "title": "Bravo Hypermarket Həftənin Fürsətləri",
+            "dates": "10 Sentyabr - 23 Sentyabr 2026",
+            "color": "#74b826",
+            "discount": "40%-dək",
+            "highlights": ["Ariel 7kg - 21.99 ₼", "Westgold Kərə Yağı - 3.89 ₼", "Final Yağ 5L - 14.50 ₼"],
+        },
+        {
+            "chain": "Araz",
+            "title": "Araz Supermarket Qənaət Festivalı",
+            "dates": "12 Sentyabr - 20 Sentyabr 2026",
+            "color": "#E30613",
+            "discount": "35%-dək",
+            "highlights": ["Milla Süd 1L - 2.19 ₼", "Bizim Tarla Basmati Düyü - 3.99 ₼", "Azərçay Buket 250g - 4.10 ₼"],
+        },
+        {
+            "chain": "OBA",
+            "title": "OBA Market Cibinizə Qənaət Bukleti",
+            "dates": "08 Sentyabr - 22 Sentyabr 2026",
+            "color": "#009640",
+            "discount": "50%-dək",
+            "highlights": ["Milla Qatıq 1kg - 2.25 ₼", "Gədəbəy Kartofu 1kq - 0.79 ₼", "Sirab 1.5L - 0.75 ₼"],
+        },
+    ]
+
+    for idx, fl in enumerate(sample_flyers):
+        with flyer_cols[idx % 3]:
+            st.markdown(
+                f"""
+                <div class="store-card" style="border-top: 4px solid {fl['color']}; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span class="store-badge" style="background: {fl['color']};">{fl['chain']}</span>
+                        <span class="promo-tag">🔥 {fl['discount']}</span>
+                    </div>
+                    <h4 style="margin: 4px 0 2px 0;">{fl['title']}</h4>
+                    <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">📅 {fl['dates']}</p>
+                    <div style="background: #f8fafc; border-radius: 8px; padding: 10px; margin-bottom: 12px;">
+                        <div style="font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 4px;">Seçilmiş Təkliflər:</div>
+                        <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #1e293b;">
+                            {''.join(f'<li>{h}</li>' for h in fl['highlights'])}
+                        </ul>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            if st.button(f"📄 Bukletə Bax ({fl['chain']})", key=f"flyer_btn_{idx}", use_container_width=True):
+                st.success(f"{fl['chain']} bukletindəki bütün endirimlər qiymət bazamıza daxil edilib.")
+
+
+# =============================================================================
+# TAB 4: QƏBZ SKANI & KEŞBEK (RECEIPT OCR SIMULATOR)
+# =============================================================================
+with tab_scan:
+    st.markdown("### 🧾 Elektron Kassa Qəbzlərinin Skanı & Keşbek")
+    st.markdown("Supermarket qəbzlərini skan edərək xərclədiyiniz məbləğdən avtomatik **1% - 2% Sebet xalı (keşbek)** qazanın.")
+
+    c_sc1, c_sc2 = st.columns([1.2, 1], gap="large")
+
+    SAMPLE_RECEIPTS = [
+        {
+            "id": "rec_bravo",
+            "store": "Bravo 28 Mall",
+            "voen": "1401564751",
+            "fiscal_id": "AZ14015647510101-92810",
+            "date": "2026-09-14 17:42",
+            "total": 24.65,
+            "cashback": 25,
+            "items": [
+                {"name": "Milla Süd 2.5% 1L", "price": 2.39, "qty": 2},
+                {"name": "Westgold Kərə Yağı 200g", "price": 3.95, "qty": 1},
+                {"name": "Ariel Yuyucu Toz 3kg", "price": 15.92, "qty": 1},
+            ],
+        },
+        {
+            "id": "rec_araz",
+            "store": "Araz Nərimanov",
+            "voen": "1500843211",
+            "fiscal_id": "AZ15008432110202-44129",
+            "date": "2026-09-15 11:20",
+            "total": 14.85,
+            "cashback": 15,
+            "items": [
+                {"name": "Zavod Çörəyi 500g", "price": 0.65, "qty": 2},
+                {"name": "Mərcan Toyuq 1kq", "price": 5.95, "qty": 1.5},
+                {"name": "Azərçay Buket 250g", "price": 4.60, "qty": 1},
+            ],
+        },
+        {
+            "id": "rec_oba",
+            "store": "OBA Yasamal",
+            "voen": "1701928374",
+            "fiscal_id": "AZ17019283740303-10294",
+            "date": "2026-09-15 20:05",
+            "total": 9.40,
+            "cashback": 10,
+            "items": [
+                {"name": "Milla Qatıq 1kg", "price": 2.35, "qty": 1},
+                {"name": "Gədəbəy Kartofu 1kq", "price": 0.85, "qty": 2.5},
+                {"name": "Sirab Mineral Su 1.5L", "price": 0.80, "qty": 2},
+            ],
+        },
+    ]
+
+    with c_sc1:
+        st.markdown("#### 📸 Qəbz Seçimi")
+        receipt_mode = st.radio("Mənbə:", ["Nümunə Bakı Qəbzləri", "Fayl Yüklə (Şəkil / PDF)"], horizontal=True)
+
+        if receipt_mode == "Nümunə Bakı Qəbzləri":
+            rec_options = [f"{r['store']} — {r['total']:.2f} ₼ ({r['date']})" for r in SAMPLE_RECEIPTS]
+            rec_sel_idx = st.selectbox("Qəbz seçin:", range(len(SAMPLE_RECEIPTS)), format_func=lambda i: rec_options[i])
+            active_rec = SAMPLE_RECEIPTS[rec_sel_idx]
+        else:
+            uploaded_file = st.file_uploader("Qəbzin fotosunu seçin:", type=["jpg", "jpeg", "png", "pdf"])
+            active_rec = SAMPLE_RECEIPTS[0]
+            if uploaded_file:
+                st.image(uploaded_file, caption="Yüklənmiş Qəbz", width=250)
+
+        if st.button("🚀 Qəbzi OCR Analiz Et & Keşbek Qazan", type="primary", use_container_width=True):
+            st.session_state["scanned_receipt"] = active_rec
+            st.success(f"Qəbz uğurla təsdiqləndi! +{active_rec['cashback']} Sebet xalı qazandınız.")
+
+    with c_sc2:
+        st.markdown("#### 📑 OCR Nəticəsi & Fiskal Çıxarış")
+        rec_data = st.session_state.get("scanned_receipt", SAMPLE_RECEIPTS[0])
+
+        items_html = "".join([f"<div style='display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;'><span>{it['name']} x{it['qty']}</span><span>{(it['price']*it['qty']):.2f} ₼</span></div>" for it in rec_data['items']])
+
+        st.markdown(
+            f"""
+            <div style="background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 20px; font-family: monospace; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                <div style="text-align: center; font-weight: 800; font-size: 16px; margin-bottom: 4px;">{rec_data['store'].upper()}</div>
+                <div style="text-align: center; font-size: 12px; color: #64748b; margin-bottom: 12px;">VÖEN: {rec_data['voen']}</div>
+                <div style="border-top: 1px dashed #e2e8f0; margin-bottom: 12px;"></div>
+                <div style="font-size: 12px; margin-bottom: 6px;">Fiskal İD: <b>{rec_data['fiscal_id']}</b></div>
+                <div style="font-size: 12px; margin-bottom: 12px;">Tarix: <b>{rec_data['date']}</b></div>
+                <div style="border-top: 1px dashed #e2e8f0; margin-bottom: 12px;"></div>
+                {items_html}
+                <div style="border-top: 1px dashed #e2e8f0; margin: 12px 0;"></div>
+                <div style="display:flex; justify-content:space-between; font-weight:800; font-size:15px;">
+                    <span>YEKUN:</span>
+                    <span>{rec_data['total']:.2f} ₼</span>
+                </div>
+                <div style="background: #dcfce7; color: #166534; padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 13px; text-align: center; margin-top: 12px;">
+                    ✨ Qazanılan Keşbek: +{rec_data['cashback']} Xal (= {rec_data['cashback']/100:.2f} ₼)
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+# =============================================================================
+# TAB 5: BAZAR ANALİTİKASI (MARKET ANALYTICS)
 # =============================================================================
 with tab_analytics:
     st.markdown("### 📊 Bakı Ərzaq Bazarının Analitik Göstəriciləri")
