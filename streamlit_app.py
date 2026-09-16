@@ -1836,7 +1836,7 @@ tab_optimizer, tab_comparison, tab_flyers, tab_scan, tab_analytics, tab_loyalty,
     "🧾 Qəbz Skanı & Keşbek (OCR)",
     "📊 Bazar Analitikası (Analytics)",
     "🎁 Keşbek & Loyallıq",
-    "👤 Hesabım & Giriş (Login)",
+    "👤 Giriş & Qeydiyyat (Auth)",
     "ℹ️ Texniki Memarlıq (About)",
 ])
 
@@ -3058,16 +3058,18 @@ with tab_auth:
             st.markdown("#### Giriş Məlumatları")
             
             if st.button("⚡ 1-Kliklə Demo Hesabla Giriş (Ali İskəndərli)", key="btn_demo_login_tab", use_container_width=True, type="primary"):
-                demo_usr = user_db.authenticate_user("demo", "sebet2026")
-                if demo_usr:
+                ok, msg, demo_usr = user_db.authenticate_user("demo", "sebet2026")
+                if ok and demo_usr:
                     st.session_state["user_authenticated"] = True
                     st.session_state["current_user"] = demo_usr
                     st.session_state["points"] = demo_usr.get("sebet_points", 300)
-                    saved_b = user_db.load_user_basket(demo_usr["id"])
+                    saved_b, saved_loc = user_db.load_user_basket(demo_usr["id"])
                     if saved_b:
                         st.session_state["basket"] = saved_b
                     st.toast(f"Xoş gəldiniz, {demo_usr['full_name']}!", icon="👋")
                     st.rerun()
+                else:
+                    st.error(msg)
 
             st.markdown("<div style='text-align: center; color: #94a3b8; margin: 10px 0;'>və ya öz hesabınızla</div>", unsafe_allow_html=True)
 
@@ -3080,18 +3082,18 @@ with tab_auth:
                     if not login_user or not login_pwd:
                         st.error("Zəhmət olmasa istifadəçi adı və şifrəni daxil edin.")
                     else:
-                        usr = user_db.authenticate_user(login_user.strip(), login_pwd)
-                        if usr:
+                        ok, msg, usr = user_db.authenticate_user(login_user.strip(), login_pwd)
+                        if ok and usr:
                             st.session_state["user_authenticated"] = True
                             st.session_state["current_user"] = usr
                             st.session_state["points"] = usr.get("sebet_points", 0)
-                            saved_b = user_db.load_user_basket(usr["id"])
+                            saved_b, saved_loc = user_db.load_user_basket(usr["id"])
                             if saved_b:
                                 st.session_state["basket"] = saved_b
                             st.success(f"Xoş gəldiniz, {usr['full_name']}!")
                             st.rerun()
                         else:
-                            st.error("İstifadəçi adı və ya şifrə yanlışdır.")
+                            st.error(msg)
 
         with auth_subtab_reg:
             st.markdown("#### Yeni İstifadəçi Hesabı Yarat")
@@ -3115,32 +3117,32 @@ with tab_auth:
                 reg_pass1 = st.text_input("Şifrə", type="password", placeholder="Ən azı 4 simvol")
                 reg_pass2 = st.text_input("Şifrənin Təkrarı", type="password", placeholder="Şifrəni yenidən yazın")
 
-                submit_reg = st.form_submit_button("Qeydiyyatdan Keç və Xalları Al", use_container_width=True, type="primary")
+                submit_reg = st.form_submit_button("Qeydiyyatdan Keç və Xalları Al (+250)", use_container_width=True, type="primary")
 
                 if submit_reg:
-                    if not reg_fullname or not reg_username or not reg_email or not reg_pass1:
-                        st.error("Zəhmət olmasa bütün sahələri doldurun.")
+                    if not reg_fullname or not reg_username or not reg_pass1:
+                        st.error("Zəhmət olmasa bütün tələb olunan sahələri doldurun.")
                     elif len(reg_pass1) < 4:
                         st.error("Şifrə ən azı 4 simvoldan ibarət olmalıdır.")
                     elif reg_pass1 != reg_pass2:
                         st.error("Daxil edilən şifrələr bir-biri ilə uyğun gəlmir.")
                     else:
-                        ok, res = user_db.register_user(
+                        ok, msg, res = user_db.register_user(
                             username=reg_username.strip(),
-                            email=reg_email.strip(),
-                            password=reg_pass1,
                             full_name=reg_fullname.strip(),
-                            initial_points=250,
-                            preferred_location=reg_loc,
+                            password=reg_pass1,
+                            email=reg_email.strip(),
+                            phone=reg_username.strip(),
+                            home_location=reg_loc,
                         )
-                        if ok:
+                        if ok and res:
                             st.session_state["user_authenticated"] = True
                             st.session_state["current_user"] = res
                             st.session_state["points"] = res.get("sebet_points", 250)
                             st.success(f"🎉 Təbriklər, {reg_fullname}! Hesabınız yaradıldı və 250 xal balansınıza köçürüldü.")
                             st.rerun()
                         else:
-                            st.error(f"Qeydiyyat xətası: {res}")
+                            st.error(msg)
 
     # =========================================================================
     # Live SQLite Database Inspector & Analytics
