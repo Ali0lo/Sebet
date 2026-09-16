@@ -1212,6 +1212,84 @@ def load_all_data():
 CHAINS, CATEGORIES, PRODUCTS, STORES, STORES_INVENTORY = load_all_data()
 
 # -----------------------------------------------------------------------------
+# Weekly Specials & Promotional Deals Engine
+# -----------------------------------------------------------------------------
+WEEKLY_SPECIALS_CATALOG: List[Dict[str, Any]] = [
+    # Bravo Supermarket
+    {"chain": "bravo", "barcode": "9415494000125", "promo_price": 4.79, "regular_price": 5.50, "note": "Yeni Zelandiya kərə yağı"},
+    {"chain": "bravo", "barcode": "5449000000996", "promo_price": 1.99, "regular_price": 2.45, "note": "Sərinləşdirici içki 1.5L"},
+    {"chain": "bravo", "barcode": "8001090123456", "promo_price": 12.49, "regular_price": 14.90, "note": "Avtomat yuyucu toz 3kg"},
+    {"chain": "bravo", "barcode": "8001090123499", "promo_price": 23.99, "regular_price": 28.90, "note": "Dev ekonomi ailə paketi 7kg"},
+    {"chain": "bravo", "barcode": "4760032100147", "promo_price": 14.50, "regular_price": 17.50, "note": "Final günəbaxan yağı 5L"},
+    {"chain": "bravo", "barcode": "4760083300124", "promo_price": 2.09, "regular_price": 2.35, "note": "Milla təzə süd 1L"},
+    # Araz Supermarket
+    {"chain": "araz", "barcode": "4760123456789", "promo_price": 1.95, "regular_price": 2.35, "note": "Giləzi kənd yumurtası 10-lu"},
+    {"chain": "araz", "barcode": "4760088800011", "promo_price": 1.79, "regular_price": 2.10, "note": "Təzə Quba qırmızı alması 1kg"},
+    {"chain": "araz", "barcode": "4760012300124", "promo_price": 3.99, "regular_price": 4.65, "note": "Azərçay Buket qara çay 250g"},
+    {"chain": "araz", "barcode": "8001090543210", "promo_price": 5.79, "regular_price": 6.50, "note": "Pantene Pro-V bərpaedici şampun 400ml"},
+    {"chain": "araz", "barcode": "4760078901272", "promo_price": 3.99, "regular_price": 4.70, "note": "Bizim Tarla əla növ basmati düyü 1kg"},
+    {"chain": "araz", "barcode": "4760083300124", "promo_price": 2.19, "regular_price": 2.35, "note": "Milla pasterizə süd 1L"},
+    # OBA Market
+    {"chain": "oba", "barcode": "4760083300124", "promo_price": 1.99, "regular_price": 2.15, "note": "Milla təbii süd 1L"},
+    {"chain": "oba", "barcode": "4760032100147", "promo_price": 16.49, "regular_price": 17.50, "note": "Final təmizlənmiş yağ 5L"},
+    {"chain": "oba", "barcode": "4760088800035", "promo_price": 0.99, "regular_price": 1.15, "note": "Gədəbəy sarı kartofu 1kg"},
+    {"chain": "oba", "barcode": "7622210287123", "promo_price": 1.69, "regular_price": 1.85, "note": "Alpen Gold plitka şokolad 85g"},
+    {"chain": "oba", "barcode": "8001090123470", "promo_price": 3.19, "regular_price": 3.55, "note": "Fairy limon qabyuyan maye 650ml"},
+    {"chain": "oba", "barcode": "8690530012345", "promo_price": 5.79, "regular_price": 5.95, "note": "Papia 3 qatlı tualet kağızı 8-li"},
+    {"chain": "oba", "barcode": "4760048100123", "promo_price": 0.75, "regular_price": 0.90, "note": "Sirab qazsız mineral su 1.5L"},
+    {"chain": "oba", "barcode": "4760083300261", "promo_price": 2.25, "regular_price": 2.45, "note": "Milla kənd üsulu qatıq 1kg"},
+    # Bazarstore
+    {"chain": "bazarstore", "barcode": "9415494000194", "promo_price": 12.79, "regular_price": 14.20, "note": "Anchor 82.9% kərə yağı 500g"},
+    {"chain": "bazarstore", "barcode": "4760032100123", "promo_price": 4.49, "regular_price": 5.20, "note": "Möcüzə qarğıdalı yağı 1L"},
+    {"chain": "bazarstore", "barcode": "8690506001234", "promo_price": 3.99, "regular_price": 4.70, "note": "Duru zeytun yağlı sabun 4x150g"},
+    {"chain": "bazarstore", "barcode": "4760078901289", "promo_price": 1.69, "regular_price": 1.95, "note": "Azərşəkər kəllə qənd 1kg"},
+    # Al Market
+    {"chain": "almarket", "barcode": "4760099887773", "promo_price": 4.89, "regular_price": 5.49, "note": "Mərcan təzə broyler toyuq 1kg"},
+    {"chain": "almarket", "barcode": "8001090887766", "promo_price": 19.99, "regular_price": 22.90, "note": "Pampers Active Baby 4 (52 ədəd)"},
+    # Neptun Supermarket
+    {"chain": "neptun", "barcode": "4760078901265", "promo_price": 3.19, "regular_price": 3.80, "note": "Bizim Tarla tomat pastası 700g"},
+    # Spar
+    {"chain": "spar", "barcode": "8711000526348", "promo_price": 14.99, "regular_price": 17.50, "note": "Jacobs Monarch həll olan qəhvə 190g"},
+]
+
+def get_weekly_deals(selected_chain: str = "all") -> List[Dict[str, Any]]:
+    """Returns active promotional deals filtered by supermarket chain."""
+    prod_by_barcode = {p["barcode"]: p for p in PRODUCTS}
+    results = []
+    for item in WEEKLY_SPECIALS_CATALOG:
+        ch = item["chain"].lower()
+        if selected_chain and selected_chain.lower() not in ["all", "bütün marketlər", ""]:
+            if ch != selected_chain.lower():
+                continue
+        p = prod_by_barcode.get(item["barcode"])
+        if not p:
+            continue
+        reg_p = float(item["regular_price"])
+        prom_p = float(item["promo_price"])
+        sav = round(reg_p - prom_p, 2)
+        pct = max(1, round((sav / reg_p) * 100))
+        ch_meta = CHAINS.get(ch, {"name": ch.title(), "color": "#10b981"})
+        cat_meta = CATEGORIES.get(p.get("cat_slug", ""), {"name_az": "Ərzaq"})
+        results.append({
+            "barcode": item["barcode"],
+            "product": p,
+            "name": p["canonical_name"],
+            "brand": p["brand"],
+            "cat_slug": p.get("cat_slug", ""),
+            "cat_name": cat_meta.get("name_az", "Ərzaq"),
+            "unit": p.get("unit", "ədəd"),
+            "chain_slug": ch,
+            "chain_name": ch_meta.get("name", ch.title()),
+            "chain_color": ch_meta.get("color", "#10b981"),
+            "regular_price": reg_p,
+            "promo_price": prom_p,
+            "savings": sav,
+            "discount_pct": pct,
+            "note": item.get("note", "Həftəlik xüsusi təklif"),
+        })
+    return results
+
+# -----------------------------------------------------------------------------
 # 4. Optimization Engine (Single Baseline vs 2-Store Split)
 # -----------------------------------------------------------------------------
 def run_basket_optimization(
