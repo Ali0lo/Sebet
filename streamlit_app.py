@@ -181,36 +181,184 @@ if dark_mode:
         color: inherit !important;
     }
 
-    /* Buttons */
+    /* Buttons (Secondary, Steppers, Presets, Clear, Flyers, etc.) */
+    button,
+    button[data-testid*="stBaseButton"],
+    button[data-testid*="baseButton"],
+    button[data-testid="stBaseButton-secondary"],
     button[kind="secondary"],
-    button[data-testid="baseButton-secondary"] {
+    .stButton > button {
         background-color: #1e293b !important;
         color: #f8fafc !important;
         border: 1px solid #475569 !important;
+        box-shadow: none !important;
     }
+    button:hover,
+    button[data-testid*="stBaseButton"]:hover,
+    button[data-testid*="baseButton"]:hover,
+    button[data-testid="stBaseButton-secondary"]:hover,
     button[kind="secondary"]:hover,
-    button[data-testid="baseButton-secondary"]:hover {
+    .stButton > button:hover {
         background-color: #334155 !important;
         border-color: #10b981 !important;
         color: #34d399 !important;
     }
-    button[kind="secondary"] p,
-    button[data-testid="baseButton-secondary"] p {
-        color: #f8fafc !important;
+    button p,
+    button span,
+    button div,
+    button[data-testid*="stBaseButton"] *,
+    button[data-testid*="baseButton"] *,
+    .stButton > button * {
+        color: inherit !important;
+        background-color: transparent !important;
     }
-    button[kind="secondary"]:hover p,
-    button[data-testid="baseButton-secondary"]:hover p {
+
+    /* Number Input Stepper (+ / -) Buttons */
+    div[data-testid="stNumberInput"] button,
+    div[data-testid="stNumberInput"] [data-testid*="Button"] {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+        border: 1px solid #475569 !important;
+    }
+    div[data-testid="stNumberInput"] button:hover {
+        background-color: #334155 !important;
+        border-color: #10b981 !important;
         color: #34d399 !important;
     }
+
+    /* Primary Buttons Override */
+    button[data-testid="stBaseButton-primary"],
+    button[data-testid="baseButton-primary"],
     button[kind="primary"],
-    button[data-testid="baseButton-primary"] {
+    .stButton > button[kind="primary"] {
         background-color: #10b981 !important;
         color: #ffffff !important;
-        border: none !important;
+        border: 1px solid #10b981 !important;
     }
-    button[kind="primary"] p,
-    button[data-testid="baseButton-primary"] p {
+    button[data-testid="stBaseButton-primary"]:hover,
+    button[data-testid="baseButton-primary"]:hover,
+    button[kind="primary"]:hover,
+    .stButton > button[kind="primary"]:hover {
+        background-color: #059669 !important;
+        border-color: #059669 !important;
         color: #ffffff !important;
+    }
+    button[data-testid="stBaseButton-primary"] *,
+    button[data-testid="baseButton-primary"] *,
+    button[kind="primary"] * {
+        color: #ffffff !important;
+        background-color: transparent !important;
+    }
+
+    /* Tables & DataFrames (Glide Data Grid Canvas & Styler) */
+    div[data-testid="stDataFrame"],
+    div[data-testid="stDataFrameResizable"],
+    .stDataFrameGlideDataEditor,
+    .dvn-scroller,
+    .dvn-stack,
+    div[data-testid="stDataFrame"] > div {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+    }
+    div[data-testid="stDataFrame"] canvas,
+    .stDataFrameGlideDataEditor canvas,
+    .dvn-scroller canvas,
+    .dvn-stack canvas {
+        filter: invert(0.88) hue-rotate(180deg) !important;
+    }
+    div[data-testid="stDataFrame"] [data-testid="stElementToolbar"] {
+        background-color: #1e293b !important;
+        border: 1px solid #334155 !important;
+        border-radius: 6px !important;
+    }
+    div[data-testid="stDataFrame"] [data-testid="stElementToolbar"] button {
+        background-color: transparent !important;
+        border: none !important;
+        color: #f8fafc !important;
+    }
+    div[data-testid="stDataFrame"] [data-testid="stElementToolbar"] button:hover {
+        color: #34d399 !important;
+    }
+    div[data-testid="stDataFrameColumnMenu"],
+    div[data-testid="stDataFrameColumnVisibilityMenu"],
+    div[data-testid="stDataFrameStatisticsMenu"] {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+        border: 1px solid #334155 !important;
+    }
+    div[data-testid="stDataFrameColumnMenu"] *,
+    div[data-testid="stDataFrameColumnVisibilityMenu"] *,
+    div[data-testid="stDataFrameStatisticsMenu"] * {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+    }
+
+    /* HTML / Styled Tables */
+    table,
+    .stTable,
+    div[data-testid="stTable"],
+    table[data-testid="stTableStyledTable"],
+    table thead,
+    table tbody,
+    table tr {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+        border-color: #334155 !important;
+    }
+    table th,
+    table td,
+    table[data-testid="stTableStyledTable"] th,
+    table[data-testid="stTableStyledTable"] td {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+        border: 1px solid #334155 !important;
+    }
+    table tbody tr:nth-of-type(even) td {
+        background-color: #243248 !important;
+    }
+
+    /* Code Tags, Backticks & Code Blocks */
+    code, kbd, samp {
+        background-color: #1e293b !important;
+        color: #34d399 !important;
+        border: 1px solid #334155 !important;
+        border-radius: 4px !important;
+        padding: 2px 6px !important;
+        font-family: monospace !important;
+    }
+    pre,
+    pre code,
+    div[data-testid="stCode"],
+    div[data-testid="stCodeBlock"],
+    div[data-testid="stCodeBlock"] pre,
+    div[data-testid="stCodeBlock"] code {
+        background-color: #0f172a !important;
+        color: #34d399 !important;
+        border: 1px solid #334155 !important;
+        border-radius: 8px !important;
+    }
+    div[data-testid="stCodeBlock"] button {
+        background-color: transparent !important;
+        border: none !important;
+        color: #94a3b8 !important;
+    }
+
+    /* File Uploader & Camera */
+    div[data-testid="stFileUploader"],
+    div[data-testid="stFileUploader"] section,
+    div[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"],
+    div[data-testid="stCameraInput"] {
+        background-color: #1e293b !important;
+        border: 1px solid #475569 !important;
+        color: #f8fafc !important;
+    }
+    div[data-testid="stFileUploader"] * {
+        color: #f8fafc !important;
+    }
+
+    /* Dividers */
+    hr {
+        border-color: #334155 !important;
     }
 
     /* Expanders */
@@ -219,9 +367,14 @@ if dark_mode:
         border: 1px solid #334155 !important;
         border-radius: 12px !important;
     }
+    div[data-testid="stExpander"] details {
+        background-color: #1e293b !important;
+        border-radius: 12px !important;
+    }
     div[data-testid="stExpander"] summary {
         background-color: #1e293b !important;
         color: #f8fafc !important;
+        border-radius: 12px !important;
     }
     div[data-testid="stExpander"] summary * {
         color: #f8fafc !important;
@@ -229,9 +382,13 @@ if dark_mode:
     div[data-testid="stExpander"] summary:hover {
         color: #34d399 !important;
     }
+    div[data-testid="stExpander"] summary svg {
+        fill: #f8fafc !important;
+    }
     div[data-testid="stExpander"] div[role="region"] {
         background-color: #1e293b !important;
         color: #f8fafc !important;
+        border-top: 1px solid #334155 !important;
     }
 
     /* Metrics */
