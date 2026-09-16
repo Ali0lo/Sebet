@@ -1574,16 +1574,37 @@ with st.sidebar:
     else:
         st.markdown(
             f"""
-            <div style="background: {card_bg}; border: 1px solid {card_border}; border-radius: 12px; padding: 10px 12px; margin: 10px 0 10px 0;">
-                <div style="font-size: 12px; font-weight: 700; color: {card_text};">👤 Qonaq İstifadəçi</div>
-                <div style="font-size: 11px; color: {sub_text};">Xalları və səbəti saxlamaq üçün daxil olun</div>
+            <div style="background: {card_bg}; border: 1px solid {card_border}; border-radius: 12px; padding: 12px; margin: 10px 0 10px 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 13px; font-weight: 700; color: {card_text};">👤 Qonaq İstifadəçi</div>
+                    <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px; border: 1px solid #10b981;">+250 XAL</span>
+                </div>
+                <div style="font-size: 11px; color: {sub_text}; line-height: 1.4; margin-top: 5px;">
+                    Səbətinizi yadda saxlamaq və bonus qazanmaq üçün daxil olun və ya qeydiyyatdan keçin.
+                </div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-        col_sb_log, col_sb_demo = st.columns(2)
-        with col_sb_log:
-            with st.popover("🔑 Giriş", use_container_width=True):
+        col_sb_auth_btn, col_sb_demo = st.columns([1.15, 1])
+        with col_sb_auth_btn:
+            if st.button("👤 Giriş / Qeydiyyat", key="sb_btn_open_auth_dialog", type="primary", use_container_width=True, help="Split pəncərədə giriş və ya qeydiyyat"):
+                show_auth_dialog()
+        with col_sb_demo:
+            if st.button("⚡ Demo Giriş", key="sb_btn_demo_login", use_container_width=True, help="Ali İskəndərli demo hesabı ilə 1-kliklə daxil ol"):
+                ok, msg, u_data = user_db.authenticate_user("demo", "sebet2026")
+                if ok:
+                    st.session_state["user_authenticated"] = True
+                    st.session_state["current_user"] = u_data
+                    st.session_state["points"] = u_data.get("sebet_points", 300)
+                    s_b, s_loc = user_db.load_user_basket(u_data["id"])
+                    if s_b:
+                        st.session_state.basket = s_b
+                    st.rerun()
+
+        with st.popover("⚙️ Tez Giriş & Qeydiyyat Formu", use_container_width=True):
+            sb_tab_in, sb_tab_up = st.tabs(["🔑 Giriş", "📝 Qeydiyyat (+250)"])
+            with sb_tab_in:
                 st.markdown("##### 🔑 Daxil Ol")
                 sb_u = st.text_input("İstifadəçi adı / Telefon:", key="sb_pop_u")
                 sb_p = st.text_input("Şifrə:", type="password", key="sb_pop_p")
@@ -1600,17 +1621,32 @@ with st.sidebar:
                         st.rerun()
                     else:
                         st.error(msg)
-        with col_sb_demo:
-            if st.button("⚡ Demo Giriş", key="sb_btn_demo_login", use_container_width=True, help="Ali İskəndərli demo hesabı ilə 1-kliklə daxil ol"):
-                ok, msg, u_data = user_db.authenticate_user("demo", "sebet2026")
-                if ok:
-                    st.session_state["user_authenticated"] = True
-                    st.session_state["current_user"] = u_data
-                    st.session_state["points"] = u_data.get("sebet_points", 300)
-                    s_b, s_loc = user_db.load_user_basket(u_data["id"])
-                    if s_b:
-                        st.session_state.basket = s_b
-                    st.rerun()
+            with sb_tab_up:
+                st.markdown("##### 📝 Yeni Qeydiyyat")
+                st.caption("🎁 Qeydiyyatdan keçin, +250 Sebet xalı qazanın!")
+                sb_reg_name = st.text_input("Ad və Soyad:", key="sb_pop_reg_name")
+                sb_reg_u = st.text_input("İstifadəçi adı / Tel:", key="sb_pop_reg_u")
+                sb_reg_p = st.text_input("Şifrə:", type="password", key="sb_pop_reg_p")
+                if st.button("Qeydiyyatdan Keç", key="sb_pop_btn_reg", type="primary", use_container_width=True):
+                    if not sb_reg_name or not sb_reg_u or not sb_reg_p:
+                        st.error("Bütün xanaları doldurun")
+                    elif len(sb_reg_p) < 4:
+                        st.error("Şifrə ən azı 4 simvol olmalıdır")
+                    else:
+                        ok, msg, u_data = user_db.register_user(
+                            username=sb_reg_u.strip(),
+                            full_name=sb_reg_name.strip(),
+                            password=sb_reg_p,
+                            phone=sb_reg_u.strip(),
+                        )
+                        if ok:
+                            st.session_state["user_authenticated"] = True
+                            st.session_state["current_user"] = u_data
+                            st.session_state["points"] = u_data.get("sebet_points", 250)
+                            st.success(msg)
+                            st.rerun()
+                        else:
+                            st.error(msg)
 
     st.markdown("### 📍 Bakı Məkanı & Radius")
 
