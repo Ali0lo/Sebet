@@ -27,8 +27,8 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Dark Mode State (checked early from session state)
-dark_mode = bool(st.session_state.get("dark_mode_toggle", False))
+# Dark Mode State (checked early from session state, default to True)
+dark_mode = bool(st.session_state.get("dark_mode_toggle", True))
 
 # Shared Theme Variables
 card_bg = "#1e293b" if dark_mode else "#ffffff"
@@ -104,10 +104,12 @@ if dark_mode:
         font-weight: 600 !important;
     }
 
-    /* Tabs */
+    /* Tabs Styling */
     button[data-baseweb="tab"] {
         background-color: transparent !important;
-        border-color: #334155 !important;
+        border: none !important;
+        border-bottom: 2px solid transparent !important;
+        box-shadow: none !important;
     }
     button[data-baseweb="tab"] p,
     button[data-baseweb="tab"] div,
@@ -115,6 +117,7 @@ if dark_mode:
         color: #94a3b8 !important;
         font-weight: 600 !important;
         font-size: 14px !important;
+        background-color: transparent !important;
     }
     button[data-baseweb="tab"]:hover p,
     button[data-baseweb="tab"]:hover span {
@@ -181,34 +184,25 @@ if dark_mode:
         color: inherit !important;
     }
 
-    /* Buttons (Secondary, Steppers, Presets, Clear, Flyers, etc.) */
-    button,
-    button[data-testid*="stBaseButton"],
-    button[data-testid*="baseButton"],
-    button[data-testid="stBaseButton-secondary"],
-    button[kind="secondary"],
-    .stButton > button {
+    /* Secondary Buttons */
+    .stButton > button:not([kind="primary"]),
+    button[data-testid*="stBaseButton-secondary"],
+    button[kind="secondary"] {
         background-color: #1e293b !important;
         color: #f8fafc !important;
         border: 1px solid #475569 !important;
         box-shadow: none !important;
     }
-    button:hover,
-    button[data-testid*="stBaseButton"]:hover,
-    button[data-testid*="baseButton"]:hover,
-    button[data-testid="stBaseButton-secondary"]:hover,
-    button[kind="secondary"]:hover,
-    .stButton > button:hover {
+    .stButton > button:not([kind="primary"]):hover,
+    button[data-testid*="stBaseButton-secondary"]:hover,
+    button[kind="secondary"]:hover {
         background-color: #334155 !important;
         border-color: #10b981 !important;
         color: #34d399 !important;
     }
-    button p,
-    button span,
-    button div,
-    button[data-testid*="stBaseButton"] *,
-    button[data-testid*="baseButton"] *,
-    .stButton > button * {
+    .stButton > button:not([kind="primary"]) *,
+    button[data-testid*="stBaseButton-secondary"] *,
+    button[kind="secondary"] * {
         color: inherit !important;
         background-color: transparent !important;
     }
@@ -227,30 +221,28 @@ if dark_mode:
     }
 
     /* Primary Buttons Override */
-    button[data-testid="stBaseButton-primary"],
-    button[data-testid="baseButton-primary"],
-    button[kind="primary"],
-    .stButton > button[kind="primary"] {
+    .stButton > button[kind="primary"],
+    button[data-testid*="stBaseButton-primary"],
+    button[kind="primary"] {
         background-color: #10b981 !important;
         color: #ffffff !important;
         border: 1px solid #10b981 !important;
     }
-    button[data-testid="stBaseButton-primary"]:hover,
-    button[data-testid="baseButton-primary"]:hover,
-    button[kind="primary"]:hover,
-    .stButton > button[kind="primary"]:hover {
+    .stButton > button[kind="primary"]:hover,
+    button[data-testid*="stBaseButton-primary"]:hover,
+    button[kind="primary"]:hover {
         background-color: #059669 !important;
         border-color: #059669 !important;
         color: #ffffff !important;
     }
-    button[data-testid="stBaseButton-primary"] *,
-    button[data-testid="baseButton-primary"] *,
+    .stButton > button[kind="primary"] *,
+    button[data-testid*="stBaseButton-primary"] *,
     button[kind="primary"] * {
         color: #ffffff !important;
         background-color: transparent !important;
     }
 
-    /* Tables & DataFrames (Glide Data Grid Canvas & Styler) */
+    /* Tables & DataFrames (Glide Data Grid Container) */
     div[data-testid="stDataFrame"],
     div[data-testid="stDataFrameResizable"],
     .stDataFrameGlideDataEditor,
@@ -259,12 +251,6 @@ if dark_mode:
     div[data-testid="stDataFrame"] > div {
         background-color: #1e293b !important;
         border-color: #334155 !important;
-    }
-    div[data-testid="stDataFrame"] canvas,
-    .stDataFrameGlideDataEditor canvas,
-    .dvn-scroller canvas,
-    .dvn-stack canvas {
-        filter: invert(0.88) hue-rotate(180deg) !important;
     }
     div[data-testid="stDataFrame"] [data-testid="stElementToolbar"] {
         background-color: #1e293b !important;
@@ -305,7 +291,12 @@ if dark_mode:
         color: #f8fafc !important;
         border-color: #334155 !important;
     }
-    table th,
+    table th {
+        background-color: #0f172a !important;
+        color: #f8fafc !important;
+        border: 1px solid #334155 !important;
+        font-weight: 700 !important;
+    }
     table td,
     table[data-testid="stTableStyledTable"] th,
     table[data-testid="stTableStyledTable"] td {
@@ -314,11 +305,11 @@ if dark_mode:
         border: 1px solid #334155 !important;
     }
     table tbody tr:nth-of-type(even) td {
-        background-color: #243248 !important;
+        background-color: #182338 !important;
     }
 
     /* Code Tags, Backticks & Code Blocks */
-    code, kbd, samp {
+    code, kbd, samp, tt {
         background-color: #1e293b !important;
         color: #34d399 !important;
         border: 1px solid #334155 !important;
@@ -379,7 +370,8 @@ if dark_mode:
     div[data-testid="stExpander"] summary * {
         color: #f8fafc !important;
     }
-    div[data-testid="stExpander"] summary:hover {
+    div[data-testid="stExpander"] summary:hover,
+    div[data-testid="stExpander"] summary:hover * {
         color: #34d399 !important;
     }
     div[data-testid="stExpander"] summary svg {
@@ -395,21 +387,22 @@ if dark_mode:
     div[data-testid="stMetric"] {
         background-color: #1e293b !important;
         border: 1px solid #334155 !important;
-        border-radius: 12px !important;
+        border-radius: 14px !important;
         padding: 14px 16px !important;
     }
     div[data-testid="stMetricLabel"],
-    div[data-testid="stMetricLabel"] p,
-    div[data-testid="stMetricLabel"] span {
+    div[data-testid="stMetricLabel"] * {
         color: #94a3b8 !important;
         font-size: 13px !important;
     }
     div[data-testid="stMetricValue"],
-    div[data-testid="stMetricValue"] p,
-    div[data-testid="stMetricValue"] span,
-    div[data-testid="stMetricValue"] div {
+    div[data-testid="stMetricValue"] * {
         color: #34d399 !important;
         font-weight: 800 !important;
+    }
+    div[data-testid="stMetricDelta"],
+    div[data-testid="stMetricDelta"] * {
+        color: #94a3b8 !important;
     }
 
     /* Sliders */
@@ -511,9 +504,21 @@ else:
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-    html, body, [class*="css"], .stApp {
+    :root, [data-testid="stAppViewContainer"], .stApp {
+        --text-color: #0f172a !important;
+        --background-color: #f8fafc !important;
+        --secondary-background-color: #ffffff !important;
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-        color: #0f172a;
+    }
+
+    section[data-testid="stSidebar"] {
+        background-color: #ffffff !important;
+        border-right: 1px solid #e2e8f0 !important;
+    }
+    [data-testid="stHeader"] {
+        background-color: rgba(248, 250, 252, 0.95) !important;
     }
 
     .main-header {
@@ -632,21 +637,24 @@ def render_map(
         if hover_data:
             kwargs["hover_data"] = hover_data
 
+        legend_bg = "rgba(30, 41, 59, 0.85)" if dark_mode else "rgba(255, 255, 255, 0.85)"
+        legend_font = dict(color="#f8fafc" if dark_mode else "#0f172a")
+
         if hasattr(px, "scatter_map"):
             fig = px.scatter_map(df, **kwargs)
             fig.update_layout(
                 map_style="open-street-map",
                 margin={"r": 0, "t": 0, "l": 0, "b": 0},
-                legend=dict(yanchor="top", y=0.98, xanchor="left", x=0.02, bgcolor="rgba(255,255,255,0.8)"),
+                legend=dict(yanchor="top", y=0.98, xanchor="left", x=0.02, bgcolor=legend_bg, font=legend_font),
             )
             st.plotly_chart(fig, use_container_width=True)
             return
         elif hasattr(px, "scatter_mapbox"):
             fig = px.scatter_mapbox(df, **kwargs)
             fig.update_layout(
-                mapbox_style="carto-positron",
+                mapbox_style="carto-darkmatter" if dark_mode else "carto-positron",
                 margin={"r": 0, "t": 0, "l": 0, "b": 0},
-                legend=dict(yanchor="top", y=0.98, xanchor="left", x=0.02, bgcolor="rgba(255,255,255,0.8)"),
+                legend=dict(yanchor="top", y=0.98, xanchor="left", x=0.02, bgcolor=legend_bg, font=legend_font),
             )
             st.plotly_chart(fig, use_container_width=True)
             return
@@ -655,6 +663,77 @@ def render_map(
 
     # Fallback to standard streamlit map
     st.map(df[[lat, lon]], zoom=int(zoom))
+
+
+def clear_basket_keys():
+    """Clears all dynamic basket quantity input keys from session state."""
+    for k in list(st.session_state.keys()):
+        if k.startswith("bqty_") or k == "new_qty_kg_val":
+            del st.session_state[k]
+
+
+def render_basket_items_table(items: List[Dict[str, Any]], dark: bool = True):
+    """Renders a clean, highly readable HTML table for basket items breakdown in dark and light modes."""
+    if not items:
+        return
+    th_bg = "#0f172a" if dark else "#f8fafc"
+    td_bg = "#1e293b" if dark else "#ffffff"
+    td_alt_bg = "#182338" if dark else "#f1f5f9"
+    text_color = "#f8fafc" if dark else "#0f172a"
+    sub_color = "#94a3b8" if dark else "#64748b"
+    border_color = "#334155" if dark else "#e2e8f0"
+    badge_bg = "rgba(16, 185, 129, 0.18)" if dark else "#ecfdf5"
+    badge_color = "#34d399" if dark else "#059669"
+    badge_border = "rgba(16, 185, 129, 0.35)" if dark else "#a7f3d0"
+
+    rows_html = ""
+    for i, it in enumerate(items):
+        bg = td_alt_bg if i % 2 == 1 else td_bg
+        is_item_kg = (it.get("unit") == "kg")
+        qty_val = it["quantity"]
+        if is_item_kg:
+            qty_display = f"{qty_val:.2f} kq"
+        else:
+            qty_display = f"{int(qty_val) if isinstance(qty_val, float) and qty_val.is_integer() else qty_val} {it.get('unit', '')}"
+
+        rows_html += f"""
+        <tr style="background-color: {bg}; border-bottom: 1px solid {border_color};">
+            <td style="padding: 10px 14px; font-weight: 600; color: {text_color}; text-align: left;">{it['name']}</td>
+            <td style="padding: 10px 14px; color: {sub_color}; text-align: center; font-weight: 500;">{qty_display}</td>
+            <td style="padding: 10px 14px; color: {text_color}; text-align: right; font-weight: 500;">{it['unit_price']:.2f} ₼</td>
+            <td style="padding: 10px 14px; text-align: right;">
+                <span style="background: {badge_bg}; color: {badge_color}; border: 1px solid {badge_border}; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 13px;">
+                    {it['total']:.2f} ₼
+                </span>
+            </td>
+        </tr>
+        """
+
+    total_sum = sum(it.get("total", 0.0) for it in items)
+    table_html = f"""
+    <div style="width: 100%; overflow-x: auto; border: 1px solid {border_color}; border-radius: 12px; margin: 8px 0 14px 0;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; font-family: inherit;">
+            <thead>
+                <tr style="background-color: {th_bg}; border-bottom: 2px solid {border_color};">
+                    <th style="padding: 10px 14px; text-align: left; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Məhsul</th>
+                    <th style="padding: 10px 14px; text-align: center; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Miqdar</th>
+                    <th style="padding: 10px 14px; text-align: right; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Qiymət</th>
+                    <th style="padding: 10px 14px; text-align: right; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Məbləğ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {rows_html}
+            </tbody>
+            <tfoot>
+                <tr style="background-color: {th_bg}; border-top: 2px solid {border_color};">
+                    <td colspan="3" style="padding: 10px 14px; font-weight: 700; color: {text_color}; text-align: right;">Cəmi:</td>
+                    <td style="padding: 10px 14px; text-align: right; font-weight: 800; font-size: 14px; color: {badge_color};">{total_sum:.2f} ₼</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    """
+    st.markdown(table_html, unsafe_allow_html=True)
 
 
 # -----------------------------------------------------------------------------
@@ -862,7 +941,7 @@ with st.sidebar:
         "frontend/public/sebet-logo-banner.png" if os.path.exists("frontend/public/sebet-logo-banner.png") else "https://raw.githubusercontent.com/Ali0lo/Sebet/main/frontend/public/logo-light.png",
         use_container_width=True,
     )
-    dark_mode = st.toggle("🌙 Qaranlıq Rejim (Dark Mode)", value=False, key="dark_mode_toggle")
+    dark_mode = st.toggle("🌙 Qaranlıq Rejim (Dark Mode)", value=True, key="dark_mode_toggle")
 
     st.markdown("### 📍 Bakı Məkanı & Radius")
 
@@ -972,6 +1051,7 @@ with tab_optimizer:
         col_p1, col_p2, col_p3 = st.columns(3)
         with col_p1:
             if st.button("🍳 Səhər Yeməyi", key="preset_breakfast", use_container_width=True):
+                clear_basket_keys()
                 st.session_state.basket = [
                     {"barcode": PRODUCTS[0]["barcode"], "canonical_name": PRODUCTS[0]["canonical_name"], "brand": PRODUCTS[0]["brand"], "quantity": 2.0, "unit": "liter", "cat_slug": PRODUCTS[0]["cat_slug"]},
                     {"barcode": PRODUCTS[4]["barcode"], "canonical_name": PRODUCTS[4]["canonical_name"], "brand": PRODUCTS[4]["brand"], "quantity": 1.0, "unit": "piece", "cat_slug": PRODUCTS[4]["cat_slug"]},
@@ -982,6 +1062,7 @@ with tab_optimizer:
 
         with col_p2:
             if st.button("🥗 Meyvə & Tərəvəz", key="preset_produce", use_container_width=True):
+                clear_basket_keys()
                 st.session_state.basket = [
                     {"barcode": PRODUCTS[28]["barcode"], "canonical_name": PRODUCTS[28]["canonical_name"], "brand": PRODUCTS[28]["brand"], "quantity": 2.0, "unit": "kg", "cat_slug": PRODUCTS[28]["cat_slug"]},
                     {"barcode": PRODUCTS[29]["barcode"], "canonical_name": PRODUCTS[29]["canonical_name"], "brand": PRODUCTS[29]["brand"], "quantity": 1.5, "unit": "kg", "cat_slug": PRODUCTS[29]["cat_slug"]},
@@ -992,6 +1073,7 @@ with tab_optimizer:
 
         with col_p3:
             if st.button("🏠 Ailəvi Həftəlik", key="preset_family", use_container_width=True):
+                clear_basket_keys()
                 st.session_state.basket = [
                     {"barcode": PRODUCTS[15]["barcode"], "canonical_name": PRODUCTS[15]["canonical_name"], "brand": PRODUCTS[15]["brand"], "quantity": 2.0, "unit": "kg", "cat_slug": PRODUCTS[15]["cat_slug"]},
                     {"barcode": PRODUCTS[19]["barcode"], "canonical_name": PRODUCTS[19]["canonical_name"], "brand": PRODUCTS[19]["brand"], "quantity": 1.0, "unit": "piece", "cat_slug": PRODUCTS[19]["cat_slug"]},
@@ -1008,7 +1090,7 @@ with tab_optimizer:
                 ["Bütün Kateqoriyalar"] + [c["name_az"] for c in CATEGORIES.values()],
                 key="basket_cat_filter",
             )
-            f_search = st.text_input("Məhsul axtarışı:", key="basket_prod_search", placeholder="Məs: Süd, Yağ, Çay...")
+            f_search = st.text_input("Məhsul axtarışı:", key="basket_prod_search", placeholder="Məs: Süd, Yağ, Çay, Kartof...")
 
             avail_prods = PRODUCTS
             if f_cat != "Bütün Kateqoriyalar":
@@ -1025,25 +1107,64 @@ with tab_optimizer:
                 selected_idx = st.selectbox("Məhsul seçin:", range(len(avail_prods)), format_func=lambda i: prod_names[i], key="basket_sel_prod")
                 sel_prod = avail_prods[selected_idx]
 
-                is_kg = sel_prod.get("unit") == "kg"
+                is_kg = (sel_prod.get("unit") == "kg")
                 if is_kg:
-                    new_qty = st.number_input("Çəki (kq):", min_value=0.2, max_value=20.0, value=1.0, step=0.5, key="new_qty_kg")
+                    st.markdown("<div style='font-size: 13px; font-weight: 700; color: #10b981; margin: 6px 0 2px 0;'>⚖️ Çəki Məhsulu — İstədiyiniz Çəkini Daxil Edin:</div>", unsafe_allow_html=True)
+                    
+                    # Quick weight presets
+                    chip_cols = st.columns(5)
+                    for chip_val, c_col in zip([0.5, 1.0, 1.5, 2.0, 3.0], chip_cols):
+                        with c_col:
+                            if st.button(f"{chip_val} kq", key=f"adder_chip_{chip_val}", use_container_width=True):
+                                st.session_state["adder_kg_val"] = chip_val
+                                st.rerun()
+
+                    cur_adder_kg = float(st.session_state.get("adder_kg_val", 1.0))
+                    new_qty = st.number_input(
+                        "Dəqiq çəki (kq):",
+                        min_value=0.05,
+                        max_value=50.0,
+                        value=cur_adder_kg,
+                        step=0.1,
+                        format="%.2f",
+                        key="new_qty_kg_input",
+                        help="İstənilən çəkini klaviatura ilə əllə daxil edin (məs: 0.75, 1.35, 2.40 kq)",
+                    )
+                    # Average price for estimate
+                    p_prices = [get_effective_price(sel_prod, ck) for ck in ["bravo", "araz", "oba", "bazarstore", "almarket", "neptun", "spar"]]
+                    avg_price = sum(p_prices) / len(p_prices) if p_prices else float(sel_prod.get("base_price", 1.0))
+                    est_total = round(avg_price * new_qty, 2)
+                    st.markdown(
+                        f"<div style='background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 8px 12px; margin: 6px 0 10px 0; font-size: 13px; color: #34d399;'>"
+                        f"⚖️ Seçilmiş: <b>{new_qty:.2f} kq</b> | 💰 Təxmini Məbləğ: <b>~{est_total:.2f} ₼</b> (1 kq ≈ {avg_price:.2f} ₼)"
+                        f"</div>",
+                        unsafe_allow_html=True,
+                    )
                 else:
-                    new_qty = st.number_input("Say (ədəd):", min_value=1.0, max_value=50.0, value=1.0, step=1.0, key="new_qty_count")
+                    new_qty = st.number_input(
+                        "Say (ədəd / litr):",
+                        min_value=1.0,
+                        max_value=100.0,
+                        value=1.0,
+                        step=1.0,
+                        format="%.0f",
+                        key="new_qty_count",
+                    )
 
                 if st.button("Səbətə Əlavə Et", key="btn_add_to_basket", type="primary", use_container_width=True):
                     existing = next((item for item in st.session_state.basket if item["barcode"] == sel_prod["barcode"]), None)
                     if existing:
-                        existing["quantity"] = round(existing["quantity"] + new_qty, 1)
+                        existing["quantity"] = round(existing["quantity"] + new_qty, 2)
                     else:
                         st.session_state.basket.append({
                             "barcode": sel_prod["barcode"],
                             "canonical_name": sel_prod["canonical_name"],
                             "brand": sel_prod["brand"],
-                            "quantity": new_qty,
+                            "quantity": round(new_qty, 2),
                             "unit": sel_prod.get("unit", "ədəd"),
                             "cat_slug": sel_prod["cat_slug"],
                         })
+                    clear_basket_keys()
                     st.rerun()
             else:
                 st.info("Axtarışa uyğun məhsul tapılmadı.")
@@ -1054,31 +1175,61 @@ with tab_optimizer:
         else:
             st.markdown(f"**Səbətdəki Məhsullar ({len(st.session_state.basket)} növ):**")
             for idx, item in enumerate(st.session_state.basket):
-                c_name, c_minus, c_qty, c_plus, c_del = st.columns([3, 0.6, 1.2, 0.6, 0.6])
-                unit_label = "kq" if item.get("unit") == "kg" else "ədəd"
-                step = 0.5 if item.get("unit") == "kg" else 1.0
-                min_val = 0.5 if item.get("unit") == "kg" else 1.0
+                is_kg = (item.get("unit") == "kg")
+                unit_label = "kq" if is_kg else ("L" if item.get("unit") == "liter" else "ədəd")
+
+                c_name, c_qty, c_del = st.columns([2.5, 1.8, 0.4])
 
                 with c_name:
                     st.markdown(f"**{item['canonical_name']}**")
-                with c_minus:
-                    if st.button("➖", key=f"minus_{idx}"):
-                        if item["quantity"] > min_val:
-                            item["quantity"] = round(item["quantity"] - step, 1)
-                            st.rerun()
+                    if is_kg:
+                        st.markdown(f"<span style='font-size: 11px; color: #10b981; font-weight: 700; background: rgba(16,185,129,0.15); padding: 2px 6px; border-radius: 4px;'>⚖️ Çəki: {item['quantity']:.2f} kq</span>", unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"<span style='font-size: 11px; color: #94a3b8; font-weight: 600;'>📦 {unit_label}</span>", unsafe_allow_html=True)
+
                 with c_qty:
-                    st.markdown(f"<div style='text-align: center; padding-top: 6px; font-weight: 700;'>{item['quantity']} {unit_label}</div>", unsafe_allow_html=True)
-                with c_plus:
-                    if st.button("➕", key=f"plus_{idx}"):
-                        item["quantity"] = round(item["quantity"] + step, 1)
-                        st.rerun()
+                    cur_qty = float(item["quantity"])
+                    bqty_key = f"bqty_{item['barcode']}_{idx}"
+                    if is_kg:
+                        val = st.number_input(
+                            f"Çəki (kq) - {item['canonical_name']}",
+                            min_value=0.05,
+                            max_value=50.0,
+                            value=cur_qty,
+                            step=0.1,
+                            format="%.2f",
+                            key=bqty_key,
+                            label_visibility="collapsed",
+                            help=f"Dəqiq çəkini klaviatura ilə daxil edin (məs: 0.75, 1.35, 2.40)",
+                        )
+                        if abs(val - cur_qty) > 0.001:
+                            item["quantity"] = round(val, 2)
+                            st.rerun()
+                    else:
+                        val = st.number_input(
+                            f"Miqdar - {item['canonical_name']}",
+                            min_value=1.0,
+                            max_value=100.0,
+                            value=cur_qty,
+                            step=1.0,
+                            format="%.0f",
+                            key=bqty_key,
+                            label_visibility="collapsed",
+                            help="Say daxil edin",
+                        )
+                        if abs(val - cur_qty) > 0.001:
+                            item["quantity"] = float(int(val))
+                            st.rerun()
+
                 with c_del:
-                    if st.button("🗑️", key=f"del_{idx}"):
+                    if st.button("🗑️", key=f"del_{idx}", help="Səbətdən sil"):
                         st.session_state.basket.pop(idx)
+                        clear_basket_keys()
                         st.rerun()
 
             if st.button("Səbəti Təmizlə", key="clear_basket_btn", use_container_width=True):
                 st.session_state.basket = []
+                clear_basket_keys()
                 st.rerun()
 
     # Right Column: Optimization Output
@@ -1154,17 +1305,8 @@ with tab_optimizer:
                         """,
                         unsafe_allow_html=True,
                     )
-                    with st.expander("Məhsul siyahısı (Tək Market)", expanded=False):
-                        single_df = pd.DataFrame([
-                            {
-                                "Məhsul": it["name"],
-                                "Miqdar": f"{it['quantity']} {it.get('unit', '')}",
-                                "Qiymət": f"{it['unit_price']:.2f} ₼",
-                                "Məbləğ": f"{it['total']:.2f} ₼",
-                            }
-                            for it in single["items"]
-                        ])
-                        st.dataframe(single_df, hide_index=True, use_container_width=True)
+                    with st.expander(f"🛒 Səbət tərkibi ({len(single['items'])} məhsul)", expanded=True):
+                        render_basket_items_table(single["items"], dark=dark_mode)
 
                 with card_col2:
                     if is_split_viable and split:
@@ -1192,28 +1334,10 @@ with tab_optimizer:
                         )
 
                         with st.expander(f"🛒 1-ci Market: {s1['branch_name']} ({len(split['s1_items'])} məhsul)", expanded=True):
-                            s1_df = pd.DataFrame([
-                                {
-                                    "Məhsul": it["name"],
-                                    "Say/Çəki": f"{it['quantity']} {it.get('unit', '')}",
-                                    "Qiymət": f"{it['unit_price']:.2f} ₼",
-                                    "Məbləğ": f"{it['total']:.2f} ₼",
-                                }
-                                for it in split["s1_items"]
-                            ])
-                            st.dataframe(s1_df, hide_index=True, use_container_width=True)
+                            render_basket_items_table(split["s1_items"], dark=dark_mode)
 
                         with st.expander(f"🛒 2-ci Market: {s2['branch_name']} ({len(split['s2_items'])} məhsul)", expanded=True):
-                            s2_df = pd.DataFrame([
-                                {
-                                    "Məhsul": it["name"],
-                                    "Say/Çəki": f"{it['quantity']} {it.get('unit', '')}",
-                                    "Qiymət": f"{it['unit_price']:.2f} ₼",
-                                    "Məbləğ": f"{it['total']:.2f} ₼",
-                                }
-                                for it in split["s2_items"]
-                            ])
-                            st.dataframe(s2_df, hide_index=True, use_container_width=True)
+                            render_basket_items_table(split["s2_items"], dark=dark_mode)
                     else:
                         st.info("ℹ️ Seçilmiş piyada radiusunda qiymət fərqi 0.15 ₼-dən az olduğu üçün tək marketdən alış-veriş etmək ən optimal qərardır.")
 
@@ -1583,7 +1707,14 @@ with tab_analytics:
             text="Ümumi Səbət Dəyəri (₼)",
         )
         fig_index.update_traces(texttemplate='%{text:.2f} ₼', textposition='outside')
-        fig_index.update_layout(showlegend=False, yaxis_range=[0, totals_df["Ümumi Səbət Dəyəri (₼)"].max() * 1.15])
+        fig_index.update_layout(
+            showlegend=False,
+            yaxis_range=[0, totals_df["Ümumi Səbət Dəyəri (₼)"].max() * 1.15],
+            template="plotly_dark" if dark_mode else "plotly_white",
+            paper_bgcolor="#1e293b" if dark_mode else "#ffffff",
+            plot_bgcolor="#1e293b" if dark_mode else "#ffffff",
+            font=dict(color="#f8fafc" if dark_mode else "#0f172a"),
+        )
         st.plotly_chart(fig_index, use_container_width=True)
 
     with col_an2:

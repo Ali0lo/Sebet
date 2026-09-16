@@ -2,7 +2,11 @@
 gatherUsageStats = false
 
 [theme]
+base = "dark"
 primaryColor = "#10b981"
+backgroundColor = "#0b1120"
+secondaryBackgroundColor = "#1e293b"
+textColor = "#f8fafc"
 font = "sans serif"
 
 [server]
