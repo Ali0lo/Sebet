@@ -1685,32 +1685,45 @@ with st.sidebar:
     if "user_location_confirmed" not in st.session_state:
         st.session_state["user_location_confirmed"] = False
 
-    # Actively request browser geolocation via streamlit_js_eval
-    if HAS_GEO:
-        geo_info = get_geolocation(component_key="browser_auto_gps_locator")
-        if geo_info and isinstance(geo_info, dict) and "coords" in geo_info and geo_info["coords"]:
-            raw_lat = geo_info["coords"].get("latitude")
-            raw_lon = geo_info["coords"].get("longitude")
-            accuracy = float(geo_info["coords"].get("accuracy", 9999.0))
-            if raw_lat and raw_lon:
-                g_lat = round(float(raw_lat), 4)
-                g_lon = round(float(raw_lon), 4)
-                st.session_state["raw_gps_coords"] = (g_lat, g_lon)
-                st.session_state["raw_gps_accuracy"] = accuracy
-                if not st.session_state.get("user_location_confirmed", False):
-                    if st.session_state.get("last_auto_gps") != (g_lat, g_lon):
-                        st.session_state["last_auto_gps"] = (g_lat, g_lon)
+    # On-demand GPS geolocation resolver
+    if st.session_state.get("request_gps", False):
+        if HAS_GEO:
+            with st.container():
+                st.info("📡 Brauzerdən GPS koordinatlarınız sorğulanır... Zəhmət olmasa 'İcazə ver' (Allow) seçin.")
+                geo_info = get_geolocation(component_key=f"user_gps_resolver_{st.session_state.get('gps_counter', 1)}")
+                if geo_info and isinstance(geo_info, dict) and "coords" in geo_info and geo_info["coords"]:
+                    raw_lat = geo_info["coords"].get("latitude")
+                    raw_lon = geo_info["coords"].get("longitude")
+                    accuracy = float(geo_info["coords"].get("accuracy", 9999.0))
+                    if raw_lat and raw_lon:
+                        g_lat = round(float(raw_lat), 4)
+                        g_lon = round(float(raw_lon), 4)
+                        st.session_state["raw_gps_coords"] = (g_lat, g_lon)
+                        st.session_state["raw_gps_accuracy"] = accuracy
                         st.session_state["user_coords"] = (g_lat, g_lon)
+                        st.session_state["user_location_confirmed"] = True
+
                         closest_k = min(
                             LOCATION_PRESETS.keys(),
                             key=lambda k: calculate_distance_meters((g_lat, g_lon), LOCATION_PRESETS[k]),
                         )
-                        if accuracy <= 1000:
+                        dist_to_closest = calculate_distance_meters((g_lat, g_lon), LOCATION_PRESETS[closest_k])
+                        if dist_to_closest <= 1500:
                             st.session_state["selected_loc_name"] = closest_k
-                            st.session_state["gps_detected"] = "precise"
                         else:
-                            st.session_state["selected_loc_name"] = closest_k
-                            st.session_state["gps_detected"] = "coarse"
+                            st.session_state["selected_loc_name"] = f"Cari Məkan ({closest_k} yaxınlığı)"
+
+                        st.session_state["gps_detected"] = "precise" if accuracy <= 1000 else "coarse"
+                        st.session_state["request_gps"] = False
+                        st.toast(f"📍 Məkan təyin edildi: {st.session_state['selected_loc_name']}", icon="✅")
+                        st.rerun()
+
+                if st.button("✕ Sorğunu İmtina Et", key="sb_btn_cancel_gps_active", use_container_width=True):
+                    st.session_state["request_gps"] = False
+                    st.rerun()
+        else:
+            st.warning("⚠️ Brauzerdə geolokasiya modulu mövcud deyil.")
+            st.session_state["request_gps"] = False
 
     preset_keys = list(LOCATION_PRESETS.keys())
     cur_sel_name = st.session_state["selected_loc_name"]
@@ -1718,7 +1731,7 @@ with st.sidebar:
 
     st.markdown(
         f"""
-        <div style="background: {card_bg}; border: 1px solid {card_border}; border-radius: 12px; padding: 12px; margin-bottom: 12px;">
+        <div style="background: {card_bg}; border: 1px solid {card_border}; border-radius: 12px; padding: 12px; margin-bottom: 10px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
                 <span style="font-size: 11px; font-weight: 800; color: #10b981; text-transform: uppercase; letter-spacing: 0.05em;">📍 Məkan & Ərazi</span>
                 <span style="font-size: 11px; color: {sub_text};">🚶 {int(st.session_state['max_walking_dist'])}m</span>
@@ -1730,6 +1743,21 @@ with st.sidebar:
         """,
         unsafe_allow_html=True,
     )
+
+    col_sb_gps, col_sb_reset = st.columns([1.65, 1])
+    with col_sb_gps:
+        if st.button("🎯 Cari Məkanım (GPS)", key="sb_btn_use_gps", use_container_width=True, help="Brauzer GPS vasitəsilə cari məkanınızı avtomatik təyin edin"):
+            st.session_state["request_gps"] = True
+            st.session_state["gps_counter"] = st.session_state.get("gps_counter", 0) + 1
+            st.rerun()
+    with col_sb_reset:
+        if st.button("🔄 Sıfırla", key="sb_btn_reset_loc", use_container_width=True, help="Məkanı 28 May mərkəzinə qaytar"):
+            st.session_state["selected_loc_name"] = "28 May m. / Dəmiryol Vağzalı"
+            st.session_state["user_coords"] = (40.3798, 49.8475)
+            st.session_state["user_location_confirmed"] = True
+            st.session_state["gps_detected"] = "manual"
+            st.session_state["request_gps"] = False
+            st.rerun()
 
     chosen_preset = st.selectbox(
         "Məkanı Dəyişdir (80+ Ərazi & Metro):",
