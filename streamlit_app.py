@@ -1849,7 +1849,7 @@ if st.session_state.get("request_gps", False):
 tab_optimizer, tab_comparison, tab_flyers, tab_scan, tab_analytics, tab_loyalty, tab_auth, tab_about = st.tabs([
     "🧺 Ağıllı Səbət (Smart Basket)",
     "🔍 Qiymət Müqayisəsi (Matrix)",
-    "📰 Həftəlik Bukletlər (Flyers)",
+    "🏷️ Həftəlik Endirimlər (Weekly Specials)",
     "🧾 Qəbz Skanı & Keşbek (OCR)",
     "📊 Bazar Analitikası (Analytics)",
     "🎁 Keşbek & Loyallıq",
@@ -2524,11 +2524,11 @@ with tab_comparison:
 
 
 # =============================================================================
-# TAB 3: HƏFTƏLİK BUKLETLƏR (WEEKLY FLYERS)
+# TAB 3: HƏFTƏLİK ENDİRİMLƏR (WEEKLY SPECIALS)
 # =============================================================================
 with tab_flyers:
-    st.markdown("### 📰 Bakı Supermarketlərinin Həftəlik Endirim Bukletləri")
-    st.markdown("Bravo, Araz, OBA və Bazarstore-un rəsmi çap olunmuş və rəqəmsal kataloqları.")
+    st.markdown("### 🏷️ Bakı Supermarketlərinin Həftəlik Endirimləri və Xüsusi Fürsətləri")
+    st.markdown("Bravo, Araz, OBA və Bazarstore-un rəsmi həftəlik endirim kampaniyaları və xüsusi təklifləri.")
 
     flyer_cols = st.columns(3)
     sample_flyers = [
@@ -2550,7 +2550,7 @@ with tab_flyers:
         },
         {
             "chain": "OBA",
-            "title": "OBA Market Cibinizə Qənaət Bukleti",
+            "title": "OBA Market Cibinizə Qənaət Endirimləri",
             "dates": "08 Sentyabr - 22 Sentyabr 2026",
             "color": "#009640",
             "discount": "50%-dək",
@@ -2580,8 +2580,8 @@ with tab_flyers:
                 """,
                 unsafe_allow_html=True,
             )
-            if st.button(f"📄 Bukletə Bax ({fl['chain']})", key=f"flyer_btn_{idx}", use_container_width=True):
-                st.success(f"{fl['chain']} bukletindəki bütün endirimlər qiymət bazamıza daxil edilib.")
+            if st.button(f"🏷️ Endirimlərə Bax ({fl['chain']})", key=f"flyer_btn_{idx}", use_container_width=True):
+                st.success(f"{fl['chain']} həftəlik endirimlərindəki bütün təkliflər qiymət bazamıza daxil edilib.")
 
 
 # =============================================================================
@@ -3207,7 +3207,7 @@ with tab_about:
         - **Frontend**: Next.js 15 (App Router, Tailwind CSS, TypeScript, Zustand, Lucide Icons, PWA).
         - **Backend & Alqoritmlər**: FastAPI (Python 3.14), SQLAlchemy, Pydantic, Geopy haversine coğrafi məsafə hesablama motoru.
         - **Ağıllı Səbət Alqoritmi**: Tək ən ucuz market (baseline) və istifadəçinin piyada getmə radiusunda (məs: 750m) 2 market arasında optimal məhsul bölgüsü (split optimization).
-        - **Məlumat Mənbələri**: Həftəlik market bukletləri (flyers), elektron qəbzlər (e-kassa OCR) və supermarket e-ticarət qiymət skreyperləri.
+        - **Məlumat Mənbələri**: Həftəlik market endirimləri və təklifləri (flyers), elektron qəbzlər (e-kassa OCR) və supermarket e-ticarət qiymət skreyperləri.
         - **İnteraktiv Streamlit Tətbiqi**: Streamlit Community Cloud vasitəsilə 100% serverless və buludda işləyən nümayiş portalı.
 
         ---
