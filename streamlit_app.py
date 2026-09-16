@@ -287,33 +287,46 @@ if dark_mode:
         color: #f8fafc !important;
     }
 
-    /* HTML / Styled Tables */
-    table,
+    /* Native Streamlit Styled Tables (Dark Mode) */
     .stTable,
     div[data-testid="stTable"],
-    table[data-testid="stTableStyledTable"],
-    table thead,
-    table tbody,
-    table tr {
+    table[data-testid="stTableStyledTable"] {
         background-color: #1e293b !important;
         color: #f8fafc !important;
         border-color: #334155 !important;
     }
-    table th {
+    table[data-testid="stTableStyledTable"] th {
         background-color: #0f172a !important;
         color: #f8fafc !important;
         border: 1px solid #334155 !important;
         font-weight: 700 !important;
     }
-    table td,
-    table[data-testid="stTableStyledTable"] th,
     table[data-testid="stTableStyledTable"] td {
         background-color: #1e293b !important;
         color: #f8fafc !important;
         border: 1px solid #334155 !important;
     }
-    table tbody tr:nth-of-type(even) td {
+    table[data-testid="stTableStyledTable"] tbody tr:nth-of-type(even) td {
         background-color: #182338 !important;
+    }
+
+    /* Scoped Basket Table (Dark Mode) */
+    .basket-breakdown-container {
+        background-color: #1e293b !important;
+        border: 1px solid #334155 !important;
+        border-radius: 12px !important;
+    }
+    .basket-table {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+    }
+    .basket-table th {
+        background-color: #0f172a !important;
+        color: #94a3b8 !important;
+    }
+    .basket-table td {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
     }
 
     /* Code Tags, Backticks & Code Blocks */
@@ -592,6 +605,53 @@ else:
         font-size: 14px;
         display: inline-block;
     }
+
+    /* Expanders (Light Mode) */
+    div[data-testid="stExpander"] {
+        background-color: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+    }
+    div[data-testid="stExpander"] details {
+        background-color: #ffffff !important;
+        border-radius: 12px !important;
+    }
+    div[data-testid="stExpander"] summary {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border-radius: 12px !important;
+    }
+    div[data-testid="stExpander"] summary * {
+        color: #0f172a !important;
+    }
+    div[data-testid="stExpander"] summary:hover,
+    div[data-testid="stExpander"] summary:hover * {
+        color: #059669 !important;
+    }
+    div[data-testid="stExpander"] div[role="region"] {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border-top: 1px solid #e2e8f0 !important;
+    }
+
+    /* Scoped Basket Table (Light Mode) */
+    .basket-breakdown-container {
+        background-color: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+    }
+    .basket-table {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+    }
+    .basket-table th {
+        background-color: #f8fafc !important;
+        color: #475569 !important;
+    }
+    .basket-table td {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+    }
     </style>
     """
 
@@ -808,14 +868,27 @@ def render_gmaps_embed_route(origin: Tuple[float, float], destination: Tuple[flo
 
 
 def render_basket_items_table(items: List[Dict[str, Any]], dark: bool = True):
-    """Renders a clean, readable table for basket items breakdown in dark and light modes."""
+    """Renders a clean, high-contrast, fully visible items breakdown table in dark and light modes."""
     if not items:
         st.info("Məhsul yoxdur.")
         return
 
-    table_rows = []
+    # Theme colors for explicit inline styling (works seamlessly in both dark and light modes)
+    th_bg = "#0f172a" if dark else "#f8fafc"
+    th_color = "#94a3b8" if dark else "#475569"
+    td_bg = "#1e293b" if dark else "#ffffff"
+    td_alt_bg = "#182338" if dark else "#f8fafc"
+    text_color = "#f8fafc" if dark else "#0f172a"
+    sub_color = "#cbd5e1" if dark else "#334155"
+    price_sub = "#94a3b8" if dark else "#64748b"
+    border_color = "#334155" if dark else "#e2e8f0"
+    pill_bg = "rgba(16, 185, 129, 0.2)" if dark else "#ecfdf5"
+    pill_color = "#34d399" if dark else "#059669"
+    pill_border = "rgba(16, 185, 129, 0.4)" if dark else "#a7f3d0"
+
+    rows_html = []
     total_cost = 0.0
-    for it in items:
+    for i, it in enumerate(items):
         qty = float(it.get("quantity", 1.0))
         unit = str(it.get("unit", "ədəd")).lower()
         if unit in ("kg", "kq"):
@@ -828,26 +901,44 @@ def render_basket_items_table(items: List[Dict[str, Any]], dark: bool = True):
         u_p = float(it.get("unit_price", 0.0))
         tot = float(it.get("total", round(u_p * qty, 2)))
         total_cost += tot
+        row_bg = td_alt_bg if i % 2 == 1 else td_bg
 
-        table_rows.append({
-            "Məhsul": it.get("name", ""),
-            "Miqdar": qty_label,
-            "Qiymət": f"{u_p:.2f} ₼",
-            "Məbləğ": f"{tot:.2f} ₼",
-        })
+        rows_html.append(
+            f'<tr style="background-color: {row_bg} !important; border-bottom: 1px solid {border_color};">'
+            f'<td style="padding: 10px 14px; font-weight: 600; color: {text_color} !important; text-align: left; background-color: {row_bg} !important;">{it.get("name", "")}</td>'
+            f'<td style="padding: 10px 14px; color: {sub_color} !important; text-align: center; font-weight: 500; background-color: {row_bg} !important;">{qty_label}</td>'
+            f'<td style="padding: 10px 14px; color: {price_sub} !important; text-align: right; font-weight: 500; background-color: {row_bg} !important;">{u_p:.2f} ₼</td>'
+            f'<td style="padding: 10px 14px; text-align: right; background-color: {row_bg} !important;">'
+            f'<span style="display: inline-block; background-color: {pill_bg} !important; color: {pill_color} !important; border: 1px solid {pill_border}; padding: 3px 9px; border-radius: 6px; font-weight: 700; font-size: 13px;">'
+            f'{tot:.2f} ₼</span></td>'
+            f'</tr>'
+        )
 
-    df = pd.DataFrame(table_rows)
-    try:
-        st.dataframe(df, hide_index=True, width="stretch")
-    except TypeError:
-        st.dataframe(df, hide_index=True, use_container_width=True)
-
-    st.markdown(
-        f"<div style='text-align: right; font-weight: 800; font-size: 14px; color: #10b981; padding: 4px 6px; margin-bottom: 8px;'>"
-        f"Cəmi ({len(items)} məhsul): {total_cost:.2f} ₼"
-        f"</div>",
-        unsafe_allow_html=True,
+    table_markup = (
+        f'<div class="basket-breakdown-container" style="width: 100%; overflow-x: auto; border: 1px solid {border_color}; border-radius: 12px; margin: 8px 0 12px 0; background-color: {td_bg} !important;">'
+        f'<table class="basket-table" style="width: 100%; border-collapse: collapse; font-size: 13px; background-color: {td_bg} !important; color: {text_color} !important;">'
+        f'<thead>'
+        f'<tr style="background-color: {th_bg} !important; border-bottom: 2px solid {border_color};">'
+        f'<th style="padding: 10px 14px; text-align: left; color: {th_color} !important; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; background-color: {th_bg} !important;">Məhsul</th>'
+        f'<th style="padding: 10px 14px; text-align: center; color: {th_color} !important; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; background-color: {th_bg} !important;">Miqdar</th>'
+        f'<th style="padding: 10px 14px; text-align: right; color: {th_color} !important; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; background-color: {th_bg} !important;">Qiymət</th>'
+        f'<th style="padding: 10px 14px; text-align: right; color: {th_color} !important; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; background-color: {th_bg} !important;">Məbləğ</th>'
+        f'</tr>'
+        f'</thead>'
+        f'<tbody>'
+        f'{"".join(rows_html)}'
+        f'</tbody>'
+        f'<tfoot>'
+        f'<tr style="background-color: {th_bg} !important; border-top: 2px solid {border_color};">'
+        f'<td colspan="3" style="padding: 10px 14px; font-weight: 700; color: {text_color} !important; text-align: right; background-color: {th_bg} !important;">Cəmi ({len(items)} məhsul):</td>'
+        f'<td style="padding: 10px 14px; text-align: right; font-weight: 800; font-size: 15px; color: {pill_color} !important; background-color: {th_bg} !important;">{total_cost:.2f} ₼</td>'
+        f'</tr>'
+        f'</tfoot>'
+        f'</table>'
+        f'</div>'
     )
+
+    st.markdown(table_markup, unsafe_allow_html=True)
 
 
 # -----------------------------------------------------------------------------
@@ -1964,7 +2055,6 @@ with tab_comparison:
 
 
 # =============================================================================
-# TAB 3: BAZAR ANALİTİKASI (MARKET ANALYTICS)
 # TAB 3: HƏFTƏLİK BUKLETLƏR (WEEKLY FLYERS)
 # =============================================================================
 with tab_flyers:
