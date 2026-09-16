@@ -6,6 +6,7 @@ Streamlit Cloud Interactive Web Application
 import math
 import os
 import time
+import textwrap
 from typing import List, Dict, Any, Tuple
 import streamlit as st
 import pandas as pd
@@ -672,6 +673,15 @@ def clear_basket_keys():
             del st.session_state[k]
 
 
+def render_html(html_str: str):
+    """Safely renders HTML without accidental Markdown indented code-block conversion."""
+    clean_html = textwrap.dedent(html_str).strip()
+    if hasattr(st, "html"):
+        st.html(clean_html)
+    else:
+        st.markdown(clean_html, unsafe_allow_html=True)
+
+
 def render_basket_items_table(items: List[Dict[str, Any]], dark: bool = True):
     """Renders a clean, highly readable HTML table for basket items breakdown in dark and light modes."""
     if not items:
@@ -686,7 +696,7 @@ def render_basket_items_table(items: List[Dict[str, Any]], dark: bool = True):
     badge_color = "#34d399" if dark else "#059669"
     badge_border = "rgba(16, 185, 129, 0.35)" if dark else "#a7f3d0"
 
-    rows_html = ""
+    rows = []
     for i, it in enumerate(items):
         bg = td_alt_bg if i % 2 == 1 else td_bg
         is_item_kg = (it.get("unit") == "kg")
@@ -696,44 +706,41 @@ def render_basket_items_table(items: List[Dict[str, Any]], dark: bool = True):
         else:
             qty_display = f"{int(qty_val) if isinstance(qty_val, float) and qty_val.is_integer() else qty_val} {it.get('unit', '')}"
 
-        rows_html += f"""
-        <tr style="background-color: {bg}; border-bottom: 1px solid {border_color};">
-            <td style="padding: 10px 14px; font-weight: 600; color: {text_color}; text-align: left;">{it['name']}</td>
-            <td style="padding: 10px 14px; color: {sub_color}; text-align: center; font-weight: 500;">{qty_display}</td>
-            <td style="padding: 10px 14px; color: {text_color}; text-align: right; font-weight: 500;">{it['unit_price']:.2f} ₼</td>
-            <td style="padding: 10px 14px; text-align: right;">
-                <span style="background: {badge_bg}; color: {badge_color}; border: 1px solid {badge_border}; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 13px;">
-                    {it['total']:.2f} ₼
-                </span>
-            </td>
-        </tr>
-        """
+        row_html = (
+            f'<tr style="background-color: {bg}; border-bottom: 1px solid {border_color};">'
+            f'<td style="padding: 10px 14px; font-weight: 600; color: {text_color}; text-align: left;">{it["name"]}</td>'
+            f'<td style="padding: 10px 14px; color: {sub_color}; text-align: center; font-weight: 500;">{qty_display}</td>'
+            f'<td style="padding: 10px 14px; color: {text_color}; text-align: right; font-weight: 500;">{it["unit_price"]:.2f} ₼</td>'
+            f'<td style="padding: 10px 14px; text-align: right;">'
+            f'<span style="background: {badge_bg}; color: {badge_color}; border: 1px solid {badge_border}; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 13px;">'
+            f'{it["total"]:.2f} ₼</span></td>'
+            f'</tr>'
+        )
+        rows.append(row_html)
 
     total_sum = sum(it.get("total", 0.0) for it in items)
-    table_html = f"""
-    <div style="width: 100%; overflow-x: auto; border: 1px solid {border_color}; border-radius: 12px; margin: 8px 0 14px 0;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 13px; font-family: inherit;">
-            <thead>
-                <tr style="background-color: {th_bg}; border-bottom: 2px solid {border_color};">
-                    <th style="padding: 10px 14px; text-align: left; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Məhsul</th>
-                    <th style="padding: 10px 14px; text-align: center; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Miqdar</th>
-                    <th style="padding: 10px 14px; text-align: right; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Qiymət</th>
-                    <th style="padding: 10px 14px; text-align: right; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Məbləğ</th>
-                </tr>
-            </thead>
-            <tbody>
-                {rows_html}
-            </tbody>
-            <tfoot>
-                <tr style="background-color: {th_bg}; border-top: 2px solid {border_color};">
-                    <td colspan="3" style="padding: 10px 14px; font-weight: 700; color: {text_color}; text-align: right;">Cəmi:</td>
-                    <td style="padding: 10px 14px; text-align: right; font-weight: 800; font-size: 14px; color: {badge_color};">{total_sum:.2f} ₼</td>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
-    """
-    st.markdown(table_html, unsafe_allow_html=True)
+    table_html = (
+        f'<div style="width: 100%; overflow-x: auto; border: 1px solid {border_color}; border-radius: 12px; margin: 8px 0 14px 0;">'
+        f'<table style="width: 100%; border-collapse: collapse; font-size: 13px; font-family: inherit;">'
+        f'<thead>'
+        f'<tr style="background-color: {th_bg}; border-bottom: 2px solid {border_color};">'
+        f'<th style="padding: 10px 14px; text-align: left; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Məhsul</th>'
+        f'<th style="padding: 10px 14px; text-align: center; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Miqdar</th>'
+        f'<th style="padding: 10px 14px; text-align: right; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Qiymət</th>'
+        f'<th style="padding: 10px 14px; text-align: right; color: {sub_color}; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;">Məbləğ</th>'
+        f'</tr>'
+        f'</thead>'
+        f'<tbody>{"".join(rows)}</tbody>'
+        f'<tfoot>'
+        f'<tr style="background-color: {th_bg}; border-top: 2px solid {border_color};">'
+        f'<td colspan="3" style="padding: 10px 14px; font-weight: 700; color: {text_color}; text-align: right;">Cəmi:</td>'
+        f'<td style="padding: 10px 14px; text-align: right; font-weight: 800; font-size: 14px; color: {badge_color};">{total_sum:.2f} ₼</td>'
+        f'</tr>'
+        f'</tfoot>'
+        f'</table>'
+        f'</div>'
+    )
+    render_html(table_html)
 
 
 # -----------------------------------------------------------------------------
@@ -1289,22 +1296,19 @@ with tab_optimizer:
                 card_col1, card_col2 = st.columns(2)
 
                 with card_col1:
-                    st.markdown(
-                        f"""
-                        <div class="store-card" style="border-top: 4px solid {single['chain_color']};">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <span class="store-badge" style="background: {single['chain_color']};">{single['chain_name']}</span>
-                                <span style="font-size: 12px; color: {sub_text};">📍 {single['distance_km']} km məsafə</span>
-                            </div>
-                            <h4 style="margin: 0 0 4px 0; color: {card_text};">{single['branch_name']}</h4>
-                            <p style="font-size: 13px; color: {sub_text}; margin-bottom: 12px;">{single['address']}</p>
-                            <div style="font-size: 20px; font-weight: 800; color: {card_text}; margin-bottom: 12px;">
-                                Cəmi: {single['total_cost']:.2f} ₼
-                            </div>
+                    render_html(f"""
+                    <div class="store-card" style="border-top: 4px solid {single['chain_color']};">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span class="store-badge" style="background: {single['chain_color']};">{single['chain_name']}</span>
+                            <span style="font-size: 12px; color: {sub_text};">📍 {single['distance_km']} km məsafə</span>
                         </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
+                        <h4 style="margin: 0 0 4px 0; color: {card_text};">{single['branch_name']}</h4>
+                        <p style="font-size: 13px; color: {sub_text}; margin-bottom: 12px;">{single['address']}</p>
+                        <div style="font-size: 20px; font-weight: 800; color: {card_text}; margin-bottom: 12px;">
+                            Cəmi: {single['total_cost']:.2f} ₼
+                        </div>
+                    </div>
+                    """)
                     with st.expander(f"🛒 Səbət tərkibi ({len(single['items'])} məhsul)", expanded=True):
                         render_basket_items_table(single["items"], dark=dark_mode)
 
@@ -1317,21 +1321,18 @@ with tab_optimizer:
                         split_card_title = "#6ee7b7" if dark_mode else "#166534"
                         split_card_price = "#34d399" if dark_mode else "#15803d"
 
-                        st.markdown(
-                            f"""
-                            <div class="store-card" style="border: 1px solid {split_card_border}; border-top: 4px solid {split_card_border}; background: {split_card_bg};">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <span class="savings-badge">✨ {split['savings_azn']:.2f} ₼ Qənaət ({split['savings_pct']}%)</span>
-                                    <span style="font-size: 12px; color: {split_card_price}; font-weight: 700;">🚶 {split['walking_meters']}m aralı</span>
-                                </div>
-                                <h4 style="margin: 0 0 4px 0; color: {split_card_title};">1. {s1['branch_name']} + 2. {s2['branch_name']}</h4>
-                                <div style="font-size: 20px; font-weight: 800; color: {split_card_price}; margin-bottom: 12px;">
-                                    Cəmi: {split['total_cost']:.2f} ₼ <span style="font-size: 14px; text-decoration: line-through; color: {sub_text};">{single['total_cost']:.2f} ₼</span>
-                                </div>
+                        render_html(f"""
+                        <div class="store-card" style="border: 1px solid {split_card_border}; border-top: 4px solid {split_card_border}; background: {split_card_bg};">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span class="savings-badge">✨ {split['savings_azn']:.2f} ₼ Qənaət ({split['savings_pct']}%)</span>
+                                <span style="font-size: 12px; color: {split_card_price}; font-weight: 700;">🚶 {split['walking_meters']}m aralı</span>
                             </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
+                            <h4 style="margin: 0 0 4px 0; color: {split_card_title};">1. {s1['branch_name']} + 2. {s2['branch_name']}</h4>
+                            <div style="font-size: 20px; font-weight: 800; color: {split_card_price}; margin-bottom: 12px;">
+                                Cəmi: {split['total_cost']:.2f} ₼ <span style="font-size: 14px; text-decoration: line-through; color: {sub_text};">{single['total_cost']:.2f} ₼</span>
+                            </div>
+                        </div>
+                        """)
 
                         with st.expander(f"🛒 1-ci Market: {s1['branch_name']} ({len(split['s1_items'])} məhsul)", expanded=True):
                             render_basket_items_table(split["s1_items"], dark=dark_mode)
