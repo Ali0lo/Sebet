@@ -32,7 +32,7 @@ if "current_user" not in st.session_state:
     st.session_state.current_user = None
 
 if "points" not in st.session_state:
-    st.session_state.points = 250
+    st.session_state.points = 0
 
 # -----------------------------------------------------------------------------
 # 1. Page Configuration & Theme
@@ -1402,7 +1402,7 @@ def show_auth_dialog():
                 <h4 style="margin: 0 0 10px 0; color: #10b981; font-weight: 800; font-size: 17px;">Bakının Ağıllı Səbət Platforması</h4>
                 <div style="font-size: 13px; color: {dlg_text}; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px;">
                     <span>🎁</span>
-                    <div><b>Xoş gəldin bonusu:</b> Yeni qeydiyyatdan keçən hər istifadəçiyə dərhal <b style="color: #10b981;">+250 Sebet Xalı (2.50 ₼)</b> hədiyyə olunur!</div>
+                    <div><b>Keşbek İmkanları:</b> Qeydiyyatdan keçərək qəbzlərinizi skan edin və hər alış-verişdə keşbek xalları toplayın!</div>
                 </div>
                 <div style="font-size: 13px; color: {dlg_text}; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px;">
                     <span>💾</span>
@@ -1433,7 +1433,7 @@ def show_auth_dialog():
                 if ok:
                     st.session_state["user_authenticated"] = True
                     st.session_state["current_user"] = u_data
-                    st.session_state["points"] = u_data.get("sebet_points", 300)
+                    st.session_state["points"] = u_data.get("sebet_points", 100)
                     s_b, s_loc = user_db.load_user_basket(u_data["id"])
                     if s_b:
                         st.session_state["basket"] = s_b
@@ -1468,7 +1468,7 @@ def show_auth_dialog():
             st.markdown(
                 """
                 <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; font-size: 12px; color: #10b981; font-weight: 600;">
-                    🎁 Qeydiyyat tamamlanan kimi 250 Sebet Xalı (2.50 AZN) balansınıza oturacaq!
+                    🎁 Qeydiyyatdan keçin və qəbzlərinizi skan edərək keşbek xalları qazanın!
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -1494,7 +1494,7 @@ def show_auth_dialog():
                 )
                 reg_p1 = st.text_input("Şifrə", type="password", placeholder="Ən azı 4 simvol", key="dlg_r_p1")
                 reg_p2 = st.text_input("Şifrənin Təkrarı", type="password", placeholder="Şifrəni yenidən yazın", key="dlg_r_p2")
-                sub_reg = st.form_submit_button("Qeydiyyatdan Keç (+250 Xal Qazan)", use_container_width=True, type="primary")
+                sub_reg = st.form_submit_button("Qeydiyyatdan Keç", use_container_width=True, type="primary")
 
                 if sub_reg:
                     if not reg_name or not reg_u or not reg_p1:
@@ -1511,12 +1511,13 @@ def show_auth_dialog():
                             email=reg_e.strip(),
                             phone=reg_u.strip(),
                             home_location=reg_loc,
+                            initial_points=0,
                         )
                         if ok:
                             st.session_state["user_authenticated"] = True
                             st.session_state["current_user"] = u_data
-                            st.session_state["points"] = u_data.get("sebet_points", 250)
-                            st.success(f"🎉 Təbriklər, {reg_name}! Hesabınız yaradıldı və 250 xal əlavə edildi.")
+                            st.session_state["points"] = u_data.get("sebet_points", 0)
+                            st.success(f"🎉 Təbriklər, {reg_name}! Hesabınız uğurla yaradıldı.")
                             st.rerun()
                         else:
                             st.error(msg)
@@ -1577,10 +1578,10 @@ with st.sidebar:
             <div style="background: {card_bg}; border: 1px solid {card_border}; border-radius: 12px; padding: 12px; margin: 10px 0 10px 0;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div style="font-size: 13px; font-weight: 700; color: {card_text};">👤 Qonaq İstifadəçi</div>
-                    <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px; border: 1px solid #10b981;">+250 XAL</span>
+                    <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px; border: 1px solid #10b981;">0 XAL</span>
                 </div>
                 <div style="font-size: 11px; color: {sub_text}; line-height: 1.4; margin-top: 5px;">
-                    Səbətinizi yadda saxlamaq və bonus qazanmaq üçün daxil olun və ya qeydiyyatdan keçin.
+                    Səbətinizi yadda saxlamaq və keşbek qazanmaq üçün daxil olun və ya qeydiyyatdan keçin.
                 </div>
             </div>
             """,
@@ -1596,14 +1597,14 @@ with st.sidebar:
                 if ok:
                     st.session_state["user_authenticated"] = True
                     st.session_state["current_user"] = u_data
-                    st.session_state["points"] = u_data.get("sebet_points", 300)
+                    st.session_state["points"] = u_data.get("sebet_points", 100)
                     s_b, s_loc = user_db.load_user_basket(u_data["id"])
                     if s_b:
                         st.session_state.basket = s_b
                     st.rerun()
 
         with st.popover("⚙️ Tez Giriş & Qeydiyyat Formu", use_container_width=True):
-            sb_tab_in, sb_tab_up = st.tabs(["🔑 Giriş", "📝 Qeydiyyat (+250)"])
+            sb_tab_in, sb_tab_up = st.tabs(["🔑 Giriş", "📝 Qeydiyyat"])
             with sb_tab_in:
                 st.markdown("##### 🔑 Daxil Ol")
                 sb_u = st.text_input("İstifadəçi adı / Telefon:", key="sb_pop_u")
@@ -1613,7 +1614,7 @@ with st.sidebar:
                     if ok:
                         st.session_state["user_authenticated"] = True
                         st.session_state["current_user"] = u_data
-                        st.session_state["points"] = u_data.get("sebet_points", 250)
+                        st.session_state["points"] = u_data.get("sebet_points", 0)
                         s_b, s_loc = user_db.load_user_basket(u_data["id"])
                         if s_b:
                             st.session_state.basket = s_b
@@ -1623,7 +1624,7 @@ with st.sidebar:
                         st.error(msg)
             with sb_tab_up:
                 st.markdown("##### 📝 Yeni Qeydiyyat")
-                st.caption("🎁 Qeydiyyatdan keçin, +250 Sebet xalı qazanın!")
+                st.caption("🎁 Qeydiyyatdan keçin və qəbzləri skan edərək keşbek toplayın!")
                 sb_reg_name = st.text_input("Ad və Soyad:", key="sb_pop_reg_name")
                 sb_reg_u = st.text_input("İstifadəçi adı / Tel:", key="sb_pop_reg_u")
                 sb_reg_p = st.text_input("Şifrə:", type="password", key="sb_pop_reg_p")
@@ -1638,11 +1639,12 @@ with st.sidebar:
                             full_name=sb_reg_name.strip(),
                             password=sb_reg_p,
                             phone=sb_reg_u.strip(),
+                            initial_points=0,
                         )
                         if ok:
                             st.session_state["user_authenticated"] = True
                             st.session_state["current_user"] = u_data
-                            st.session_state["points"] = u_data.get("sebet_points", 250)
+                            st.session_state["points"] = u_data.get("sebet_points", 0)
                             st.success(msg)
                             st.rerun()
                         else:
@@ -1781,7 +1783,7 @@ with st.sidebar:
     )
     st.session_state["max_walking_dist"] = max_walking_dist
 
-    pts = st.session_state.get("points", 250)
+    pts = st.session_state.get("points", 0)
     card_bg = "#1e293b" if dark_mode else "#f1f5f9"
     card_text = "#f8fafc" if dark_mode else "#0f172a"
     sub_text = "#94a3b8" if dark_mode else "#64748b"
@@ -3045,7 +3047,7 @@ with tab_auth:
             if st.button("🚪 Hesabdan Çıxış Et", key="btn_logout_main", type="secondary", use_container_width=True):
                 st.session_state["user_authenticated"] = False
                 st.session_state["current_user"] = None
-                st.session_state["points"] = 250
+                st.session_state["points"] = 0
                 st.toast("Hesabdan çıxış edildi", icon="🚪")
                 st.rerun()
 
@@ -3099,8 +3101,8 @@ with tab_auth:
             st.markdown("#### Yeni İstifadəçi Hesabı Yarat")
             st.markdown(
                 """
-                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 10px; padding: 12px; margin-bottom: 15px; font-size: 13px; color: #10b981;">
-                    🎁 <b>Xoş Gəldin Hədiyyəsi:</b> Qeydiyyatdan keçən hər yeni istifadəçiyə <b>250 Sebet Xalı (2.50 AZN)</b> hədiyyə olunur!
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 12px; margin-bottom: 15px; font-size: 13px; color: #10b981;">
+                    🎁 <b>Səbətinizi Qoruyun:</b> Qeydiyyatdan keçərək ərzaq siyahılarınızı yadda saxlayın və hər alış-verişdə keşbek toplayın!
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -3117,7 +3119,7 @@ with tab_auth:
                 reg_pass1 = st.text_input("Şifrə", type="password", placeholder="Ən azı 4 simvol")
                 reg_pass2 = st.text_input("Şifrənin Təkrarı", type="password", placeholder="Şifrəni yenidən yazın")
 
-                submit_reg = st.form_submit_button("Qeydiyyatdan Keç və Xalları Al (+250)", use_container_width=True, type="primary")
+                submit_reg = st.form_submit_button("Qeydiyyatdan Keç", use_container_width=True, type="primary")
 
                 if submit_reg:
                     if not reg_fullname or not reg_username or not reg_pass1:
@@ -3134,12 +3136,13 @@ with tab_auth:
                             email=reg_email.strip(),
                             phone=reg_username.strip(),
                             home_location=reg_loc,
+                            initial_points=0,
                         )
                         if ok and res:
                             st.session_state["user_authenticated"] = True
                             st.session_state["current_user"] = res
-                            st.session_state["points"] = res.get("sebet_points", 250)
-                            st.success(f"🎉 Təbriklər, {reg_fullname}! Hesabınız yaradıldı və 250 xal balansınıza köçürüldü.")
+                            st.session_state["points"] = res.get("sebet_points", 0)
+                            st.success(f"🎉 Təbriklər, {reg_fullname}! Hesabınız uğurla yaradıldı.")
                             st.rerun()
                         else:
                             st.error(msg)
