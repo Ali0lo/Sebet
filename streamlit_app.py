@@ -1807,124 +1807,76 @@ tab_optimizer, tab_comparison, tab_flyers, tab_scan, tab_analytics, tab_loyalty,
 # =============================================================================
 with tab_optimizer:
     # -------------------------------------------------------------------------
-    # Top Location Bar & Fast Switcher
     # -------------------------------------------------------------------------
-    cur_loc = st.session_state.get("selected_loc_name", "28 May / Dəmiryol Vağzalı")
-    u_lat, u_lon = st.session_state.get("user_coords", (40.3798, 49.8475))
-    walk_dist = int(st.session_state.get("max_walking_dist", 750))
-    walk_time_est = max(1, round(walk_dist / 80))
-
-    loc_top_bg = "rgba(30, 41, 59, 0.75)" if dark_mode else "#f8fafc"
-    loc_top_border = "rgba(16, 185, 129, 0.35)" if dark_mode else "#cbd5e1"
-    loc_accent = "#34d399" if dark_mode else "#059669"
-
-    # -------------------------------------------------------------------------
-    # Top Location Bar & Intuitive Baku Location Switcher
+    # Modern Compact Location Bar & Baku Switcher
     # -------------------------------------------------------------------------
     cur_loc = st.session_state.get("selected_loc_name", "28 May m. / Dəmiryol Vağzalı")
     u_lat, u_lon = st.session_state.get("user_coords", (40.3798, 49.8475))
     walk_dist = int(st.session_state.get("max_walking_dist", 750))
     walk_time_est = max(1, round(walk_dist / 80))
 
-    loc_top_bg = "rgba(30, 41, 59, 0.75)" if dark_mode else "#f8fafc"
-    loc_top_border = "rgba(16, 185, 129, 0.35)" if dark_mode else "#cbd5e1"
-    loc_accent = "#34d399" if dark_mode else "#059669"
-    gps_st = st.session_state.get("gps_detected")
+    loc_bar_bg = "#1e293b" if dark_mode else "#ffffff"
+    loc_bar_border = "rgba(16, 185, 129, 0.4)" if dark_mode else "#cbd5e1"
 
-    status_badge_html = ""
-    if gps_st == "coarse":
-        status_badge_html = """<span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">⚠️ Təxmini Şəbəkə Məkanı (Dəqiq deyil? Aşağıdan seçin)</span>"""
-    elif gps_st == "precise":
-        status_badge_html = """<span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">🎯 Dəqiq GPS Aktivdir</span>"""
-    elif st.session_state.get("user_location_confirmed"):
-        status_badge_html = """<span style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">✅ Təsdiqlənmiş Ünvan</span>"""
-
-    render_html(f"""
-    <div style="background: {loc_top_bg}; border: 1px solid {loc_top_border}; border-radius: 14px; padding: 14px 18px; margin-bottom: 16px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;">
-        <div style="display: flex; align-items: center; gap: 14px;">
-            <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
-                📍
+    # Clean, modern delivery bar
+    st.markdown(
+        f"""
+        <div style="background: {loc_bar_bg}; border: 1.5px solid {loc_bar_border}; border-radius: 12px; padding: 10px 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 18px;">📍</span>
+                <span style="font-size: 12px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.04em;">Məkan:</span>
+                <span style="font-size: 14px; font-weight: 800; color: {card_text};">{cur_loc}</span>
             </div>
-            <div>
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 3px;">
-                    <span style="font-size: 11px; font-weight: 800; color: {loc_accent}; text-transform: uppercase; letter-spacing: 0.05em;">Cari Məkan & Radius</span>
-                    {status_badge_html}
-                </div>
-                <div style="font-size: 17px; font-weight: 800; color: {card_text};">{cur_loc}</div>
-                <div style="font-size: 13px; color: {sub_text}; margin-top: 3px;">
-                    🚶 Maksimum piyada radiusu: <b style="color: {card_text};">{walk_dist} metr</b> (~{walk_time_est} dəqiqə piyada) · Ən yaxın filiallar əsasında
-                </div>
+            <div style="font-size: 12px; color: {sub_text}; display: flex; align-items: center; gap: 10px;">
+                <span>🚶 Piyada radius: <b style="color: {card_text};">{walk_dist} metr</b> (~{walk_time_est} dəqiqə)</span>
             </div>
         </div>
-    </div>
-    """)
+        """,
+        unsafe_allow_html=True,
+    )
 
-    # Open expander by default if user hasn't manually confirmed location or if coarse GPS
-    is_exp_open = not st.session_state.get("user_location_confirmed", False)
-    with st.expander("📍 Məkanı Dəyişdir / Ünvan Axtar / Xəritədə Seç", expanded=is_exp_open):
-        st.markdown("<div style='font-size: 13px; font-weight: 700; color: #94a3b8; margin-bottom: 6px;'>⚡ 1-Kliklə Populyar Bakı Məkanları:</div>", unsafe_allow_html=True)
-
-        row1_cols = st.columns(6)
-        row1_hubs = [
-            ("🚇 28 May", "28 May m. / Dəmiryol Vağzalı"),
-            ("🚇 Gənclik", "Gənclik m. / Atatürk pr. / Gənclik Mall"),
-            ("🚇 Nərimanov", "Nərimanov m. / Metropark"),
-            ("🚇 Elmlər / BDU", "Elmlər Akademiyası m. / BDU"),
-            ("🚇 İnşaatçılar", "İnşaatçılar m. / A. M. Şərifzadə"),
-            ("🚇 20 Yanvar", "20 Yanvar m. / Tbilisi pr."),
-        ]
-        for col_i, (short_label, full_key) in zip(row1_cols, row1_hubs):
-            with col_i:
-                if st.button(short_label, key=f"t1_q1_{short_label}", use_container_width=True):
-                    st.session_state["selected_loc_name"] = full_key
-                    st.session_state["user_coords"] = LOCATION_PRESETS[full_key]
-                    st.session_state["user_location_confirmed"] = True
-                    st.session_state["gps_detected"] = "manual"
-                    st.rerun()
-
-        row2_cols = st.columns(6)
-        row2_hubs = [
-            ("🚇 Əhmədli", "Əhmədli m. / Məhəmməd Hadi"),
-            ("🚇 Neftçilər", "Neftçilər m. / Rüstəm Rüstəmov"),
-            ("🏢 Sahil / Torqovı", "Sahil m. / Torqovı (Nizami küç.)"),
-            ("🏢 Port Baku", "Port Baku Mall / Neftçilər pr."),
-            ("🏘️ Yasamal", "Yasamal (Mərkəz)"),
-            ("🏘️ Xırdalan", "Xırdalan Mərkəz (Heydər Əliyev parkı)"),
-        ]
-        for col_i, (short_label, full_key) in zip(row2_cols, row2_hubs):
-            with col_i:
-                if st.button(short_label, key=f"t1_q2_{short_label}", use_container_width=True):
-                    st.session_state["selected_loc_name"] = full_key
-                    st.session_state["user_coords"] = LOCATION_PRESETS[full_key]
-                    st.session_state["user_location_confirmed"] = True
-                    st.session_state["gps_detected"] = "manual"
-                    st.rerun()
-
-        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-        tab_loc_col1, tab_loc_col2 = st.columns([1.4, 1.1], gap="medium")
+    # Sleek expander, collapsed by default
+    with st.expander("📍 Ərazini Dəyişdir / Xəritədə Yaxın Marketlərə Bax", expanded=False):
+        tab_loc_col1, tab_loc_col2 = st.columns([1.2, 1], gap="medium")
 
         with tab_loc_col1:
+            st.markdown("<div style='font-size: 12px; font-weight: 700; color: #94a3b8; margin-bottom: 6px;'>⚡ Populyar Ərazilər (1-Kliklə):</div>", unsafe_allow_html=True)
+            hub_cols = st.columns(6)
+            popular_hubs = [
+                ("28 May", "28 May m. / Dəmiryol Vağzalı"),
+                ("Gənclik", "Gənclik m. / Atatürk pr. / Gənclik Mall"),
+                ("Nərimanov", "Nərimanov m. / Metropark"),
+                ("Elmlər", "Elmlər Akademiyası m. / BDU"),
+                ("İnşaatçılar", "İnşaatçılar m. / A. M. Şərifzadə"),
+                ("Əhmədli", "Əhmədli m. / Məhəmməd Hadi"),
+            ]
+            for h_col, (h_short, h_full) in zip(hub_cols, popular_hubs):
+                with h_col:
+                    if st.button(h_short, key=f"btn_hub_{h_short}", use_container_width=True):
+                        st.session_state["selected_loc_name"] = h_full
+                        st.session_state["user_coords"] = LOCATION_PRESETS[h_full]
+                        st.session_state["user_location_confirmed"] = True
+                        st.session_state["gps_detected"] = "manual"
+                        st.rerun()
+
+            st.markdown("<div style='height: 6px;'></div>", unsafe_allow_html=True)
             t1_search_q = st.text_input(
-                "🔍 Bakı üzrə istənilən küçə, prospekt, metro və ya landmark axtarın:",
-                placeholder="Məs: Həzi Aslanov, Təbriz küç., BDU, Dəniz Mall, Badamdar, Biləcəri...",
+                "🔍 Ünvan və ya küçə axtarın:",
+                placeholder="Məs: Təbriz küç., BDU, Dəniz Mall, Port Baku, Yasamal, Əhmədli...",
                 key="tab1_fuzzy_location_search",
             )
             if t1_search_q:
-                found = sebet_data.search_baku_locations(t1_search_q, limit=6)
+                found = sebet_data.search_baku_locations(t1_search_q, limit=4)
                 if found:
-                    st.markdown("<div style='font-size: 12px; font-weight: 600; color: #10b981; margin: 4px 0;'>Tapılan nəticələr (seçmək üçün klikləyin):</div>", unsafe_allow_html=True)
                     f_cols = st.columns(2)
                     for idx_f, f_item in enumerate(found):
                         with f_cols[idx_f % 2]:
-                            btn_label = f"📍 {f_item['title']}"
-                            if st.button(btn_label, key=f"t1_found_{f_item['title']}_{idx_f}", use_container_width=True):
+                            if st.button(f"📍 {f_item['title']}", key=f"t1_f_{idx_f}", use_container_width=True):
                                 st.session_state["user_coords"] = (f_item["lat"], f_item["lon"])
                                 st.session_state["selected_loc_name"] = f_item["title"]
                                 st.session_state["user_location_confirmed"] = True
                                 st.session_state["gps_detected"] = "manual"
                                 st.rerun()
-                else:
-                    st.caption("ℹ️ Axtarışa uyğun məkan tapılmadı. Məsələn: *Port Baku*, *Torqovaya*, *Yasamal*, *Əhmədli*, *Atatürk pr.*")
 
             cur_p_keys = list(LOCATION_PRESETS.keys())
             c_idx = cur_p_keys.index(cur_loc) if cur_loc in cur_p_keys else 0
@@ -1941,28 +1893,14 @@ with tab_optimizer:
                 st.session_state["gps_detected"] = "manual"
                 st.rerun()
 
-            # Walking radius selector buttons + slider
-            st.markdown("<div style='font-size: 13px; font-weight: 600; color: #94a3b8; margin-top: 8px;'>🚶 Piyada Məsafə Radiusu:</div>", unsafe_allow_html=True)
-            r_cols = st.columns(5)
-            radii_presets = [(300, "300m"), (500, "500m"), (750, "750m"), (1000, "1000m"), (1500, "1500m")]
-            for r_col, (r_val, r_label) in zip(r_cols, radii_presets):
-                with r_col:
-                    btn_type = "primary" if walk_dist == r_val else "secondary"
-                    if st.button(r_label, key=f"t1_rbtn_{r_val}", use_container_width=True, type=btn_type):
-                        st.session_state["max_walking_dist"] = r_val
-                        st.rerun()
-
-            new_radius = st.slider(
-                "Dəqiq metr tənzimlənməsi:",
-                min_value=200,
-                max_value=2000,
-                value=int(st.session_state["max_walking_dist"]),
-                step=50,
-                key="tab1_walk_slider",
+            st.markdown(
+                f"""
+                <div style="font-size: 12px; color: #94a3b8; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(148, 163, 184, 0.15);">
+                    🚶 <b>Piyada Radius:</b> Sol menyudan tənzimlənə bilər (Cari: <b>{walk_dist}m</b>, ~{walk_time_est} dəq).
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
-            if new_radius != st.session_state["max_walking_dist"]:
-                st.session_state["max_walking_dist"] = new_radius
-                st.rerun()
 
         with tab_loc_col2:
             st.markdown("<div style='font-size: 13px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;'>🗺️ Cari Məkanınız & Yaxın Marketlər:</div>", unsafe_allow_html=True)
