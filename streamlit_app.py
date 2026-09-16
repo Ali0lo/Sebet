@@ -622,6 +622,14 @@ def get_effective_price(product: Dict[str, Any], chain_slug: str) -> float:
     return float(product.get("base_price", 0.0))
 
 
+def _safe_plotly_chart(fig):
+    """Renders plotly chart using modern width='stretch' to avoid deprecation warnings."""
+    try:
+        st.plotly_chart(fig, width="stretch")
+    except TypeError:
+        st.plotly_chart(fig, use_container_width=True)
+
+
 def render_map(
     df: pd.DataFrame,
     lat: str = "lat",
@@ -632,45 +640,115 @@ def render_map(
     hover_data: list = None,
     zoom: float = 12.0,
     height: int = 380,
+    center: dict = None,
+    color_discrete_map: dict = None,
 ):
-    """Renders map using px.scatter_map (Plotly 7+) or px.scatter_mapbox (Plotly 5/6), with st.map fallback."""
+    """Renders interactive map using px.scatter_map (Plotly 7+) or px.scatter_mapbox (Plotly 5/6) with st.map fallback."""
+    if df is None or df.empty or lat not in df.columns or lon not in df.columns:
+        st.info("📍 Xəritədə göstərmək üçün məkan məlumatı yoxdur.")
+        return
+
+    # Clean numeric coordinates
+    valid_df = df.dropna(subset=[lat, lon]).copy()
+    valid_df[lat] = pd.to_numeric(valid_df[lat], errors="coerce")
+    valid_df[lon] = pd.to_numeric(valid_df[lon], errors="coerce")
+    valid_df = valid_df.dropna(subset=[lat, lon])
+
+    if valid_df.empty:
+        st.info("📍 Xəritədə göstərmək üçün düzgün koordinatlar tapılmadı.")
+        return
+
+    # Default brand colors
+    default_color_map = {
+        "🔴 Sizin Məkanınız": "#ef4444",
+        "Bravo": "#16a34a",
+        "Araz": "#dc2626",
+        "Oba": "#059669",
+        "OBA": "#059669",
+        "Bazarstore": "#2563eb",
+        "Rahat": "#ea580c",
+        "Grandmart": "#7c3aed",
+        "Neptun": "#0891b2",
+        "Bolmart": "#d97706",
+        "Megastore": "#4f46e5",
+        "Al Market": "#0284c7",
+        "Səbət": "#10b981",
+    }
+    if color_discrete_map:
+        default_color_map.update(color_discrete_map)
+
+    # Determine center explicitly - NEVER leave empty as Plotly defaults to (0, 0) Null Island!
+    if center is None:
+        if color and color in valid_df.columns:
+            user_rows = valid_df[valid_df[color].astype(str).str.contains("Sizin Məkanınız|🔴", na=False)]
+            if not user_rows.empty:
+                c_lat = float(user_rows[lat].iloc[0])
+                c_lon = float(user_rows[lon].iloc[0])
+            else:
+                c_lat = float(valid_df[lat].mean())
+                c_lon = float(valid_df[lon].mean())
+        else:
+            c_lat = float(valid_df[lat].mean())
+            c_lon = float(valid_df[lon].mean())
+        center = dict(lat=c_lat, lon=c_lon)
+
+    legend_bg = "rgba(30, 41, 59, 0.88)" if dark_mode else "rgba(255, 255, 255, 0.88)"
+    legend_font = dict(color="#f8fafc" if dark_mode else "#0f172a", size=11)
+    target_style = "carto-darkmatter" if dark_mode else "carto-positron"
+
     try:
-        kwargs = dict(lat=lat, lon=lon, zoom=zoom, height=height)
-        if hover_name:
+        kwargs = dict(
+            lat=lat,
+            lon=lon,
+            zoom=zoom,
+            height=height,
+            center=center,
+        )
+        if hover_name and hover_name in valid_df.columns:
             kwargs["hover_name"] = hover_name
-        if color:
+        if color and color in valid_df.columns:
             kwargs["color"] = color
-        if size:
+            kwargs["color_discrete_map"] = default_color_map
+        if size and size in valid_df.columns:
             kwargs["size"] = size
         if hover_data:
-            kwargs["hover_data"] = hover_data
-
-        legend_bg = "rgba(30, 41, 59, 0.85)" if dark_mode else "rgba(255, 255, 255, 0.85)"
-        legend_font = dict(color="#f8fafc" if dark_mode else "#0f172a")
+            valid_hover = [c for c in hover_data if c in valid_df.columns]
+            if valid_hover:
+                kwargs["hover_data"] = valid_hover
 
         if hasattr(px, "scatter_map"):
-            fig = px.scatter_map(df, **kwargs)
+            kwargs["map_style"] = target_style
+            fig = px.scatter_map(valid_df, **kwargs)
+            if not size:
+                fig.update_traces(marker=dict(size=14, opacity=0.92))
             fig.update_layout(
-                map_style="open-street-map",
                 margin={"r": 0, "t": 0, "l": 0, "b": 0},
                 legend=dict(yanchor="top", y=0.98, xanchor="left", x=0.02, bgcolor=legend_bg, font=legend_font),
             )
-            st.plotly_chart(fig, use_container_width=True)
+            _safe_plotly_chart(fig)
             return
         elif hasattr(px, "scatter_mapbox"):
-            fig = px.scatter_mapbox(df, **kwargs)
+            kwargs["mapbox_style"] = target_style
+            fig = px.scatter_mapbox(valid_df, **kwargs)
+            if not size:
+                fig.update_traces(marker=dict(size=14, opacity=0.92))
             fig.update_layout(
-                mapbox_style="carto-darkmatter" if dark_mode else "carto-positron",
                 margin={"r": 0, "t": 0, "l": 0, "b": 0},
                 legend=dict(yanchor="top", y=0.98, xanchor="left", x=0.02, bgcolor=legend_bg, font=legend_font),
             )
-            st.plotly_chart(fig, use_container_width=True)
+            _safe_plotly_chart(fig)
             return
     except Exception:
         pass
 
-    # Fallback to standard streamlit map
-    st.map(df[[lat, lon]], zoom=int(zoom))
+    # Resilient fallback to standard streamlit map
+    try:
+        st.map(valid_df, latitude=lat, longitude=lon, zoom=int(zoom), height=height, width="stretch")
+    except Exception:
+        try:
+            st.map(valid_df[[lat, lon]], zoom=int(zoom))
+        except Exception:
+            st.warning("⚠️ Xəritə vizuallaşdırması yüklənə bilmədi.")
 
 
 def clear_basket_keys():
@@ -724,7 +802,7 @@ def render_gmaps_embed_route(origin: Tuple[float, float], destination: Tuple[flo
 
 
 def render_basket_items_table(items: List[Dict[str, Any]], dark: bool = True):
-    """Renders a clean, highly readable table for basket items breakdown in dark and light modes."""
+    """Renders a clean, readable table for basket items breakdown in dark and light modes."""
     if not items:
         st.info("Məhsul yoxdur.")
         return
@@ -732,31 +810,34 @@ def render_basket_items_table(items: List[Dict[str, Any]], dark: bool = True):
     table_rows = []
     total_cost = 0.0
     for it in items:
-        qty = it.get("quantity", 1.0)
-        unit = it.get("unit", "ədəd")
-        if unit == "kg":
+        qty = float(it.get("quantity", 1.0))
+        unit = str(it.get("unit", "ədəd")).lower()
+        if unit in ("kg", "kq"):
             qty_label = f"{qty:.2f} kq"
-        elif unit == "liter":
-            qty_label = f"{int(qty) if isinstance(qty, (int, float)) and float(qty).is_integer() else qty} L"
+        elif unit in ("liter", "l"):
+            qty_label = f"{int(qty) if qty.is_integer() else qty} L"
         else:
-            qty_label = f"{int(qty) if isinstance(qty, (int, float)) and float(qty).is_integer() else qty} ədəd"
+            qty_label = f"{int(qty) if qty.is_integer() else qty} ədəd"
 
-        u_p = it.get("unit_price", 0.0)
-        tot = it.get("total", round(u_p * qty, 2))
+        u_p = float(it.get("unit_price", 0.0))
+        tot = float(it.get("total", round(u_p * qty, 2)))
         total_cost += tot
 
         table_rows.append({
             "Məhsul": it.get("name", ""),
             "Miqdar": qty_label,
-            "Vahid Qiyməti": f"{u_p:.2f} ₼",
+            "Qiymət": f"{u_p:.2f} ₼",
             "Məbləğ": f"{tot:.2f} ₼",
         })
 
     df = pd.DataFrame(table_rows)
-    st.dataframe(df, hide_index=True, use_container_width=True)
+    try:
+        st.dataframe(df, hide_index=True, width="stretch")
+    except TypeError:
+        st.dataframe(df, hide_index=True, use_container_width=True)
 
     st.markdown(
-        f"<div style='text-align: right; font-weight: 800; font-size: 14px; color: #10b981; padding: 4px 6px;'>"
+        f"<div style='text-align: right; font-weight: 800; font-size: 14px; color: #10b981; padding: 4px 6px; margin-bottom: 8px;'>"
         f"Cəmi ({len(items)} məhsul): {total_cost:.2f} ₼"
         f"</div>",
         unsafe_allow_html=True,
@@ -1334,21 +1415,30 @@ with tab_optimizer:
                 {
                     "Məkan": f"🔴 Siz ({cur_loc.split('/')[0].strip()})",
                     "Şəbəkə": "🔴 Sizin Məkanınız",
-                    "lat": u_lat,
-                    "lon": u_lon,
+                    "lat": float(u_lat),
+                    "lon": float(u_lon),
                     "Məsafə": "0 m (Siz buradasınız)",
                 }
             ]
+            all_store_dists = []
             for s in STORES:
                 d_m = calculate_distance_meters((u_lat, u_lon), (s["latitude"], s["longitude"]))
-                if d_m <= max(walk_dist * 2.2, 1800):
-                    map_pts.append({
-                        "Məkan": s["branch_name"],
-                        "Şəbəkə": s["chain_slug"].title(),
-                        "lat": s["latitude"],
-                        "lon": s["longitude"],
-                        "Məsafə": f"{int(d_m)}m (~{max(1, round(d_m / 80))} dəq piyada)",
-                    })
+                all_store_dists.append((d_m, s))
+            all_store_dists.sort(key=lambda x: x[0])
+
+            cutoff_dist = max(walk_dist * 2.2, 2200)
+            stores_to_show = [item for item in all_store_dists if item[0] <= cutoff_dist]
+            if len(stores_to_show) < 5:
+                stores_to_show = all_store_dists[:6]
+
+            for d_m, s in stores_to_show:
+                map_pts.append({
+                    "Məkan": s["branch_name"],
+                    "Şəbəkə": s["chain_slug"].title(),
+                    "lat": float(s["latitude"]),
+                    "lon": float(s["longitude"]),
+                    "Məsafə": f"{int(d_m)}m (~{max(1, round(d_m / 80))} dəq piyada)",
+                })
 
             loc_preview_df = pd.DataFrame(map_pts)
             render_map(
@@ -1358,9 +1448,24 @@ with tab_optimizer:
                 color="Şəbəkə",
                 hover_name="Məkan",
                 hover_data=["Məsafə"],
-                zoom=13.2,
-                height=260,
+                zoom=13.4,
+                height=280,
+                center=dict(lat=float(u_lat), lon=float(u_lon)),
             )
+
+            # Quick summary badges of nearest stores
+            top_stores = all_store_dists[:3]
+            top_badges = []
+            for d_m, s in top_stores:
+                c_name = s["chain_slug"].title()
+                b_name = s["branch_name"].split(" - ")[-1] if " - " in s["branch_name"] else s["branch_name"]
+                walk_min = max(1, round(d_m / 80))
+                rating = s.get("gmaps_rating", 4.4)
+                top_badges.append(
+                    f"<span style='display:inline-block; background:{card_bg}; border:1px solid {card_border}; border-radius:6px; padding:3px 8px; margin:2px 3px 2px 0; font-size:11px; color:{card_text};'>"
+                    f"🏪 <b>{c_name}</b> ({b_name}): <b>{int(d_m)}m</b> · ~{walk_min} dəq · ⭐{rating}</span>"
+                )
+            st.markdown(f"<div style='margin-top: 4px; margin-bottom: 6px;'>{' '.join(top_badges)}</div>", unsafe_allow_html=True)
 
             # Re-check GPS button
             if st.button("📡 Brauzer GPS-ini Yenidən Yoxla", key="t1_refresh_gps_btn", use_container_width=True):
@@ -1848,7 +1953,7 @@ with tab_comparison:
                 plot_bgcolor="#1e293b" if dark_mode else "#ffffff",
                 font=dict(color="#f8fafc" if dark_mode else "#0f172a"),
             )
-            st.plotly_chart(fig_bar, use_container_width=True)
+            _safe_plotly_chart(fig_bar)
 
 
 # =============================================================================
@@ -2096,10 +2201,10 @@ with tab_analytics:
             plot_bgcolor="#1e293b" if dark_mode else "#ffffff",
             font=dict(color="#f8fafc" if dark_mode else "#0f172a"),
         )
-        st.plotly_chart(fig_index, use_container_width=True)
+        _safe_plotly_chart(fig_index)
 
     with col_an2:
-        st.markdown("#### 📍 Bakı & Regionlar üzrə Market Şəbəkəsi (53 Filial)")
+        st.markdown(f"#### 📍 Bakı & Regionlar üzrə Market Şəbəkəsi ({len(STORES)} Filial)")
         store_map_df = pd.DataFrame([
             {
                 "Filial": s["branch_name"],
