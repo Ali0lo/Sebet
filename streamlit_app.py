@@ -51,6 +51,7 @@ dark_mode = bool(st.session_state.get("dark_mode_toggle", True))
 card_bg = "#1e293b" if dark_mode else "#ffffff"
 card_border = "#334155" if dark_mode else "#e2e8f0"
 card_text = "#f8fafc" if dark_mode else "#0f172a"
+main_text = card_text
 sub_text = "#94a3b8" if dark_mode else "#64748b"
 
 if dark_mode:
@@ -1829,6 +1830,7 @@ with st.sidebar:
     pts = st.session_state.get("points", 0)
     card_bg = "#1e293b" if dark_mode else "#f1f5f9"
     card_text = "#f8fafc" if dark_mode else "#0f172a"
+    main_text = card_text
     sub_text = "#94a3b8" if dark_mode else "#64748b"
 
     st.markdown("---")
@@ -2551,7 +2553,7 @@ with tab_comparison:
                     with c_txt:
                         st.markdown(
                             f"""
-                            <div style="font-size: 13px; font-weight: 700; color: {main_text}; line-height: 1.3; margin-bottom: 2px;">{prod['canonical_name']}</div>
+                            <div style="font-size: 13px; font-weight: 700; color: {card_text}; line-height: 1.3; margin-bottom: 2px;">{prod['canonical_name']}</div>
                             <div style="font-size: 11px; color: {sub_text};">
                                 Ən ucuz: <b style="color: {ch_color};">{cheapest_name}</b> &bull; <b style="color: #10b981;">{cheapest_price:.2f} ₼</b>
                             </div>
@@ -3071,14 +3073,14 @@ with tab_scan:
                     f"""
                     <div style="background: {card_bg}; border: 1px solid {card_border}; border-left: 4px solid {ch_color}; border-radius: 10px; padding: 14px; margin-bottom: 10px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                            <span style="font-weight: 700; font-size: 14px; color: {main_text};">{rec_item['store_name']}</span>
+                            <span style="font-weight: 700; font-size: 14px; color: {card_text};">{rec_item['store_name']}</span>
                             <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 12px;">+{rec_item['cashback_points']} xal</span>
                         </div>
                         <div style="font-size: 12px; color: {sub_text}; margin-bottom: 4px;">Fiskal: <code>{rec_item['fiscal_id']}</code></div>
                         <div style="font-size: 12px; color: {sub_text}; margin-bottom: 6px;">Tarix: {rec_item['scanned_at']}</div>
                         <div style="display:flex; justify-content:space-between; align-items:center; font-size: 13px; font-weight: 700;">
                             <span style="color: {sub_text};">Ödənilən:</span>
-                            <span style="color: {main_text};">{rec_item['total_amount']:.2f} ₼</span>
+                            <span style="color: {card_text};">{rec_item['total_amount']:.2f} ₼</span>
                         </div>
                     </div>
                     """,
