@@ -10,6 +10,7 @@ import textwrap
 from typing import List, Dict, Any, Tuple
 import urllib.parse
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -925,28 +926,152 @@ def get_gmaps_multistop_walking_dir_url(origin: Tuple[float, float], stop1: Tupl
     return f"https://www.google.com/maps/dir/?api=1&origin={origin[0]:.6f},{origin[1]:.6f}&destination={destination[0]:.6f},{destination[1]:.6f}&waypoints={stop1[0]:.6f},{stop1[1]:.6f}&travelmode=walking"
 
 
-def render_gmaps_embed_route(origin: Tuple[float, float], destination: Tuple[float, float], waypoint: Tuple[float, float] = None, height: int = 360):
-    """Renders free, responsive embedded Google Maps route viewer without requiring paid API key."""
-    if waypoint:
-        src = f"https://maps.google.com/maps?saddr={origin[0]:.5f},{origin[1]:.5f}&daddr={waypoint[0]:.5f},{waypoint[1]:.5f}+to:{destination[0]:.5f},{destination[1]:.5f}&hl=az&output=embed"
-    else:
-        src = f"https://maps.google.com/maps?saddr={origin[0]:.5f},{origin[1]:.5f}&daddr={destination[0]:.5f},{destination[1]:.5f}&hl=az&output=embed"
+def render_gmaps_embed_route(
+    origin: Tuple[float, float],
+    destination: Tuple[float, float],
+    waypoint: Tuple[float, float] = None,
+    height: int = 380,
+    dest_name: str = "Supermarket",
+    waypoint_name: str = None,
+):
+    """Renders a guaranteed-visible interactive route map, navigation actions, and Google Maps embed."""
+    lats = [origin[0]]
+    lons = [origin[1]]
+    names = ["🔴 Sizin Məkanınız"]
+    colors = ["#ef4444"]
+    sizes = [16]
 
-    iframe_html = f"""
-    <div style="width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid rgba(148, 163, 184, 0.25); box-shadow: 0 4px 12px rgba(0,0,0,0.18); margin: 8px 0;">
-        <iframe
-            title="Google Maps Canlı Marşrut"
-            width="100%"
-            height="{height}"
-            style="border: 0; display: block;"
-            loading="lazy"
-            allowfullscreen
-            referrerpolicy="no-referrer-when-downgrade"
-            src="{src}">
-        </iframe>
-    </div>
-    """
-    render_html(iframe_html)
+    if waypoint:
+        lats.append(waypoint[0])
+        lons.append(waypoint[1])
+        names.append(f"🛒 1-ci Market: {waypoint_name or 'Supermarket 1'}")
+        colors.append("#10b981")
+        sizes.append(18)
+
+    lats.append(destination[0])
+    lons.append(destination[1])
+    names.append(f"🛒 {'2-ci Market' if waypoint else 'Ən Sərfəli Market'}: {dest_name}")
+    colors.append("#3b82f6" if waypoint else "#10b981")
+    sizes.append(18)
+
+    c_lat = sum(lats) / len(lats)
+    c_lon = sum(lons) / len(lons)
+    target_style = "carto-darkmatter" if dark_mode else "carto-positron"
+    zoom_val = 14.2 if not waypoint else 13.5
+
+    # 1. Guaranteed Interactive Visual Route Map with Route Path
+    fig = go.Figure()
+    if hasattr(go, "Scattermap") and hasattr(px, "scatter_map"):
+        fig.add_trace(go.Scattermap(
+            lat=lats,
+            lon=lons,
+            mode="lines",
+            line=dict(width=4, color="#10b981"),
+            name="Piyada Marşrutu 🚶",
+            hoverinfo="none",
+        ))
+        fig.add_trace(go.Scattermap(
+            lat=lats,
+            lon=lons,
+            mode="markers+text",
+            marker=dict(size=sizes, color=colors),
+            text=names,
+            textposition="top right",
+            textfont=dict(size=12, color="#f8fafc" if dark_mode else "#0f172a"),
+            name="Məkanlar",
+            hoverinfo="text",
+        ))
+        fig.update_layout(
+            map=dict(
+                style=target_style,
+                center=dict(lat=c_lat, lon=c_lon),
+                zoom=zoom_val,
+            ),
+            margin=dict(l=0, r=0, t=0, b=0),
+            height=height,
+            showlegend=False,
+            paper_bgcolor="#1e293b" if dark_mode else "#ffffff",
+        )
+        _safe_plotly_chart(fig)
+    elif hasattr(go, "Scattermapbox"):
+        fig.add_trace(go.Scattermapbox(
+            lat=lats,
+            lon=lons,
+            mode="lines",
+            line=dict(width=4, color="#10b981"),
+            name="Piyada Marşrutu 🚶",
+            hoverinfo="none",
+        ))
+        fig.add_trace(go.Scattermapbox(
+            lat=lats,
+            lon=lons,
+            mode="markers+text",
+            marker=dict(size=sizes, color=colors),
+            text=names,
+            textposition="top right",
+            textfont=dict(size=12, color="#f8fafc" if dark_mode else "#0f172a"),
+            name="Məkanlar",
+            hoverinfo="text",
+        ))
+        fig.update_layout(
+            mapbox=dict(
+                style=target_style,
+                center=dict(lat=c_lat, lon=c_lon),
+                zoom=zoom_val,
+            ),
+            margin=dict(l=0, r=0, t=0, b=0),
+            height=height,
+            showlegend=False,
+            paper_bgcolor="#1e293b" if dark_mode else "#ffffff",
+        )
+        _safe_plotly_chart(fig)
+    else:
+        st.map(pd.DataFrame({"lat": lats, "lon": lons}), zoom=int(zoom_val))
+
+    # 2. Direct 1-Click Navigation Actions
+    if waypoint:
+        gmaps_url = get_gmaps_multistop_walking_dir_url(origin, waypoint, destination)
+        gmaps_src = f"https://maps.google.com/maps?saddr={origin[0]:.5f},{origin[1]:.5f}&daddr={waypoint[0]:.5f},{waypoint[1]:.5f}+to:{destination[0]:.5f},{destination[1]:.5f}&hl=az&output=embed"
+    else:
+        gmaps_url = get_gmaps_walking_dir_url(origin, destination)
+        gmaps_src = f"https://maps.google.com/maps?saddr={origin[0]:.5f},{origin[1]:.5f}&daddr={destination[0]:.5f},{destination[1]:.5f}&hl=az&output=embed"
+
+    c_nav1, c_nav2 = st.columns([1.6, 1])
+    with c_nav1:
+        st.link_button(
+            "🧭 Google Maps-də Canlı Marşrutu Aç (Piyada 🚶 Naviqasiyası)",
+            gmaps_url,
+            type="primary",
+            use_container_width=True,
+        )
+    with c_nav2:
+        apple_url = f"https://maps.apple.com/?saddr={origin[0]:.5f},{origin[1]:.5f}&daddr={destination[0]:.5f},{destination[1]:.5f}&dirflg=w"
+        st.link_button(
+            "🍎 Apple Maps ilə Aç",
+            apple_url,
+            type="secondary",
+            use_container_width=True,
+        )
+
+    # 3. Embedded Google Maps iFrame (rendered through components.html so it is not stripped by st.html)
+    with st.expander("🌐 Google Maps Xarici Pəncərəsi (iFrame)", expanded=False):
+        components.html(
+            f"""
+            <div style="width: 100%; border-radius: 12px; overflow: hidden; border: 1.5px solid rgba(16, 185, 129, 0.3); box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                <iframe
+                    title="Google Maps Marşrut"
+                    width="100%"
+                    height="{height}"
+                    style="border: 0; display: block;"
+                    loading="lazy"
+                    allowfullscreen
+                    referrerpolicy="no-referrer-when-downgrade"
+                    src="{gmaps_src}">
+                </iframe>
+            </div>
+            """,
+            height=height + 25,
+        )
 
 
 def render_basket_items_table(items: List[Dict[str, Any]], dark: bool = True):
@@ -2456,22 +2581,25 @@ with tab_optimizer:
                     else:
                         st.info("ℹ️ Seçilmiş piyada radiusunda qiymət fərqi 0.15 ₼-dən az olduğu üçün tək marketdən alış-veriş etmək ən optimal qərardır.")
 
-                # Live Embedded Google Maps Viewer
+                # Live Embedded Google Maps & Route Map Viewer
                 st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
-                with st.expander("🗺️ Canlı Google Maps Xəritəsi & Marşrut (İnteraktiv)", expanded=False):
-                    st.caption("Google Maps üzərində cari məkanınızdan supermarketə qədər olan dəqiq piyada marşrutu.")
+                with st.expander("🗺️ Canlı Xəritə & Piyada Marşrutu (İnteraktiv)", expanded=True):
+                    st.caption("Xəritə üzərində cari məkanınızdan supermarketə qədər olan dəqiq piyada marşrutu və Google Maps canlı naviqasiyası.")
                     if is_split_viable and split:
                         render_gmaps_embed_route(
                             origin=(u_lat, u_lon),
                             destination=(split["s2"]["lat"], split["s2"]["lon"]),
                             waypoint=(split["s1"]["lat"], split["s1"]["lon"]),
                             height=380,
+                            dest_name=split["s2"]["branch_name"],
+                            waypoint_name=split["s1"]["branch_name"],
                         )
                     else:
                         render_gmaps_embed_route(
                             origin=(u_lat, u_lon),
                             destination=(single["lat"], single["lon"]),
                             height=380,
+                            dest_name=single["branch_name"],
                         )
 
 
