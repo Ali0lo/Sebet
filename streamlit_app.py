@@ -3,17 +3,81 @@ SebEt — Bakı Supermarket Qiymət Müqayisəsi & Ağıllı Səbət Optimizator
 Streamlit Cloud Interactive Web Application
 """
 
+import base64
+import json
 import math
 import os
 import time
 import textwrap
 from typing import List, Dict, Any, Tuple
 import urllib.parse
+import urllib.request
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
+
+def analyze_receipt_with_openai(image_bytes: bytes, api_key: str = None) -> Dict[str, Any]:
+    """Analyze real receipt photo using OpenAI GPT-4o-mini Vision."""
+    key = (api_key or OPENAI_API_KEY).strip()
+    if not key:
+        return None
+    try:
+        b64_img = base64.b64encode(image_bytes).decode("utf-8")
+        prompt = (
+            "You are an expert OCR system for Azerbaijani supermarket fiscal receipts. "
+            "Analyze this receipt and extract: "
+            "1. 'store': Store or chain name (e.g. Bravo, Araz, OBA, Bazarstore, Al Market, Neptun, Spar) "
+            "2. 'voen': VÖEN tax ID string (e.g. 1401564751) "
+            "3. 'fiscal_id': Fiscal ID / NÖŞ string "
+            "4. 'date': Date and time string from receipt "
+            "5. 'total': Total receipt amount as float in AZN "
+            "6. 'items': List of objects with 'name' (string), 'qty' (float or int), 'price' (unit price float in AZN). "
+            "Respond strictly with valid JSON containing these exact keys."
+        )
+        payload = {
+            "model": "gpt-4o-mini",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/jpeg;base64,{b64_img}"}
+                        }
+                    ]
+                }
+            ],
+            "max_tokens": 800,
+            "response_format": {"type": "json_object"}
+        }
+        req = urllib.request.Request(
+            "https://api.openai.com/v1/chat/completions",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {key}"
+            }
+        )
+        with urllib.request.urlopen(req, timeout=12) as response:
+            res_data = json.loads(response.read().decode("utf-8"))
+            content = res_data["choices"][0]["message"]["content"]
+            parsed = json.loads(content)
+            parsed["cashback"] = max(10, int(round(parsed.get("total", 10) * 1.5)))
+            parsed["chain"] = parsed.get("store", "Supermarket")
+            return parsed
+    except Exception:
+        return None
 
 try:
     from streamlit_js_eval import get_geolocation
@@ -1621,7 +1685,7 @@ def show_auth_dialog():
         )
 
     with col_forms:
-        diag_tab_login, diag_tab_reg = st.tabs(["🔑 Daxil Ol", "📝 Qeydiyyat"])
+        diag_tab_login, diag_tab_reg = st.tabs(["Daxil Ol", "Qeydiyyat"])
 
         with diag_tab_login:
             with st.form(key="dlg_form_login"):
@@ -1862,6 +1926,7 @@ with st.sidebar:
     card_bg = "#1e293b" if dark_mode else "#f1f5f9"
     card_text = "#f8fafc" if dark_mode else "#0f172a"
     main_text = card_text
+    sub_text = "#94a3b8" if dark_mode else "#64748b"
 
     st.markdown("---")
     st.markdown(
@@ -1882,11 +1947,7 @@ with st.sidebar:
 st.markdown(
     """
     <div class="main-header">
-        <div class="header-badge">🚀 Canlı Qiymət & Marşrut Optimizatoru</div>
-        <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: white;">SebEt — Bakının Ağıllı Səbət Platforması</h1>
-        <p style="margin: 6px 0 0 0; opacity: 0.92; font-size: 15px; font-weight: 400; max-width: 820px;">
-            Bakının 7 aparıcı supermarket şəbəkəsində (Bravo, Araz, OBA, Bazarstore, Al Market, Neptun, Spar) real vaxtda qiymət fərqlərini müqayisə edin və piyada məsafədə 2-market marşrutu ilə qənaət edin.
-        </p>
+        <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: white;">Sebet —  Ağıllı Səbət Platforması</h1>
     </div>
     """,
     unsafe_allow_html=True,
@@ -1945,15 +2006,13 @@ if st.session_state.get("request_gps", False):
 # -----------------------------------------------------------------------------
 # 8. Main Tabs Layout
 # -----------------------------------------------------------------------------
-tab_optimizer, tab_comparison, tab_flyers, tab_scan, tab_analytics, tab_loyalty, tab_auth, tab_about = st.tabs([
-    "🧺 Ağıllı Səbət (Smart Basket)",
-    "🔍 Qiymət Müqayisəsi (Matrix)",
-    "🏷️ Həftəlik Endirimlər (Weekly Specials)",
-    "🧾 Qəbz Skanı & Keşbek (OCR)",
-    "📊 Bazar Analitikası (Analytics)",
-    "🎁 Keşbek & Loyallıq",
-    "👤 Hesabım (Profil)" if st.session_state.get("user_authenticated") else "👤 Giriş & Qeydiyyat",
-    "ℹ️ Texniki Memarlıq (About)",
+tab_optimizer, tab_flyers, tab_scan, tab_loyalty, tab_auth, tab_about = st.tabs([
+    "Ağıllı Səbət",
+    "Həftəlik Endirimlər",
+    "Qəbz Skanı & Keşbek",
+    "Keşbek & Loyallıq",
+    "Hesabım" if st.session_state.get("user_authenticated") else "Giriş & Qeydiyyat",
+    "Haqqında & Memarlıq",
 ])
 
 # =============================================================================
@@ -2145,43 +2204,6 @@ with tab_optimizer:
     with col_basket_mgr:
         st.markdown("### 🛒 Səbətiniz")
 
-        # Quick preset buttons
-        st.markdown(f"<div style='font-size: 13px; font-weight: 600; color: {sub_text}; margin-bottom: 6px;'>⚡ Hazır Səbət Şablonları:</div>", unsafe_allow_html=True)
-        col_p1, col_p2, col_p3 = st.columns(3)
-        with col_p1:
-            if st.button("🍳 Səhər Yeməyi", key="preset_breakfast", use_container_width=True):
-                clear_basket_keys()
-                st.session_state.basket = [
-                    {"barcode": PRODUCTS[0]["barcode"], "canonical_name": PRODUCTS[0]["canonical_name"], "brand": PRODUCTS[0]["brand"], "quantity": 2.0, "unit": "liter", "cat_slug": PRODUCTS[0]["cat_slug"]},
-                    {"barcode": PRODUCTS[4]["barcode"], "canonical_name": PRODUCTS[4]["canonical_name"], "brand": PRODUCTS[4]["brand"], "quantity": 1.0, "unit": "piece", "cat_slug": PRODUCTS[4]["cat_slug"]},
-                    {"barcode": PRODUCTS[10]["barcode"], "canonical_name": PRODUCTS[10]["canonical_name"], "brand": PRODUCTS[10]["brand"], "quantity": 1.0, "unit": "piece", "cat_slug": PRODUCTS[10]["cat_slug"]},
-                    {"barcode": PRODUCTS[11]["barcode"], "canonical_name": PRODUCTS[11]["canonical_name"], "brand": PRODUCTS[11]["brand"], "quantity": 2.0, "unit": "piece", "cat_slug": PRODUCTS[11]["cat_slug"]},
-                ]
-                st.rerun()
-
-        with col_p2:
-            if st.button("🥗 Meyvə & Tərəvəz", key="preset_produce", use_container_width=True):
-                clear_basket_keys()
-                st.session_state.basket = [
-                    {"barcode": PRODUCTS[28]["barcode"], "canonical_name": PRODUCTS[28]["canonical_name"], "brand": PRODUCTS[28]["brand"], "quantity": 2.0, "unit": "kg", "cat_slug": PRODUCTS[28]["cat_slug"]},
-                    {"barcode": PRODUCTS[29]["barcode"], "canonical_name": PRODUCTS[29]["canonical_name"], "brand": PRODUCTS[29]["brand"], "quantity": 1.5, "unit": "kg", "cat_slug": PRODUCTS[29]["cat_slug"]},
-                    {"barcode": PRODUCTS[30]["barcode"], "canonical_name": PRODUCTS[30]["canonical_name"], "brand": PRODUCTS[30]["brand"], "quantity": 3.0, "unit": "kg", "cat_slug": PRODUCTS[30]["cat_slug"]},
-                    {"barcode": PRODUCTS[32]["barcode"], "canonical_name": PRODUCTS[32]["canonical_name"], "brand": PRODUCTS[32]["brand"], "quantity": 1.5, "unit": "kg", "cat_slug": PRODUCTS[32]["cat_slug"]},
-                ]
-                st.rerun()
-
-        with col_p3:
-            if st.button("🏠 Ailəvi Həftəlik", key="preset_family", use_container_width=True):
-                clear_basket_keys()
-                st.session_state.basket = [
-                    {"barcode": PRODUCTS[15]["barcode"], "canonical_name": PRODUCTS[15]["canonical_name"], "brand": PRODUCTS[15]["brand"], "quantity": 2.0, "unit": "kg", "cat_slug": PRODUCTS[15]["cat_slug"]},
-                    {"barcode": PRODUCTS[19]["barcode"], "canonical_name": PRODUCTS[19]["canonical_name"], "brand": PRODUCTS[19]["brand"], "quantity": 1.0, "unit": "piece", "cat_slug": PRODUCTS[19]["cat_slug"]},
-                    {"barcode": PRODUCTS[22]["barcode"], "canonical_name": PRODUCTS[22]["canonical_name"], "brand": PRODUCTS[22]["brand"], "quantity": 2.0, "unit": "piece", "cat_slug": PRODUCTS[22]["cat_slug"]},
-                    {"barcode": PRODUCTS[23]["barcode"], "canonical_name": PRODUCTS[23]["canonical_name"], "brand": PRODUCTS[23]["brand"], "quantity": 3.0, "unit": "piece", "cat_slug": PRODUCTS[23]["cat_slug"]},
-                    {"barcode": PRODUCTS[43]["barcode"], "canonical_name": PRODUCTS[43]["canonical_name"], "brand": PRODUCTS[43]["brand"], "quantity": 1.0, "unit": "piece", "cat_slug": PRODUCTS[43]["cat_slug"]},
-                ]
-                st.rerun()
-
         # Add Product Selector
         with st.expander("➕ Yeni Məhsul Əlavə Et", expanded=False):
             f_cat = st.selectbox(
@@ -2270,7 +2292,7 @@ with tab_optimizer:
 
         # Display Current Basket Table
         if not st.session_state.basket:
-            st.info("Səbətiniz boşdur. Yuxarıdakı şablonlardan birini seçin və ya məhsul əlavə edin.")
+            st.info("Səbətiniz boşdur. 'Yeni Məhsul Əlavə Et' bölməsindən səbətinizə məhsul əlavə edin.")
         else:
             st.markdown(f"**Səbətdəki Məhsullar ({len(st.session_state.basket)} növ):**")
             for idx, item in enumerate(st.session_state.basket):
@@ -2496,204 +2518,8 @@ with tab_optimizer:
                             dest_name=single["branch_name"],
                         )
 
-
 # =============================================================================
-# TAB 2: QİYMƏT MÜQAYİSƏSİ (PRICE COMPARISON MATRIX)
-# =============================================================================
-with tab_comparison:
-    st.markdown("### 🔍 Bakı Supermarketlərində Canlı Qiymətlər")
-    st.markdown("7 böyük supermarket şəbəkəsində cari rəf qiymətləri və endirim kampaniyaları.")
-
-    col_cat, col_srch = st.columns([1, 2])
-    with col_cat:
-        cat_options = ["Bütün Kateqoriyalar"] + [c["name_az"] for c in CATEGORIES.values()]
-        selected_cat_name = st.selectbox("Kateqoriya üzrə filtr:", cat_options)
-
-    with col_srch:
-        search_query = st.text_input("Açar sözlə axtarış (məs: Süd, Yağ, Çay, Ariel...):", value="")
-
-    # Filter products
-    filtered_products = PRODUCTS
-    if selected_cat_name != "Bütün Kateqoriyalar":
-        matching_slug = next((c["slug"] for c in CATEGORIES.values() if c["name_az"] == selected_cat_name), None)
-        if matching_slug:
-            filtered_products = [p for p in filtered_products if p["cat_slug"] == matching_slug]
-
-    if search_query:
-        q = search_query.lower()
-        filtered_products = [p for p in filtered_products if q in p["canonical_name"].lower() or q in p["brand"].lower()]
-
-    st.markdown(f"**Göstərilir: {len(filtered_products)} məhsul**")
-
-    # Build Comparison DataFrame
-    chain_keys = ["bravo", "araz", "oba", "bazarstore", "almarket", "neptun", "spar"]
-    chain_headers = {
-        "bravo": "Bravo",
-        "araz": "Araz",
-        "oba": "OBA",
-        "bazarstore": "Bazarstore",
-        "almarket": "Al Market",
-        "neptun": "Neptun",
-        "spar": "Spar",
-    }
-
-    matrix_rows = []
-    for p in filtered_products:
-        row = {
-            "Məhsul": p["canonical_name"],
-            "Qablaşdırma": p.get("pack_size", "-"),
-            "Kateqoriya": CATEGORIES.get(p["cat_slug"], {}).get("name_az", p["cat_slug"]),
-        }
-        prices = [get_effective_price(p, c_key) for c_key in chain_keys]
-        min_p = min(prices)
-        row["Ən Ucuz (₼)"] = f"{min_p:.2f} ₼"
-
-        for c_key in chain_keys:
-            eff_p = get_effective_price(p, c_key)
-            diff = eff_p - min_p
-            label = f"{eff_p:.2f} ₼"
-            if diff == 0:
-                label += " ⭐"
-            row[chain_headers[c_key]] = label
-        matrix_rows.append(row)
-
-    if matrix_rows:
-        matrix_df = pd.DataFrame(matrix_rows)
-        render_comparison_matrix_table(matrix_df, dark=dark_mode)
-
-        with st.expander("⚡ Matris Məhsullarını 1-Kliklə Ən Ucuz Qiymətlə Səbətə Əlavə Et", expanded=False):
-            st.caption("Aşağıdakı siyahıdan hər bir məhsulu avtomatik olaraq ən ucuz olduğu supermarket qiyməti ilə 1-kliklə səbətinizə ata bilərsiniz.")
-            quick_cols = st.columns(2)
-            for idx, prod in enumerate(filtered_products[:14]):
-                with quick_cols[idx % 2]:
-                    cheapest_k = min(chain_keys, key=lambda c: get_effective_price(prod, c))
-                    cheapest_name = chain_headers[cheapest_k]
-                    cheapest_price = get_effective_price(prod, cheapest_k)
-                    ch_color = CHAINS[cheapest_k].get("color", "#10b981")
-                    
-                    c_txt, c_btn = st.columns([1.8, 1.2])
-                    with c_txt:
-                        st.markdown(
-                            f"""
-                            <div style="font-size: 13px; font-weight: 700; color: {card_text}; line-height: 1.3; margin-bottom: 2px;">{prod['canonical_name']}</div>
-                            <div style="font-size: 11px; color: {sub_text};">
-                                Ən ucuz: <b style="color: {ch_color};">{cheapest_name}</b> &bull; <b style="color: #10b981;">{cheapest_price:.2f} ₼</b>
-                            </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
-                    with c_btn:
-                        if st.button(f"➕ Səbətə At", key=f"quick_add_matrix_{prod['barcode']}_{idx}", use_container_width=True):
-                            existing = next((item for item in st.session_state.basket if item["barcode"] == prod["barcode"]), None)
-                            if existing:
-                                existing["quantity"] = round(existing["quantity"] + 1.0, 2)
-                            else:
-                                st.session_state.basket.append({
-                                    "barcode": prod["barcode"],
-                                    "canonical_name": prod["canonical_name"],
-                                    "brand": prod["brand"],
-                                    "quantity": 1.0,
-                                    "unit": prod.get("unit", "ədəd"),
-                                    "cat_slug": prod["cat_slug"],
-                                })
-                            clear_basket_keys()
-                            st.toast(f"✅ {prod['canonical_name']} səbətə əlavə edildi ({cheapest_name}-da {cheapest_price:.2f} ₼)!", icon="🛒")
-                            st.rerun()
-    else:
-        st.info("Axtarışa uyğun məhsul tapılmadı.")
-
-    st.markdown("---")
-    st.markdown("#### 📊 Tək Məhsul üzrə Dərin Müqayisə Qrafiki")
-    chart_prod_names = [f"{p['canonical_name']} ({p.get('pack_size', '')})" for p in filtered_products]
-    if chart_prod_names:
-        chart_sel_idx = st.selectbox("Müqayisə ediləcək məhsulu seçin:", range(len(filtered_products)), format_func=lambda i: chart_prod_names[i])
-        chart_p = filtered_products[chart_sel_idx]
-
-        chart_data = []
-        for c_key in chain_keys:
-            p_val = get_effective_price(chart_p, c_key)
-            is_promo = (chart_p.get("promo") and chart_p["promo"].get("chain") == c_key)
-            chart_data.append({
-                "Şəbəkə": chain_headers[c_key],
-                "Qiymət (₼)": p_val,
-                "Rəng": CHAINS[c_key].get("color", "#10b981"),
-                "Kampaniya": "Endirimli Qiymət 🔥" if is_promo else "Standart Qiymət",
-            })
-        chart_df = pd.DataFrame(chart_data)
-
-        min_val = chart_df["Qiymət (₼)"].min()
-        max_val = chart_df["Qiymət (₼)"].max()
-        spread_pct = round(((max_val - min_val) / min_val) * 100, 1)
-
-        best_chart_chain = min(chain_keys, key=lambda c: get_effective_price(chart_p, c))
-        best_chart_title = chain_headers[best_chart_chain]
-        best_chart_color = CHAINS[best_chart_chain].get("color", "#10b981")
-        best_chart_price = get_effective_price(chart_p, best_chart_chain)
-
-        c_img, c_chart = st.columns([1, 2.5])
-        with c_img:
-            img_path = f"frontend/public{chart_p.get('image_url', '')}"
-            if os.path.exists(img_path):
-                st.image(img_path, caption=chart_p["canonical_name"], use_container_width=True)
-            elif chart_p.get("image_url", "").startswith("http"):
-                st.image(chart_p["image_url"], caption=chart_p["canonical_name"], use_container_width=True)
-            else:
-                st.markdown(f"### 🛒\n**{chart_p['canonical_name']}**")
-            st.metric(
-                label="Maksimum Qiymət Fərqi",
-                value=f"+{max_val - min_val:.2f} ₼",
-                delta=f"{spread_pct}% fərq",
-                delta_color="inverse",
-            )
-
-            # 1-Click cheapest add to basket button
-            if st.button(
-                f"🛒 Ən Ucuz ({best_chart_title}: {best_chart_price:.2f} ₼) Səbətə At",
-                key=f"btn_matrix_add_{chart_p['barcode']}",
-                type="primary",
-                use_container_width=True,
-            ):
-                existing = next((item for item in st.session_state.basket if item["barcode"] == chart_p["barcode"]), None)
-                if existing:
-                    existing["quantity"] = round(existing["quantity"] + 1.0, 2)
-                else:
-                    st.session_state.basket.append({
-                        "barcode": chart_p["barcode"],
-                        "canonical_name": chart_p["canonical_name"],
-                        "brand": chart_p["brand"],
-                        "quantity": 1.0,
-                        "unit": chart_p.get("unit", "ədəd"),
-                        "cat_slug": chart_p["cat_slug"],
-                    })
-                clear_basket_keys()
-                st.toast(f"✅ {chart_p['canonical_name']} səbətə əlavə edildi ({best_chart_title}-da {best_chart_price:.2f} ₼)!", icon="🛒")
-                st.rerun()
-
-        with c_chart:
-            fig_bar = px.bar(
-                chart_df,
-                x="Şəbəkə",
-                y="Qiymət (₼)",
-                color="Şəbəkə",
-                color_discrete_map={row["Şəbəkə"]: row["Rəng"] for _, row in chart_df.iterrows()},
-                text="Qiymət (₼)",
-                title=f"{chart_p['canonical_name']} — Şəbəkələr üzrə Qiymət Dağılımı",
-            )
-            fig_bar.update_traces(texttemplate='%{text:.2f} ₼', textposition='outside')
-            fig_bar.update_layout(
-                yaxis_range=[0, max_val * 1.2],
-                showlegend=False,
-                margin=dict(t=40, b=20, l=20, r=20),
-                template="plotly_dark" if dark_mode else "plotly_white",
-                paper_bgcolor="#1e293b" if dark_mode else "#ffffff",
-                plot_bgcolor="#1e293b" if dark_mode else "#ffffff",
-                font=dict(color="#f8fafc" if dark_mode else "#0f172a"),
-            )
-            _safe_plotly_chart(fig_bar)
-
-
-# =============================================================================
-# TAB 3: HƏFTƏLİK ENDİRİMLƏR (WEEKLY SPECIALS)
+# TAB 2: HƏFTƏLİK ENDİRİMLƏR (WEEKLY SPECIALS)
 # =============================================================================
 with tab_flyers:
     st.markdown("### 🏷️ Bakı Supermarketlərinin Həftəlik Endirimləri və Xüsusi Fürsətləri")
@@ -2991,7 +2817,10 @@ with tab_scan:
         active_rec = SAMPLE_RECEIPTS[st.session_state.active_rec_idx]
 
         st.markdown("---")
-        upload_tab1, upload_tab2 = st.tabs(["📁 Şəkil Yüklə", "📷 Kamera ilə Çək"])
+        if OPENAI_API_KEY:
+            st.caption("🤖 OpenAI GPT-4o Vision mühərriki aktivdir (.env)")
+
+        upload_tab1, upload_tab2 = st.tabs(["Şəkil Yüklə", "Kamera ilə Çək"])
         with upload_tab1:
             up_file = st.file_uploader("Qəbzin fotosunu seçin (JPG/PNG):", type=["jpg", "jpeg", "png"], key="rec_uploader")
             if up_file:
@@ -3001,9 +2830,21 @@ with tab_scan:
             if cam_pic:
                 st.image(cam_pic, caption="Çəkilmiş Qəbz", width=220)
 
-        if st.button("🚀 Qəbzi OCR Skan Et & Keşbek Qazan", key="scan_receipt_btn", type="primary", use_container_width=True):
-            with st.spinner("🔍 Qəbz OCR mühərriki işə salınır, fiskal şifrə və VÖEN oxunur..."):
-                time.sleep(0.4)
+        if st.button("Qəbzi OCR Skan Et & Keşbek Qazan", key="scan_receipt_btn", type="primary", use_container_width=True):
+            img_file = up_file or cam_pic
+            ai_parsed = None
+            if img_file and OPENAI_API_KEY:
+                with st.spinner("🔍 OpenAI GPT-4o Vision ilə qəbz skan edilir və fiskal məlumatlar oxunur..."):
+                    ai_parsed = analyze_receipt_with_openai(img_file.getvalue())
+            
+            if ai_parsed:
+                active_rec = ai_parsed
+                st.session_state["scanned_receipt"] = ai_parsed
+                st.info("✨ Qəbz OpenAI GPT-4o Vision vasitəsilə uğurla təhlil edildi!")
+            else:
+                with st.spinner("🔍 Qəbz OCR mühərriki işə salınır, fiskal şifrə və VÖEN oxunur..."):
+                    time.sleep(0.4)
+
             earned_cb = int(active_rec.get("cashback", 10))
             new_pts = st.session_state.get("points", 0) + earned_cb
             st.session_state["points"] = new_pts
@@ -3018,7 +2859,7 @@ with tab_scan:
             user_db.save_scanned_receipt(
                 user_id=u_id,
                 store_name=active_rec["store"],
-                chain_name=active_rec["chain"],
+                chain_name=active_rec.get("chain", active_rec["store"]),
                 fiscal_id=active_rec["fiscal_id"],
                 total_amount=active_rec["total"],
                 cashback_points=earned_cb,
@@ -3110,93 +2951,6 @@ with tab_scan:
                 )
     else:
         st.info("ℹ️ Hələ ki heç bir qəbz qeydə alınmayıb. Yuxarıdakı 'Qəbzi OCR Skan Et & Keşbek Qazan' düyməsinə klikləyərək ilk qəbzinizi əlavə edin!")
-
-
-# =============================================================================
-# TAB 5: BAZAR ANALİTİKASI (MARKET ANALYTICS)
-# =============================================================================
-with tab_analytics:
-    st.markdown("### 📊 Bakı Ərzaq Bazarının Analitik Göstəriciləri")
-
-    col_an1, col_an2 = st.columns(2)
-
-    with col_an1:
-        st.markdown("#### 🏆 Şəbəkələrin Qiymət İndeksi (Ucuzluq Reytinqi)")
-        # Calculate aggregate basket cost across all 53 products
-        chain_totals = []
-        for c_key in chain_keys:
-            tot = sum(get_effective_price(p, c_key) for p in PRODUCTS)
-            chain_totals.append({
-                "Şəbəkə": chain_headers[c_key],
-                "Ümumi Səbət Dəyəri (₼)": round(tot, 2),
-                "Rəng": CHAINS[c_key].get("color", "#10b981"),
-            })
-        totals_df = pd.DataFrame(chain_totals).sort_values("Ümumi Səbət Dəyəri (₼)")
-        base_min = totals_df["Ümumi Səbət Dəyəri (₼)"].min()
-        totals_df["İndeks (%)"] = totals_df["Ümumi Səbət Dəyəri (₼)"].apply(lambda x: round((x / base_min) * 100, 1))
-
-        fig_index = px.bar(
-            totals_df,
-            x="Şəbəkə",
-            y="Ümumi Səbət Dəyəri (₼)",
-            color="Şəbəkə",
-            color_discrete_map={r["Şəbəkə"]: r["Rəng"] for _, r in totals_df.iterrows()},
-            text="Ümumi Səbət Dəyəri (₼)",
-        )
-        fig_index.update_traces(texttemplate='%{text:.2f} ₼', textposition='outside')
-        fig_index.update_layout(
-            showlegend=False,
-            yaxis_range=[0, totals_df["Ümumi Səbət Dəyəri (₼)"].max() * 1.15],
-            template="plotly_dark" if dark_mode else "plotly_white",
-            paper_bgcolor="#1e293b" if dark_mode else "#ffffff",
-            plot_bgcolor="#1e293b" if dark_mode else "#ffffff",
-            font=dict(color="#f8fafc" if dark_mode else "#0f172a"),
-        )
-        _safe_plotly_chart(fig_index)
-
-    with col_an2:
-        st.markdown(f"#### 📍 Bakı & Regionlar üzrə Market Şəbəkəsi ({len(STORES)} Filial)")
-        store_map_df = pd.DataFrame([
-            {
-                "Filial": s["branch_name"],
-                "Şəbəkə": s["chain_slug"].title(),
-                "Ərazi": s["neighborhood"],
-                "Google Reytinqi ⭐": f"⭐ {s.get('gmaps_rating', 4.4)} ({s.get('gmaps_reviews', 1200):,} rəy)",
-                "İş Saatları 🕒": s.get("opening_hours", "08:00 – 23:00"),
-                "lat": s["latitude"],
-                "lon": s["longitude"],
-            }
-            for s in STORES
-        ])
-        render_map(
-            store_map_df,
-            lat="lat",
-            lon="lon",
-            color="Şəbəkə",
-            hover_name="Filial",
-            hover_data=["Ərazi", "Google Reytinqi ⭐", "İş Saatları 🕒"],
-            zoom=10.5,
-            height=370,
-        )
-
-    st.markdown("---")
-    st.markdown("#### ⚡ Ən Böyük Qiymət Fərqi Olan Top 5 Məhsul")
-    dispersion_list = []
-    for p in PRODUCTS:
-        all_prices = [get_effective_price(p, c_key) for c_key in chain_keys]
-        p_min = min(all_prices)
-        p_max = max(all_prices)
-        spread = p_max - p_min
-        spread_pct = round((spread / p_min) * 100, 1)
-        dispersion_list.append({
-            "Məhsul": p["canonical_name"],
-            "Ən Aşağı Qiymət": f"{p_min:.2f} ₼",
-            "Ən Yuxarı Qiymət": f"{p_max:.2f} ₼",
-            "Fərq (₼)": round(spread, 2),
-            "Fərq (%)": spread_pct,
-        })
-    disp_df = pd.DataFrame(dispersion_list).sort_values("Fərq (%)", ascending=False).head(5)
-    render_dispersion_table(disp_df, dark=dark_mode)
 
 
 # =============================================================================
@@ -3450,7 +3204,7 @@ with tab_auth:
         st.markdown("### 👤 Giriş və Qeydiyyat")
         st.caption("Hesabınıza daxil olun və ya yeni qeydiyyatdan keçin.")
 
-        auth_subtab_login, auth_subtab_reg = st.tabs(["🔑 Giriş Et", "📝 Yeni Qeydiyyat"])
+        auth_subtab_login, auth_subtab_reg = st.tabs(["Giriş Et", "Yeni Qeydiyyat"])
 
         with auth_subtab_login:
             st.markdown("#### Giriş Məlumatları")
