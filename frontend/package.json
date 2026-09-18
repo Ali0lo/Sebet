@@ -2,6 +2,10 @@
   "name": "sebet-frontend",
   "version": "1.0.0",
   "private": true,
+  "contributors": [
+    "Ali Iskandarli",
+    "Sayali Guliyeva"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",

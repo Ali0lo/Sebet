@@ -1624,25 +1624,10 @@ def show_auth_dialog():
         diag_tab_login, diag_tab_reg = st.tabs(["🔑 Daxil Ol", "📝 Qeydiyyat"])
 
         with diag_tab_login:
-            if st.button("⚡ 1-Kliklə Demo Giriş (Ali İskəndərli)", key="dlg_btn_demo_in", use_container_width=True, type="primary"):
-                ok, msg, u_data = user_db.authenticate_user("demo", "sebet2026")
-                if ok:
-                    st.session_state["user_authenticated"] = True
-                    st.session_state["current_user"] = u_data
-                    st.session_state["points"] = u_data.get("sebet_points", 100)
-                    s_b, s_loc = user_db.load_user_basket(u_data["id"])
-                    if s_b:
-                        st.session_state["basket"] = s_b
-                    st.session_state["show_auth_modal"] = False
-                    st.toast(f"Xoş gəldiniz, {u_data['full_name']}!", icon="👋")
-                    st.rerun()
-
-            st.markdown("<div style='text-align: center; color: #94a3b8; margin: 8px 0; font-size: 12px;'>və ya öz hesabınızla</div>", unsafe_allow_html=True)
-
             with st.form(key="dlg_form_login"):
-                u_in = st.text_input("İstifadəçi adı və ya Telefon / E-poçt", placeholder="Məs: demo və ya ali@sebet.az", key="dlg_inp_user")
+                u_in = st.text_input("İstifadəçi adı və ya Telefon / E-poçt", placeholder="Məs: reshad99 və ya reshad@example.com", key="dlg_inp_user")
                 p_in = st.text_input("Şifrə", type="password", placeholder="••••••••", key="dlg_inp_pwd")
-                sub_login = st.form_submit_button("Daxil Ol", use_container_width=True)
+                sub_login = st.form_submit_button("Daxil Ol", use_container_width=True, type="primary")
 
                 if sub_login:
                     if not u_in or not p_in:
@@ -1788,22 +1773,9 @@ with st.sidebar:
             """,
             unsafe_allow_html=True,
         )
-        col_sb_auth_btn, col_sb_demo = st.columns([1.15, 1])
-        with col_sb_auth_btn:
-            if st.button("👤 Giriş / Qeydiyyat", key="sb_btn_open_auth_dialog", type="primary", use_container_width=True, help="Split pəncərədə giriş və ya qeydiyyat"):
-                st.session_state["show_auth_modal"] = True
-                st.rerun()
-        with col_sb_demo:
-            if st.button("⚡ Demo Giriş", key="sb_btn_demo_login", use_container_width=True, help="Ali İskəndərli demo hesabı ilə 1-kliklə daxil ol"):
-                ok, msg, u_data = user_db.authenticate_user("demo", "sebet2026")
-                if ok:
-                    st.session_state["user_authenticated"] = True
-                    st.session_state["current_user"] = u_data
-                    st.session_state["points"] = u_data.get("sebet_points", 100)
-                    s_b, s_loc = user_db.load_user_basket(u_data["id"])
-                    if s_b:
-                        st.session_state.basket = s_b
-                    st.rerun()
+        if st.button("👤 Giriş / Qeydiyyat", key="sb_btn_open_auth_dialog", type="primary", use_container_width=True):
+            st.session_state["show_auth_modal"] = True
+            st.rerun()
 
     st.markdown("---")
 
@@ -1890,18 +1862,6 @@ with st.sidebar:
     card_bg = "#1e293b" if dark_mode else "#f1f5f9"
     card_text = "#f8fafc" if dark_mode else "#0f172a"
     main_text = card_text
-    sub_text = "#94a3b8" if dark_mode else "#64748b"
-
-    st.markdown("---")
-    st.markdown(
-        f"""
-        <div style="background: {card_bg}; padding: 12px; border-radius: 12px; font-size: 13px; border: 1px solid rgba(148, 163, 184, 0.2);">
-            <div style="font-weight: 700; color: {card_text}; margin-bottom: 4px;">👤 Müştəri Profili (Demo)</div>
-            <div style="color: {sub_text};">Sebet Xalları: <b style="color: #10b981;">{pts} Xal</b> (= {pts / 100:.2f} ₼)</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
     st.markdown("---")
     st.markdown(
@@ -1992,7 +1952,7 @@ tab_optimizer, tab_comparison, tab_flyers, tab_scan, tab_analytics, tab_loyalty,
     "🧾 Qəbz Skanı & Keşbek (OCR)",
     "📊 Bazar Analitikası (Analytics)",
     "🎁 Keşbek & Loyallıq",
-    "👤 Giriş & Qeydiyyat (Auth)",
+    "👤 Hesabım (Profil)" if st.session_state.get("user_authenticated") else "👤 Giriş & Qeydiyyat",
     "ℹ️ Texniki Memarlıq (About)",
 ])
 
@@ -3494,27 +3454,10 @@ with tab_auth:
 
         with auth_subtab_login:
             st.markdown("#### Giriş Məlumatları")
-            
-            if st.button("⚡ 1-Kliklə Demo Hesabla Giriş (Ali İskəndərli)", key="btn_demo_login_tab", use_container_width=True, type="primary"):
-                ok, msg, demo_usr = user_db.authenticate_user("demo", "sebet2026")
-                if ok and demo_usr:
-                    st.session_state["user_authenticated"] = True
-                    st.session_state["current_user"] = demo_usr
-                    st.session_state["points"] = demo_usr.get("sebet_points", 300)
-                    saved_b, saved_loc = user_db.load_user_basket(demo_usr["id"])
-                    if saved_b:
-                        st.session_state["basket"] = saved_b
-                    st.toast(f"Xoş gəldiniz, {demo_usr['full_name']}!", icon="👋")
-                    st.rerun()
-                else:
-                    st.error(msg)
-
-            st.markdown("<div style='text-align: center; color: #94a3b8; margin: 10px 0;'>və ya öz hesabınızla</div>", unsafe_allow_html=True)
-
             with st.form(key="tab_login_form"):
-                login_user = st.text_input("İstifadəçi adı və ya E-poçt", placeholder="Məsələn: demo və ya ali@sebet.az")
+                login_user = st.text_input("İstifadəçi adı və ya E-poçt", placeholder="Məsələn: reshad99 və ya reshad@example.com")
                 login_pwd = st.text_input("Şifrə", type="password", placeholder="••••••••")
-                submit_login = st.form_submit_button("Daxil Ol", use_container_width=True)
+                submit_login = st.form_submit_button("Daxil Ol", use_container_width=True, type="primary")
 
                 if submit_login:
                     if not login_user or not login_pwd:
@@ -3593,6 +3536,12 @@ with tab_about:
         - **Ağıllı Səbət Alqoritmi**: Tək ən ucuz market (baseline) və istifadəçinin piyada getmə radiusunda (məs: 750m) 2 market arasında optimal məhsul bölgüsü (split optimization).
         - **Məlumat Mənbələri**: Həftəlik market endirimləri və təklifləri (flyers), elektron qəbzlər (e-kassa OCR) və supermarket e-ticarət qiymət skreyperləri.
         - **İnteraktiv Streamlit Tətbiqi**: Streamlit Community Cloud vasitəsilə 100% serverless və buludda işləyən nümayiş portalı.
+
+        ---
+
+        #### 👥 Müəlliflər & Töhfəçilər (Contributors)
+        - **Ali Iskandarli**
+        - **Sayali Guliyeva**
 
         ---
 

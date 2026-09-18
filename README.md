@@ -323,7 +323,6 @@ Given a shopping basket $\mathcal{B} = \{(p_1, q_1), \dots, (p_n, q_n)\}$:
 ---
 
 ## 6. Crowdsourced Receipt OCR & "ƏDV Geri Al" Synergy
-## 📄 License
 
 Azerbaijani shoppers already photograph fiscal receipts into **Birbank / edvgerial.az** for their 3% - 5% state VAT cashback. **SebEt** piggybacks on this daily reflex:
 1. User snaps the cash register receipt (*Fiskal Kassa Qəbzi*).
@@ -334,6 +333,16 @@ Azerbaijani shoppers already photograph fiscal receipts into **Birbank / edvgeri
    - Line items: `[Item Name] x [Qty] = [Price] AZN`
 3. Canonical SKU matcher maps line text to master database and updates `store_prices`.
 4. User receives **+50 SebEt Points**, redeemable for partner coffee vouchers, cinema tickets, or mobile top-ups.
+
+---
+
+## 👥 Authors & Contributors
+- **Ali Iskandarli** ([@Ali0lo](https://github.com/Ali0lo))
+- **Sayali Guliyeva**
+
+---
+
+## 📄 License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 <br />
