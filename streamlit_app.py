@@ -1605,34 +1605,23 @@ def show_auth_dialog():
 
         st.markdown(
             f"""
-            <div style="margin-top: 12px; line-height: 1.5;">
-                <h4 style="margin: 0 0 10px 0; color: #10b981; font-weight: 800; font-size: 17px;">Bakının Ağıllı Səbət Platforması</h4>
-                <div style="font-size: 13px; color: {dlg_text}; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px;">
-                    <span>🎁</span>
-                    <div><b>Keşbek İmkanları:</b> Qeydiyyatdan keçərək qəbzlərinizi skan edin və hər alış-verişdə keşbek xalları toplayın!</div>
+            <div style="margin-top: 14px; line-height: 1.5;">
+                <h4 style="margin: 0 0 6px 0; color: #10b981; font-weight: 800; font-size: 16px;">Bakının Ağıllı Səbət Platforması</h4>
+                <p style="font-size: 13px; color: {dlg_sub}; margin: 0 0 12px 0;">
+                    Supermarket qiymətlərini müqayisə edin, səbətinizi yadda saxlayın və hər qəbzdə keşbek toplayın.
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: {dlg_text};">
+                    <div>✨ <b>Canlı Qiymət Müqayisəsi</b> — 7 supermarket şəbəkəsi</div>
+                    <div>💰 <b>Qəbz Keşbeki</b> — Hər alış-verişdə xallar</div>
+                    <div>💾 <b>Səbət Yaddaşı</b> — Ərzaqlarınızı buludda saxlayın</div>
                 </div>
-                <div style="font-size: 13px; color: {dlg_text}; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px;">
-                    <span>💾</span>
-                    <div><b>Səbət Sinxronizasiyası:</b> Yığdığınız ərzaqları bir toxunuşla bazada yadda saxlayın və istənilən vaxt bərpa edin.</div>
-                </div>
-                <div style="font-size: 13px; color: {dlg_text}; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px;">
-                    <span>💳</span>
-                    <div><b>2x Keşbek & Endirim:</b> Bravo, Araz, OBA, Bazarstore və digər marketlərdən keşbek toplayın.</div>
-                </div>
-                <div style="font-size: 13px; color: {dlg_text}; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px;">
-                    <span>📍</span>
-                    <div><b>Optimal Marşrut:</b> Ünvanınıza ən yaxın 2 market kombinasiyası ilə büdcənizə qənaət edin.</div>
-                </div>
-            </div>
-            <div style="margin-top: 14px; padding: 10px 12px; background: {dlg_card_bg}; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; font-size: 12px; color: #10b981;">
-                🔒 Şifrəniz PBKDF2-HMAC-SHA256 (100,000 iterasiya) ilə etibarlı şifrələnir.
             </div>
             """,
             unsafe_allow_html=True,
         )
 
     with col_forms:
-        diag_tab_login, diag_tab_reg = st.tabs(["🔑 Daxil Ol (Login)", "📝 Yeni Qeydiyyat (Register)"])
+        diag_tab_login, diag_tab_reg = st.tabs(["🔑 Daxil Ol", "📝 Qeydiyyat"])
 
         with diag_tab_login:
             if st.button("⚡ 1-Kliklə Demo Giriş (Ali İskəndərli)", key="dlg_btn_demo_in", use_container_width=True, type="primary"):
@@ -1674,14 +1663,6 @@ def show_auth_dialog():
                             st.error(msg)
 
         with diag_tab_reg:
-            st.markdown(
-                """
-                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; font-size: 12px; color: #10b981; font-weight: 600;">
-                    🎁 Qeydiyyatdan keçin və qəbzlərinizi skan edərək keşbek xalları qazanın!
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
             with st.form(key="dlg_form_register"):
                 reg_name = st.text_input("Ad və Soyadınız", placeholder="Məs: Rəşad Məmmədov", key="dlg_r_name")
                 reg_u = st.text_input("İstifadəçi Adı və ya Telefon", placeholder="reshad99 və ya 0501234567", key="dlg_r_user")
@@ -1823,53 +1804,6 @@ with st.sidebar:
                     if s_b:
                         st.session_state.basket = s_b
                     st.rerun()
-
-        with st.popover("⚙️ Tez Giriş & Qeydiyyat Formu", use_container_width=True):
-            sb_tab_in, sb_tab_up = st.tabs(["🔑 Giriş", "📝 Qeydiyyat"])
-            with sb_tab_in:
-                st.markdown("##### 🔑 Daxil Ol")
-                sb_u = st.text_input("İstifadəçi adı / Telefon:", key="sb_pop_u")
-                sb_p = st.text_input("Şifrə:", type="password", key="sb_pop_p")
-                if st.button("Daxil Ol", key="sb_pop_btn_login", type="primary", use_container_width=True):
-                    ok, msg, u_data = user_db.authenticate_user(sb_u, sb_p)
-                    if ok:
-                        st.session_state["user_authenticated"] = True
-                        st.session_state["current_user"] = u_data
-                        st.session_state["points"] = u_data.get("sebet_points", 0)
-                        s_b, s_loc = user_db.load_user_basket(u_data["id"])
-                        if s_b:
-                            st.session_state.basket = s_b
-                        st.success(msg)
-                        st.rerun()
-                    else:
-                        st.error(msg)
-            with sb_tab_up:
-                st.markdown("##### 📝 Yeni Qeydiyyat")
-                st.caption("🎁 Qeydiyyatdan keçin və qəbzləri skan edərək keşbek toplayın!")
-                sb_reg_name = st.text_input("Ad və Soyad:", key="sb_pop_reg_name")
-                sb_reg_u = st.text_input("İstifadəçi adı / Tel:", key="sb_pop_reg_u")
-                sb_reg_p = st.text_input("Şifrə:", type="password", key="sb_pop_reg_p")
-                if st.button("Qeydiyyatdan Keç", key="sb_pop_btn_reg", type="primary", use_container_width=True):
-                    if not sb_reg_name or not sb_reg_u or not sb_reg_p:
-                        st.error("Bütün xanaları doldurun")
-                    elif len(sb_reg_p) < 4:
-                        st.error("Şifrə ən azı 4 simvol olmalıdır")
-                    else:
-                        ok, msg, u_data = user_db.register_user(
-                            username=sb_reg_u.strip(),
-                            full_name=sb_reg_name.strip(),
-                            password=sb_reg_p,
-                            phone=sb_reg_u.strip(),
-                            initial_points=0,
-                        )
-                        if ok:
-                            st.session_state["user_authenticated"] = True
-                            st.session_state["current_user"] = u_data
-                            st.session_state["points"] = u_data.get("sebet_points", 0)
-                            st.success(msg)
-                            st.rerun()
-                        else:
-                            st.error(msg)
 
     st.markdown("---")
 
@@ -3423,11 +3357,6 @@ with tab_loyalty:
 # TAB 7: İSTİFADƏÇİ HESABI & GİRİŞ (USER AUTH & DATABASE)
 # =============================================================================
 with tab_auth:
-    st.markdown("### 👤 İstifadəçi Hesabı və Giriş (User Account & Database)")
-    st.markdown(
-        "Sebet platformasında qeydiyyatdan keçin, xallarınızı toplayın, ərzaq səbətlərinizi yadda saxlayın və canlı SQLite istifadəçi bazasını izləyin."
-    )
-
     auth_card_bg = "#1e293b" if dark_mode else "#f8fafc"
     auth_card_border = "#334155" if dark_mode else "#e2e8f0"
     auth_text_color = "#f8fafc" if dark_mode else "#0f172a"
@@ -3437,6 +3366,8 @@ with tab_auth:
     current_usr = st.session_state.get("current_user", None)
 
     if is_logged_in and current_usr:
+        st.markdown("### 👤 İstifadəçi Profili")
+        st.caption("Hesab məlumatlarınız, toplanan xallar və yadda saxlanılmış səbətlər.")
         u_id = current_usr["id"]
         u_full = current_usr.get("full_name", "İstifadəçi")
         u_name = current_usr.get("username", "")
@@ -3476,7 +3407,7 @@ with tab_auth:
                     </div>
                     <div>
                         <div style="font-size: 12px; color: {auth_sub_color}; text-transform: uppercase; font-weight: 600;">Təhlükəsizlik</div>
-                        <div style="font-size: 16px; font-weight: 700; color: {auth_text_color}; margin-top: 4px;">🔒 PBKDF2-HMAC-SHA256</div>
+                        <div style="font-size: 16px; font-weight: 700; color: {auth_text_color}; margin-top: 4px;">🔒 Qorunur</div>
                     </div>
                 </div>
             </div>
@@ -3556,9 +3487,10 @@ with tab_auth:
             st.dataframe(pd.DataFrame(rec_table_data), use_container_width=True, hide_index=True)
 
     else:
-        st.info("💡 Ərzaq siyahınızı yadda saxlamaq, keşbek xalları toplamaq və endirim çekləri əldə etmək üçün daxil olun və ya qeydiyyatdan keçin.")
+        st.markdown("### 👤 Giriş və Qeydiyyat")
+        st.caption("Hesabınıza daxil olun və ya yeni qeydiyyatdan keçin.")
 
-        auth_subtab_login, auth_subtab_reg = st.tabs(["🔑 Giriş Et (Login)", "📝 Yeni Qeydiyyat (Register)"])
+        auth_subtab_login, auth_subtab_reg = st.tabs(["🔑 Giriş Et", "📝 Yeni Qeydiyyat"])
 
         with auth_subtab_login:
             st.markdown("#### Giriş Məlumatları")
@@ -3603,14 +3535,6 @@ with tab_auth:
 
         with auth_subtab_reg:
             st.markdown("#### Yeni İstifadəçi Hesabı Yarat")
-            st.markdown(
-                """
-                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 12px; margin-bottom: 15px; font-size: 13px; color: #10b981;">
-                    🎁 <b>Səbətinizi Qoruyun:</b> Qeydiyyatdan keçərək ərzaq siyahılarınızı yadda saxlayın və hər alış-verişdə keşbek toplayın!
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
             with st.form(key="tab_register_form"):
                 reg_col1, reg_col2 = st.columns(2)
                 with reg_col1:
@@ -3650,77 +3574,6 @@ with tab_auth:
                             st.rerun()
                         else:
                             st.error(msg)
-
-    # =========================================================================
-    # Live SQLite Database Inspector & Analytics
-    # =========================================================================
-    st.markdown("---")
-    st.markdown("### 🗄️ İstifadəçilər Məlumat Bazası (SQLite Canlı İcmal)")
-    st.caption("Bazada saxlanılan istifadəçi hesabları və təhlükəsizlik arxitekturası. (Şifrələr gizlədilib)")
-
-    all_users = user_db.get_all_users_summary()
-    total_users_count = len(all_users)
-    total_db_points = sum(u.get("sebet_points", 0) for u in all_users)
-    all_db_receipts = user_db.get_recent_receipts(limit=50)
-
-    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-    with col_m1:
-        st.metric("👥 Qeydiyyatlı İstifadəçilər", f"{total_users_count} nəfər")
-    with col_m2:
-        st.metric("💎 Dövriyyədəki Xallar", f"{total_db_points:,} xal")
-    with col_m3:
-        st.metric("💰 Ümumi Keşbek Dəyəri", f"{total_db_points / 100:.2f} ₼")
-    with col_m4:
-        st.metric("🧾 Skan Edilən Qəbzlər", f"{len(all_db_receipts)} qəbz")
-
-    with st.expander("📋 Verilənlər Bazasındakı İstifadəçilərin Cədvəli (Live Data)", expanded=True):
-        if all_users:
-            import pandas as pd
-            df_users = pd.DataFrame(all_users)
-            df_display = df_users.rename(
-                columns={
-                    "id": "ID",
-                    "full_name": "Tam Adı",
-                    "username": "İstifadəçi Adı",
-                    "email": "E-poçt",
-                    "membership_tier": "Status",
-                    "sebet_points": "Xal Balansı",
-                    "preferred_location": "Ərazi",
-                    "created_at": "Qeydiyyat Tarixi",
-                    "last_login": "Son Giriş",
-                }
-            )
-            st.dataframe(df_display, use_container_width=True, hide_index=True)
-        else:
-            st.info("Bazada hələ qeydiyyatdan keçmiş istifadəçi yoxdur.")
-
-    with st.expander("🧾 Verilənlər Bazasındakı Bütün Skan Edilmiş Qəbzlər (Audit Logs)", expanded=False):
-        if all_db_receipts:
-            import pandas as pd
-            df_recs = pd.DataFrame([
-                {
-                    "ID": r["id"],
-                    "İstifadəçi": r.get("user_full_name") or (f"İstifadəçi #{r.get('user_id')}" if r.get("user_id") else "Qonaq"),
-                    "Supermarket": r["store_name"],
-                    "Fiskal ID": r["fiscal_id"],
-                    "Məbləğ": f"{r['total_amount']:.2f} ₼",
-                    "Keşbek Xalı": f"+{r['cashback_points']}",
-                    "Skan Tarixi": r["scanned_at"],
-                }
-                for r in all_db_receipts
-            ])
-            st.dataframe(df_recs, use_container_width=True, hide_index=True)
-        else:
-            st.info("Bazada hələ skan edilmiş qəbz qeydi yoxdur.")
-
-    st.markdown(
-        """
-        <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 12px; padding: 14px; font-size: 13px; color: #94a3b8;">
-            🔒 <b>Təhlükəsizlik Zəmanəti:</b> İstifadəçi şifrələri verilənlər bazasında açıq mətn kimi saxlanılmır. Hər bir istifadəçi üçün unikal 16-baytlıq kriptoqrafik <code>salt</code> generasiya edilir və <code>PBKDF2-HMAC-SHA256</code> alqoritmi ilə 100,000 iterasiyada şifrələnir.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
 # =============================================================================
