@@ -2963,7 +2963,6 @@ with tab_flyers:
                 deal_card_bg = "#1e293b" if dark_mode else "#ffffff"
                 deal_border_color = "#334155" if dark_mode else "#e2e8f0"
                 deal_img_url = resolve_product_image_src(deal.get("image_url") or p_item.get("image_url", ""))
-                deal_img_bg = "#ffffff" if dark_mode else "#f8fafc"
 
                 st.markdown(
                     f"""
@@ -2975,8 +2974,8 @@ with tab_flyers:
                                     🔥 -{deal['discount_pct']}% ENDİRİM
                                 </span>
                             </div>
-                            <div style="width: 100%; height: 130px; display: flex; align-items: center; justify-content: center; background: {deal_img_bg}; border-radius: 10px; overflow: hidden; margin-bottom: 10px; padding: 8px; border: 1px solid {'#334155' if dark_mode else '#e2e8f0'};">
-                                <img src="{deal_img_url}" alt="{deal['name']}" style="max-height: 100%; max-width: 100%; object-fit: contain; border-radius: 6px;" />
+                            <div style="width: 100%; height: 130px; display: flex; align-items: center; justify-content: center; background: transparent; overflow: hidden; margin-bottom: 10px; padding: 4px;">
+                                <img src="{deal_img_url}" alt="{deal['name']}" style="max-height: 100%; max-width: 100%; object-fit: contain; background: transparent;" />
                             </div>
                             <div style="font-size: 14px; font-weight: 800; color: {card_text}; line-height: 1.35; min-height: 40px; margin-bottom: 6px;">
                                 {deal['name']}
