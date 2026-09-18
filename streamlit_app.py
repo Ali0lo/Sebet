@@ -797,7 +797,264 @@ else:
     </style>
     """
 
-st.markdown(custom_css, unsafe_allow_html=True)
+animation_css = """
+<style>
+/* =============================================================================
+   Smooth Animations & Modern Sophisticated Micro-Interactions
+   ============================================================================= */
+html {
+    scroll-behavior: smooth;
+}
+
+@keyframes sebetFadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes sebetFadeInDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes sebetFadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@keyframes sebetPulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+    }
+}
+
+@keyframes sebetSubtleScale {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.025);
+    }
+}
+
+@keyframes sebetShimmerGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Main Hero Header Animation */
+.main-header {
+    background-size: 200% 200% !important;
+    animation: sebetFadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) both, sebetShimmerGradient 12s ease infinite !important;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.main-header:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 32px -8px rgba(16, 185, 129, 0.35) !important;
+}
+.header-badge {
+    transition: transform 0.25s ease, background 0.25s ease !important;
+}
+.header-badge:hover {
+    transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Tab Switching Animations & Smooth Micro-Interactions */
+div[data-baseweb="tab-panel"] {
+    animation: sebetFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+button[data-baseweb="tab"] {
+    transition: color 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
+                border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
+                transform 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    will-change: transform;
+}
+button[data-baseweb="tab"]:hover {
+    transform: translateY(-2px);
+}
+button[data-baseweb="tab"]:active {
+    transform: translateY(0);
+}
+div[data-baseweb="tab-highlight"] {
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Buttons - Polished Micro-Interactions */
+.stButton > button {
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    will-change: transform, box-shadow;
+    border-radius: 10px !important;
+}
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -4px rgba(16, 185, 129, 0.3) !important;
+}
+.stButton > button:active {
+    transform: translateY(1px) scale(0.98) !important;
+    transition: transform 0.08s ease !important;
+}
+
+/* Primary Button Glow */
+.stButton > button[kind="primary"],
+button[data-testid*="stBaseButton-primary"],
+button[kind="primary"] {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.stButton > button[kind="primary"]:hover,
+button[data-testid*="stBaseButton-primary"]:hover,
+button[kind="primary"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -3px rgba(16, 185, 129, 0.45) !important;
+}
+
+/* Cards (Store Cards, Metric Cards, Containers) */
+.store-card, .metric-card, .loyalty-card, .sebet-receipt-paper {
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.28s ease !important;
+    will-change: transform, box-shadow;
+}
+.store-card:hover, .metric-card:hover, .loyalty-card:hover, .sebet-receipt-paper:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.22) !important;
+    border-color: rgba(16, 185, 129, 0.45) !important;
+}
+
+/* Native Metrics Hover Lift */
+div[data-testid="stMetric"] {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.25s ease !important;
+    will-change: transform;
+}
+div[data-testid="stMetric"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.15) !important;
+    border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+/* Badges & Tags Subtle Animation */
+.savings-badge {
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
+    animation: sebetSubtleScale 4s ease-in-out infinite;
+    display: inline-block;
+}
+.savings-badge:hover {
+    transform: scale(1.06) !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+.store-badge, .promo-tag {
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
+}
+.store-badge:hover, .promo-tag:hover {
+    transform: scale(1.05);
+}
+
+/* Form Inputs Focus Transitions */
+input, textarea, [data-baseweb="input"], [data-baseweb="select"] {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
+}
+input:focus, textarea:focus, [data-baseweb="input"]:focus-within, [data-baseweb="select"]:focus-within {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* Sliders */
+div[data-testid="stSlider"] div[role="slider"] {
+    transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+div[data-testid="stSlider"] div[role="slider"]:hover {
+    transform: scale(1.15) !important;
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.25) !important;
+}
+
+/* Number Input Stepper (+ / -) Buttons */
+div[data-testid="stNumberInput"] button,
+div[data-testid="stNumberInput"] [data-testid*="Button"] {
+    transition: all 0.18s ease !important;
+}
+div[data-testid="stNumberInput"] button:hover {
+    transform: scale(1.06) !important;
+}
+
+/* Expanders */
+div[data-testid="stExpander"] {
+    transition: border-color 0.22s ease, box-shadow 0.22s ease !important;
+}
+div[data-testid="stExpander"]:hover {
+    border-color: rgba(16, 185, 129, 0.4) !important;
+    box-shadow: 0 6px 18px -4px rgba(0, 0, 0, 0.12) !important;
+}
+div[data-testid="stExpander"] summary {
+    transition: color 0.2s ease, background-color 0.2s ease !important;
+}
+
+/* Alerts Entrance */
+div[data-testid="stAlert"] {
+    animation: sebetFadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+div[data-testid="stAlert"]:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Table Rows Hover */
+table[data-testid="stTableStyledTable"] tbody tr,
+.basket-table tbody tr,
+.matrix-table tbody tr {
+    transition: background-color 0.15s ease, transform 0.15s ease !important;
+}
+table[data-testid="stTableStyledTable"] tbody tr:hover,
+.basket-table tbody tr:hover,
+.matrix-table tbody tr:hover {
+    background-color: rgba(16, 185, 129, 0.08) !important;
+}
+
+/* File Uploader & Camera */
+div[data-testid="stFileUploader"],
+div[data-testid="stCameraInput"] {
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease !important;
+}
+div[data-testid="stFileUploader"]:hover,
+div[data-testid="stCameraInput"]:hover {
+    border-color: #10b981 !important;
+    box-shadow: 0 6px 20px -4px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* Toast Notifications */
+div[data-testid="stToast"] {
+    animation: sebetFadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2) !important;
+}
+</style>
+"""
+
+st.markdown(custom_css + animation_css, unsafe_allow_html=True)
 
 
 # -----------------------------------------------------------------------------
@@ -2685,7 +2942,7 @@ with tab_flyers:
 
                 st.markdown(
                     f"""
-                    <div style="background: {deal_card_bg}; border: 1px solid {deal_border_color}; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+                    <div class="store-card" style="background: {deal_card_bg}; border: 1px solid {deal_border_color}; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
                             <span style="background: {c_color}; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">{c_name}</span>
                             <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">
@@ -2887,7 +3144,7 @@ with tab_scan:
 
         st.markdown(
             f"""
-            <div style="background: {rec_bg}; border: 2px dashed {rec_border}; border-radius: 14px; padding: 22px; font-family: 'Courier New', Courier, monospace; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+            <div class="sebet-receipt-paper" style="background: {rec_bg}; border: 2px dashed {rec_border}; border-radius: 14px; padding: 22px; font-family: 'Courier New', Courier, monospace; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
                 <div style="text-align: center; font-size: 11px; letter-spacing: 0.1em; color: {rec_sub}; margin-bottom: 2px;">AZƏRBAYCAN RESPUBLİKASI DVX</div>
                 <div style="text-align: center; font-weight: 800; font-size: 16px; margin-bottom: 4px; color: {rec_text};">{rec_data['store'].upper()}</div>
                 <div style="text-align: center; font-size: 11px; color: {rec_sub}; margin-bottom: 12px;">VÖEN: {rec_data['voen']}</div>
@@ -2934,7 +3191,7 @@ with tab_scan:
                 ch_color = CHAINS.get(rec_item["chain_name"].lower(), {}).get("color", "#10b981")
                 st.markdown(
                     f"""
-                    <div style="background: {card_bg}; border: 1px solid {card_border}; border-left: 4px solid {ch_color}; border-radius: 10px; padding: 14px; margin-bottom: 10px;">
+                    <div class="store-card" style="background: {card_bg}; border: 1px solid {card_border}; border-left: 4px solid {ch_color}; border-radius: 10px; padding: 14px; margin-bottom: 10px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
                             <span style="font-weight: 700; font-size: 14px; color: {card_text};">{rec_item['store_name']}</span>
                             <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 12px;">+{rec_item['cashback_points']} xal</span>
@@ -2972,7 +3229,7 @@ with tab_loyalty:
 
         st.markdown(
             f"""
-            <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 24px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); border: 1px solid #334155;">
+            <div class="loyalty-card" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 24px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); border: 1px solid #334155;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div style="font-size: 13px; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">{card_tier}</div>
                     <span style="font-size: 11px; background: rgba(16, 185, 129, 0.2); color: #34d399; padding: 2px 8px; border-radius: 6px; font-weight: 700;">{'🟢 DAXİL OLUB' if curr_u else '⚪ QONAQ'}</span>
@@ -3050,15 +3307,15 @@ with tab_loyalty:
 
         st.markdown(
             f"""
-            <div style="background: {wg_bg}; border: 1px solid {wg_border}; padding: 16px; border-radius: 12px; margin-bottom: 12px;">
+            <div class="metric-card" style="background: {wg_bg}; border: 1px solid {wg_border}; padding: 16px; border-radius: 12px; margin-bottom: 12px;">
                 <div style="font-weight: 700; color: {wg_title};">🌟 Westgold 82.5% Kərə Yağı — 2x Keşbek</div>
                 <div style="font-size: 13px; color: {wg_text};">Bu həftə Westgold kərə yağı alan istifadəçilərə hər qutuda <b>+40 Sebet xalı</b> hədiyyə!</div>
             </div>
-            <div style="background: {mil_bg}; border: 1px solid {mil_border}; padding: 16px; border-radius: 12px; margin-bottom: 12px;">
+            <div class="metric-card" style="background: {mil_bg}; border: 1px solid {mil_border}; padding: 16px; border-radius: 12px; margin-bottom: 12px;">
                 <div style="font-weight: 700; color: {mil_title};">🥛 Milla Süd Məhsulları Kampaniyası</div>
                 <div style="font-size: 13px; color: {mil_text};">Səbətinizə 3 ədəd Milla məhsulu əlavə etdikdə avtomatik <b>0.50 AZN dərhal endirim</b> tətbiq olunur.</div>
             </div>
-            <div style="background: {ar_bg}; border: 1px solid {ar_border}; padding: 16px; border-radius: 12px;">
+            <div class="metric-card" style="background: {ar_bg}; border: 1px solid {ar_border}; padding: 16px; border-radius: 12px;">
                 <div style="font-weight: 700; color: {ar_title};">🧺 Ariel Yuyucu Toz 7kg Eko-Paket</div>
                 <div style="font-size: 13px; color: {ar_text};">Həftənin seçilmiş təmizlik məhsulu. Bravo və Bazarstore filiallarında xüsusi qiymət zəmanəti.</div>
             </div>
@@ -3092,7 +3349,7 @@ with tab_auth:
 
         st.markdown(
             f"""
-            <div style="background: {auth_card_bg}; border: 1.5px solid #10b981; border-radius: 16px; padding: 22px; margin-bottom: 20px;">
+            <div class="store-card" style="background: {auth_card_bg}; border: 1.5px solid #10b981; border-radius: 16px; padding: 22px; margin-bottom: 20px;">
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
                     <div style="display: flex; align-items: center; gap: 16px;">
                         <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; border-radius: 50%; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
