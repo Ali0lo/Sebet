@@ -1081,6 +1081,28 @@ def get_effective_price(product: Dict[str, Any], chain_slug: str) -> float:
     return float(product.get("base_price", 0.0))
 
 
+@st.cache_data(show_spinner=False)
+def resolve_product_image_src(image_url: str) -> str:
+    """Resolves local product image paths or remote URLs to browser/base64-friendly image sources."""
+    if not image_url:
+        return "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&auto=format&fit=crop&q=80"
+    if image_url.startswith("http://") or image_url.startswith("https://") or image_url.startswith("data:image"):
+        return image_url
+    if image_url.startswith("/products/"):
+        fname = image_url.replace("/products/", "")
+        app_dir = os.path.dirname(os.path.abspath(__file__))
+        local_file = os.path.join(app_dir, "frontend", "public", "products", fname)
+        if os.path.exists(local_file):
+            try:
+                with open(local_file, "rb") as f:
+                    encoded = base64.b64encode(f.read()).decode("utf-8")
+                ext = "png" if fname.lower().endswith(".png") else "jpeg"
+                return f"data:image/{ext};base64,{encoded}"
+            except Exception:
+                pass
+    return image_url
+
+
 def _safe_plotly_chart(fig):
     """Renders plotly chart using modern width='stretch' to avoid deprecation warnings."""
     try:
@@ -1725,6 +1747,7 @@ def get_weekly_deals(selected_chain: str = "all") -> List[Dict[str, Any]]:
             "cat_slug": p.get("cat_slug", ""),
             "cat_name": cat_meta.get("name_az", "Ərzaq"),
             "unit": p.get("unit", "ədəd"),
+            "image_url": p.get("image_url", ""),
             "chain_slug": ch,
             "chain_name": ch_meta.get("name", ch.title()),
             "chain_color": ch_meta.get("color", "#10b981"),
@@ -2844,7 +2867,7 @@ with tab_flyers:
     selected_chain_slug = st.session_state.get("selected_discount_chain", "bravo")
 
     # Supermarket filter selector buttons
-    st.markdown("##### 🛒 Supermarket üzrə Endirimləri Süzün:")
+    st.markdown("##### 🛒 Supermarket üzrə Endirimləri Filter:")
     chain_filter_list = [
         ("Bravo", "bravo", "#74b826"),
         ("Araz", "araz", "#E30613"),
@@ -2867,7 +2890,7 @@ with tab_flyers:
         search_d_q = st.text_input("🔍 Endirimli məhsullarda axtar:", placeholder="Məs: Kərə yağı, Ariel, Düyü, Süd...", key="inp_deal_search")
     with col_d_cat:
         cat_options = ["Bütün Kateqoriyalar"] + sorted(list(set(c["name_az"] for c in CATEGORIES.values())))
-        cat_filter_d = st.selectbox("Kateqoriya üzrə süzgəc:", cat_options, key="sel_deal_cat")
+        cat_filter_d = st.selectbox("Kateqoriya üzrə filter:", cat_options, key="sel_deal_cat")
 
     # Fetch active deals
     active_deals = get_weekly_deals(selected_chain_slug)
@@ -2939,21 +2962,25 @@ with tab_flyers:
 
                 deal_card_bg = "#1e293b" if dark_mode else "#ffffff"
                 deal_border_color = "#334155" if dark_mode else "#e2e8f0"
+                deal_img_url = resolve_product_image_src(deal.get("image_url") or p_item.get("image_url", ""))
+                deal_img_bg = "#ffffff" if dark_mode else "#f8fafc"
 
                 st.markdown(
                     f"""
-                    <div class="store-card" style="background: {deal_card_bg}; border: 1px solid {deal_border_color}; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
-                            <span style="background: {c_color}; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">{c_name}</span>
-                            <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">
-                                🔥 -{deal['discount_pct']}% ENDİRİM
-                            </span>
-                        </div>
-                        <div style="font-size: 14px; font-weight: 800; color: {card_text}; line-height: 1.3; margin-bottom: 4px;">
-                            {deal['name']}
-                        </div>
-                        <div style="font-size: 12px; color: {sub_text}; margin-bottom: 10px;">
-                            {deal['brand']} &bull; {deal['cat_name']} &bull; <i>{deal['note']}</i>
+                    <div class="store-card" style="background: {deal_card_bg}; border: 1px solid {deal_border_color}; border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                                <span style="background: {c_color}; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">{c_name}</span>
+                                <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">
+                                    🔥 -{deal['discount_pct']}% ENDİRİM
+                                </span>
+                            </div>
+                            <div style="width: 100%; height: 130px; display: flex; align-items: center; justify-content: center; background: {deal_img_bg}; border-radius: 10px; overflow: hidden; margin-bottom: 10px; padding: 8px; border: 1px solid {'#334155' if dark_mode else '#e2e8f0'};">
+                                <img src="{deal_img_url}" alt="{deal['name']}" style="max-height: 100%; max-width: 100%; object-fit: contain; border-radius: 6px;" />
+                            </div>
+                            <div style="font-size: 14px; font-weight: 800; color: {card_text}; line-height: 1.35; min-height: 40px; margin-bottom: 6px;">
+                                {deal['name']}
+                            </div>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: baseline; padding-top: 8px; border-top: 1px dashed {deal_border_color};">
                             <div>
