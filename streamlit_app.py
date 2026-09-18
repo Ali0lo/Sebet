@@ -2966,28 +2966,30 @@ with tab_flyers:
 
                 st.markdown(
                     f"""
-                    <div class="store-card" style="background: {deal_card_bg}; border: 1px solid {deal_border_color}; border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between;">
-                        <div>
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                                <span style="background: {c_color}; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">{c_name}</span>
-                                <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">
-                                    🔥 -{deal['discount_pct']}% ENDİRİM
-                                </span>
+                    <div class="store-card" style="background: {deal_card_bg}; border: 1px solid {deal_border_color}; border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+                        <div style="display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 76px; height: 76px; min-width: 76px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: transparent; overflow: hidden;">
+                                <img src="{deal_img_url}" alt="{deal['name']}" style="max-height: 76px; max-width: 76px; object-fit: contain; background: transparent;" />
                             </div>
-                            <div style="width: 100%; height: 130px; display: flex; align-items: center; justify-content: center; background: transparent; overflow: hidden; margin-bottom: 10px; padding: 4px;">
-                                <img src="{deal_img_url}" alt="{deal['name']}" style="max-height: 100%; max-width: 100%; object-fit: contain; background: transparent;" />
-                            </div>
-                            <div style="font-size: 14px; font-weight: 800; color: {card_text}; line-height: 1.35; min-height: 40px; margin-bottom: 6px;">
-                                {deal['name']}
-                            </div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: baseline; padding-top: 8px; border-top: 1px dashed {deal_border_color};">
-                            <div>
-                                <span style="font-size: 13px; color: #94a3b8; text-decoration: line-through; margin-right: 8px;">{deal['regular_price']:.2f} ₼</span>
-                                <span style="font-size: 18px; font-weight: 800; color: #10b981;">{deal['promo_price']:.2f} ₼</span>
-                            </div>
-                            <div style="font-size: 11px; font-weight: 700; color: #10b981;">
-                                Qənaət: {deal['savings']:.2f} ₼
+                            <div style="flex-grow: 1; min-width: 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; gap: 6px;">
+                                    <span style="background: {c_color}; color: white; padding: 2px 7px; border-radius: 5px; font-size: 11px; font-weight: 700;">{c_name}</span>
+                                    <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 1px 6px; border-radius: 5px; font-size: 11px; font-weight: 800;">
+                                        🔥 -{deal['discount_pct']}% ENDİRİM
+                                    </span>
+                                </div>
+                                <div style="font-size: 14px; font-weight: 800; color: {card_text}; line-height: 1.35; margin-bottom: 6px;">
+                                    {deal['name']}
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px;">
+                                    <div>
+                                        <span style="font-size: 12px; color: #94a3b8; text-decoration: line-through; margin-right: 6px;">{deal['regular_price']:.2f} ₼</span>
+                                        <span style="font-size: 16px; font-weight: 800; color: #10b981;">{deal['promo_price']:.2f} ₼</span>
+                                    </div>
+                                    <div style="font-size: 11px; font-weight: 700; color: #10b981;">
+                                        Qənaət: {deal['savings']:.2f} ₼
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
